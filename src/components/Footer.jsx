@@ -73,7 +73,7 @@ export default function Footer() {
               <a href="#" className="text-gray-400 hover:text-teal-400">
                 <Linkedin className="w-6 h-6 inline" /> LinkedIn
               </a>
-              <a href="#" className="text-gray-400 hover:text-teal-400">
+              <a href="https://github.com/threeLogics" className="text-gray-400 hover:text-teal-400">
                 <Github className="w-6 h-6 inline" /> GitHub
               </a>
               <a
