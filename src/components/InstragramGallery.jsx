@@ -3,15 +3,15 @@ import { motion } from "framer-motion";
 const InstagramGallery = () => {
   const images = [
     {
-      src: "src/assets/1Insta.webp",
+      src: "../assets/1Insta.webp",
       link: "https://www.instagram.com/p/DGLmI0yo5BQ/",
     },
     {
-      src: "src/assets/2Insta.webp",
+      src: "../assets/2Insta.webp",
       link: "https://www.instagram.com/p/DGLmo2qoq3w/",
     },
     {
-      src: "src/assets/3Insta.webp",
+      src: "../assets/3Insta.webp",
       link: "https://www.instagram.com/p/DGLnDC0IyC7/",
     },
   ];
