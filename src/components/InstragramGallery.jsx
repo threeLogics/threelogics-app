@@ -1,20 +1,13 @@
 import { motion } from "framer-motion";
-
-const InstagramGallery = () => {
-  const images = [
-    {
-      src: "../assets/1Insta.webp",
-      link: "https://www.instagram.com/p/DGLmI0yo5BQ/",
-    },
-    {
-      src: "../assets/2Insta.webp",
-      link: "https://www.instagram.com/p/DGLmo2qoq3w/",
-    },
-    {
-      src: "../assets/3Insta.webp",
-      link: "https://www.instagram.com/p/DGLnDC0IyC7/",
-    },
-  ];
+import img1 from "../assets/1Insta.webp";
+import img2 from "../assets/2Insta.webp";
+import img3 from "../assets/3Insta.webp";
+  const InstagramGallery = () => {
+    const images = [
+      { src: img1, link: "https://www.instagram.com/p/DGLmI0yo5BQ/" },
+      { src: img2, link: "https://www.instagram.com/p/DGLmo2qoq3w/" },
+      { src: img3, link: "https://www.instagram.com/p/DGLnDC0IyC7/" },
+    ];
 
   return (
     <div className="my-16 flex justify-center">
