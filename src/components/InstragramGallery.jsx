@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import img1 from "../assets/1Insta.webp";
+console.log(img1);
 import img2 from "../assets/2Insta.webp";
 import img3 from "../assets/3Insta.webp";
 
@@ -9,7 +10,7 @@ const InstagramGallery = () => {
     { src: img2, link: "https://www.instagram.com/p/DGLmo2qoq3w/" },
     { src: img3, link: "https://www.instagram.com/p/DGLnDC0IyC7/" },
   ];
-  console.log(img1);
+  
 
   return (
     <div className="my-16 flex justify-center">
