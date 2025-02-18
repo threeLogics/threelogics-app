@@ -2,12 +2,14 @@ import { motion } from "framer-motion";
 import img1 from "../assets/1Insta.webp";
 import img2 from "../assets/2Insta.webp";
 import img3 from "../assets/3Insta.webp";
-  const InstagramGallery = () => {
-    const images = [
-      { src: img1, link: "https://www.instagram.com/p/DGLmI0yo5BQ/" },
-      { src: img2, link: "https://www.instagram.com/p/DGLmo2qoq3w/" },
-      { src: img3, link: "https://www.instagram.com/p/DGLnDC0IyC7/" },
-    ];
+
+const InstagramGallery = () => {
+  const images = [
+    { src: img1, link: "https://www.instagram.com/p/DGLmI0yo5BQ/" },
+    { src: img2, link: "https://www.instagram.com/p/DGLmo2qoq3w/" },
+    { src: img3, link: "https://www.instagram.com/p/DGLnDC0IyC7/" },
+  ];
+  console.log(img1);
 
   return (
     <div className="my-16 flex justify-center">
@@ -21,7 +23,7 @@ import img3 from "../assets/3Insta.webp";
         {images.map((img, index) => (
           <motion.a
             key={index}
-            href={img.link} // Enlace dinámico
+            href={img.link}
             target="_blank"
             rel="noopener noreferrer"
             initial={{ opacity: 0, y: 50 }}
