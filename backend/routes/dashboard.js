@@ -1,8 +1,5 @@
 import express from "express";
-import Producto from "../models/Producto.js";
-import Movimiento from "../models/Movimiento.js";
-import { Op, fn, col } from "sequelize";
-import sequelize from "../config/database.js";
+import supabase from "../supabaseClient.js";
 import PDFDocument from "pdfkit";
 import { verificarToken } from "../middleware/authMiddleware.js"; // Middleware de autenticación
 
@@ -12,68 +9,73 @@ const router = express.Router();
 router.get("/estadisticas", verificarToken, async (req, res) => {
   try {
     console.log("🛠️ Usuario recibido:", req.usuario);
-    const usuario = req.usuario || { nombre: "Usuario Desconocido" }; // Previene undefined
+    const usuario = req.usuario || { nombre: "Usuario Desconocido" };
 
-    let whereCondition = {}; // Condición base
-
+    let whereCondition = {};
     if (usuario.rol !== "admin") {
-      // Si NO es admin, solo filtrar por usuario
       whereCondition = { usuarioId: usuario.id };
     }
 
     // 📦 Cantidad total de productos en stock (según usuario)
-    const totalProductos = await Producto.count({ where: whereCondition });
-    const totalStock = await Producto.sum("cantidad", {
-      where: whereCondition,
-    });
+    const { count: totalProductos } = await supabase
+      .from("productos")
+      .select("id", { count: "exact" })
+      .match(whereCondition);
+
+    const { data: stockData } = await supabase
+      .from("productos")
+      .select("cantidad")
+      .match(whereCondition);
+
+    const totalStock = stockData
+      ? stockData.reduce((acc, prod) => acc + prod.cantidad, 0)
+      : 0;
 
     // 📊 Cantidad de movimientos en los últimos 30 días
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - 30);
 
-    const totalMovimientos = await Movimiento.count({
-      where: { fecha: { [Op.gte]: fechaLimite }, ...whereCondition },
-    });
+    const { count: totalMovimientos } = await supabase
+      .from("movimientos")
+      .select("id", { count: "exact" })
+      .gte("fecha", fechaLimite.toISOString())
+      .match(whereCondition);
 
-    const movimientosEntrada = await Movimiento.count({
-      where: {
-        tipo: "entrada",
-        fecha: { [Op.gte]: fechaLimite },
-        ...whereCondition,
-      },
-    });
+    const { count: movimientosEntrada } = await supabase
+      .from("movimientos")
+      .select("id", { count: "exact" })
+      .eq("tipo", "entrada")
+      .gte("fecha", fechaLimite.toISOString())
+      .match(whereCondition);
 
-    const movimientosSalida = await Movimiento.count({
-      where: {
-        tipo: "salida",
-        fecha: { [Op.gte]: fechaLimite },
-        ...whereCondition,
-      },
-    });
+    const { count: movimientosSalida } = await supabase
+      .from("movimientos")
+      .select("id", { count: "exact" })
+      .eq("tipo", "salida")
+      .gte("fecha", fechaLimite.toISOString())
+      .match(whereCondition);
 
-    // 📊 Categoría más popular
-    const categoriaMasPopularData = await Movimiento.findOne({
-      attributes: ["productoId", [fn("COUNT", col("productoId")), "total"]],
-      where: whereCondition,
-      group: ["productoId"],
-      order: [[fn("COUNT", col("productoId")), "DESC"]],
-      include: { model: Producto, attributes: ["categoriaId"] },
-    });
+    // 📊 Categoría más popular (producto con más movimientos)
+    const { data: categoriaMasPopularData } = await supabase
+      .from("movimientos")
+      .select("productoId", { count: "exact" })
+      .match(whereCondition)
+      .order("count", { ascending: false })
+      .limit(1);
 
     const categoriaMasPopular =
-      categoriaMasPopularData?.Producto?.categoriaId || "N/A";
+      categoriaMasPopularData?.length > 0
+        ? categoriaMasPopularData[0].productoId
+        : "N/A";
 
-    // 🔍 Productos más movidos
-    const productosMasMovidos = await Movimiento.findAll({
-      attributes: ["productoId", [fn("COUNT", col("productoId")), "total"]],
-      where: whereCondition,
-      group: ["productoId"],
-      order: [[fn("COUNT", col("productoId")), "DESC"]],
-      limit: 5,
-      include: { model: Producto, attributes: ["nombre"] },
-    });
+    // 🔍 Productos más movidos (top 5)
+    const { data: productosMasMovidos } = await supabase
+      .from("movimientos")
+      .select("productoId, count:productoId")
+      .match(whereCondition)
+      .order("count", { ascending: false })
+      .limit(5);
 
-    // ✅ Solo una respuesta JSON
     return res.json({
       totalProductos,
       totalStock,
@@ -89,7 +91,7 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
   }
 });
 
-/// 📌 Generar reporte en PDF de movimientos (Mejorado)
+/// 📌 Generar reporte en PDF de movimientos
 router.get("/reporte-pdf", verificarToken, async (req, res) => {
   try {
     const { usuario } = req;
@@ -100,13 +102,13 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     }
 
     // Obtener movimientos según usuario/admin
-    const movimientos = await Movimiento.findAll({
-      where: whereCondition,
-      include: { model: Producto, attributes: ["nombre"] },
-      order: [["fecha", "DESC"]],
-    });
+    const { data: movimientos } = await supabase
+      .from("movimientos")
+      .select("id, productoId, tipo, cantidad, fecha")
+      .match(whereCondition)
+      .order("fecha", { ascending: false });
 
-    if (!movimientos.length) {
+    if (!movimientos || movimientos.length === 0) {
       return res
         .status(404)
         .json({ error: "No hay movimientos para generar el PDF" });
@@ -121,9 +123,6 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    // 📌 Fuente predeterminada
-    doc.font("Helvetica");
-
     // 📌 Encabezado con Título
     doc
       .fontSize(20)
@@ -137,18 +136,13 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
       .text(`Fecha: ${new Date().toLocaleDateString()}`, { align: "left" })
       .moveDown();
 
-    // 📌 Línea divisoria
-    doc.moveTo(40, doc.y).lineTo(550, doc.y).stroke();
-    doc.moveDown(1);
-
     // 📦 Encabezado de Tabla
     doc
       .fontSize(14)
       .text("Detalles de Movimientos:", { underline: true })
       .moveDown();
-
-    // 📌 Dibujar la tabla manualmente
     doc.fontSize(10);
+
     const tableTop = doc.y;
     const columnSpacing = 100;
     const rowHeight = 20;
@@ -162,13 +156,16 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     doc.text("Fecha", startX + columnSpacing * 4, tableTop);
     doc.moveDown();
 
-    // 📌 Dibujar cada fila de la tabla
     let currentY = tableTop + rowHeight;
     movimientos.forEach((mov) => {
       doc.text(mov.id.toString(), startX, currentY);
-      doc.text(mov.Producto?.nombre || "N/A", startX + columnSpacing, currentY);
       doc.text(
-        mov.tipo === "entrada" ? " Entrada" : " Salida",
+        mov.productoId ? mov.productoId.toString() : "N/A",
+        startX + columnSpacing,
+        currentY
+      );
+      doc.text(
+        mov.tipo === "entrada" ? "Entrada" : "Salida",
         startX + columnSpacing * 2,
         currentY
       );
@@ -181,7 +178,6 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
       currentY += rowHeight;
     });
 
-    // 🔚 Cerrar documento
     doc.end();
   } catch (error) {
     console.error("Error generando PDF:", error);

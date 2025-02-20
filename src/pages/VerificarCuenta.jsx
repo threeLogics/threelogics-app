@@ -4,25 +4,37 @@ import { api } from "../services/api";
 import { toast } from "react-toastify";
 
 export default function VerificarCuenta() {
-  const { token } = useParams(); // ✅ Obtiene el token de la URL
+  const { token } = useParams();
   const navigate = useNavigate();
   const [mensaje, setMensaje] = useState("Verificando cuenta...");
 
   useEffect(() => {
     async function verificar() {
-      console.log("🔍 Token capturado desde la URL:", token); // ✅ Verifica que el token se obtiene
+      console.log("🔍 Token capturado desde la URL:", token);
 
       if (!token) {
-        setMensaje("Error: Token no encontrado en la URL.");
+        setMensaje("⚠️ Error: Token no encontrado en la URL.");
         return;
       }
 
       try {
-        await api.get(`/auth/verificar/${token}`);
-        toast.success("Cuenta verificada con éxito. Ahora puedes iniciar sesión.");
-        navigate("/login");
+        const response = await api.get(`/auth/verificar/${token}`);
+        toast.success(
+          response.data.mensaje || "✅ Cuenta verificada con éxito."
+        );
+        setMensaje("✅ Verificación completada. Redirigiendo...");
+
+        setTimeout(() => navigate("/login"), 3000);
       } catch (error) {
-        setMensaje("Error al verificar la cuenta.");
+        console.error("❌ Error en la verificación:", error);
+
+        if (error.response?.status === 404) {
+          setMensaje("❌ Token inválido o expirado.");
+          toast.error("❌ Token inválido o expirado.");
+        } else {
+          setMensaje("❌ Error en el servidor al verificar la cuenta.");
+          toast.error("❌ Error en el servidor.");
+        }
       }
     }
     verificar();

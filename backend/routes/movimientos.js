@@ -1,19 +1,22 @@
 import express from "express";
-import Movimiento from "../models/Movimiento.js";
-import Producto from "../models/Producto.js";
-import Categoria from "../models/Categoria.js";
+import supabase from "../supabaseClient.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
-import { Op } from "sequelize"; // 🔹 Para filtrar por fecha
 import { Parser } from "json2csv";
 import fs from "fs";
 
 const router = express.Router();
 
-// Registrar un nuevo movimiento (entrada/salida)
+// ✅ Registrar un nuevo movimiento (entrada/salida)
 router.post("/", verificarToken, async (req, res) => {
   try {
     const { tipo, cantidad, productoId } = req.body;
-    const producto = await Producto.findByPk(productoId);
+
+    // 🔹 Obtener el producto desde Supabase
+    const { data: producto } = await supabase
+      .from("productos")
+      .select("id, cantidad, usuarioId")
+      .eq("id", productoId)
+      .single();
 
     if (!producto) {
       return res.status(404).json({ error: "Producto no encontrado" });
@@ -41,14 +44,25 @@ router.post("/", verificarToken, async (req, res) => {
       return res.status(400).json({ error: "Tipo de movimiento no válido" });
     }
 
-    await producto.update({ cantidad: nuevoStock });
+    // 🔹 Actualizar el stock del producto en Supabase
+    await supabase
+      .from("productos")
+      .update({ cantidad: nuevoStock })
+      .eq("id", productoId);
 
-    const movimiento = await Movimiento.create({
-      tipo,
-      cantidad,
-      productoId,
-      usuarioId: req.usuario.id,
-    });
+    // 🔹 Registrar el movimiento en Supabase
+    const { data: movimiento, error: errorMovimiento } = await supabase
+      .from("movimientos")
+      .insert([{ tipo, cantidad, productoId, usuarioId: req.usuario.id }])
+      .select()
+      .single();
+
+    if (errorMovimiento) {
+      console.error("❌ Error al registrar movimiento:", errorMovimiento);
+      return res
+        .status(500)
+        .json({ error: "Error al registrar el movimiento" });
+    }
 
     res.status(201).json({
       mensaje: "Movimiento registrado y stock actualizado",
@@ -56,91 +70,87 @@ router.post("/", verificarToken, async (req, res) => {
       nuevoStock,
     });
   } catch (error) {
-    console.error("Error al registrar movimiento:", error);
+    console.error("❌ Error al registrar movimiento:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// 🔹 Obtener todos los movimientos con filtros por categoría y fecha
+// ✅ Obtener todos los movimientos con filtros por categoría y fecha
 router.get("/", verificarToken, async (req, res) => {
   try {
-    const { categoriaId, dias } = req.query; // 🔹 Se reciben los filtros desde el frontend
-
+    const { categoriaId, dias } = req.query;
     let filtros = {};
 
-    // 🔹 Filtrar por fecha (últimos N días)
     if (dias) {
       const fechaLimite = new Date();
       fechaLimite.setDate(fechaLimite.getDate() - parseInt(dias));
-      filtros.fecha = { [Op.gte]: fechaLimite };
+      filtros.fecha = { gte: fechaLimite.toISOString() };
     }
 
     let movimientos;
 
     if (req.usuario.rol === "admin") {
-      // 🔹 Incluir producto y categoría
-      movimientos = await Movimiento.findAll({
-        where: filtros,
-        include: {
-          model: Producto,
-          attributes: ["nombre", "categoriaId"],
-          include: {
-            model: Categoria,
-            attributes: ["id", "nombre"],
-          },
-        },
-        order: [["fecha", "DESC"]],
-      });
+      // 🔹 Obtener movimientos con información del producto
+      const { data, error } = await supabase
+        .from("movimientos")
+        .select(
+          "id, tipo, cantidad, fecha, productoId, productos (nombre, categoriaId)"
+        )
+        .match(filtros)
+        .order("fecha", { ascending: false });
 
-      // 🔹 Filtrar por categoría si se seleccionó una
+      if (error) throw error;
+      movimientos = data;
+
       if (categoriaId) {
         movimientos = movimientos.filter(
-          (mov) => mov.Producto?.Categoria?.id == categoriaId
+          (mov) => mov.productos?.categoriaId == categoriaId
         );
       }
     } else {
-      // 🔹 Cliente solo ve movimientos de sus productos
-      movimientos = await Movimiento.findAll({
-        where: filtros,
-        include: {
-          model: Producto,
-          attributes: ["nombre", "categoriaId"],
-          include: {
-            model: Categoria,
-            attributes: ["id", "nombre"],
-          },
-          where: { usuarioId: req.usuario.id },
-        },
-        order: [["fecha", "DESC"]],
-      });
+      // 🔹 Obtener movimientos del usuario autenticado
+      const { data, error } = await supabase
+        .from("movimientos")
+        .select(
+          "id, tipo, cantidad, fecha, productoId, productos (nombre, categoriaId)"
+        )
+        .eq("usuarioId", req.usuario.id)
+        .match(filtros)
+        .order("fecha", { ascending: false });
+
+      if (error) throw error;
+      movimientos = data;
 
       if (categoriaId) {
         movimientos = movimientos.filter(
-          (mov) => mov.Producto?.Categoria?.id == categoriaId
+          (mov) => mov.productos?.categoriaId == categoriaId
         );
       }
     }
 
     res.json(movimientos);
   } catch (error) {
-    console.error("Error al obtener movimientos:", error);
+    console.error("❌ Error al obtener movimientos:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
 // 📥 Descargar movimientos en CSV
 router.get("/descargar", async (req, res) => {
   try {
-    const movimientos = await Movimiento.findAll({
-      include: { model: Producto, attributes: ["nombre"] },
-      order: [["fecha", "DESC"]],
-    });
+    const { data: movimientos, error } = await supabase
+      .from("movimientos")
+      .select("id, tipo, cantidad, fecha, productos (nombre)")
+      .order("fecha", { ascending: false });
+
+    if (error) throw error;
 
     const datos = movimientos.map((mov) => ({
       ID: mov.id,
-      Producto: mov.Producto ? mov.Producto.nombre : "N/A",
+      Producto: mov.productos ? mov.productos.nombre : "N/A",
       Tipo: mov.tipo,
       Cantidad: mov.cantidad,
-      Fecha: mov.fecha.toISOString(),
+      Fecha: new Date(mov.fecha).toISOString(),
     }));
 
     const json2csv = new Parser();
@@ -155,7 +165,7 @@ router.get("/descargar", async (req, res) => {
       fs.unlinkSync(filePath); // Eliminar el archivo después de descargarlo
     });
   } catch (error) {
-    console.error("Error al generar CSV:", error);
+    console.error("❌ Error al generar CSV:", error);
     res.status(500).json({ error: error.message });
   }
 });

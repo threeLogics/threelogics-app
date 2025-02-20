@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 const Page404 = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-black to-teal-700 text-white text-center overflow-hidden">
-      
       {/* Animación de caída del 404 */}
       <motion.h1
         className="text-9xl font-extrabold tracking-widest"
@@ -29,7 +28,11 @@ const Page404 = () => {
           className="mt-12" // Más margen arriba
           initial={{ y: 10 }}
           animate={{ y: [-3, 0, -3] }} // Movimiento sutil arriba y abajo
-          transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            repeatType: "reverse",
+          }}
         >
           <Link
             to="/"

@@ -1,6 +1,6 @@
 import express from "express";
 import { body, validationResult } from "express-validator";
-import Categoria from "../models/Categoria.js";
+import supabase from "../supabaseClient.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -14,7 +14,7 @@ const validarCampos = (req, res, next) => {
   next();
 };
 
-// Crear categoría con validación, usuarioId y evitar duplicados
+// ✅ Crear categoría con validación, usuarioId y evitar duplicados
 router.post(
   "/",
   [
@@ -27,76 +27,125 @@ router.post(
       const { nombre } = req.body;
       const usuarioId = req.usuario.id;
 
-      // Verificar si la categoría ya existe para este usuario
-      const categoriaExistente = await Categoria.findOne({
-        where: { nombre, usuarioId },
-      });
+      // 🔹 Verificar si la categoría ya existe para este usuario en Supabase
+      const { data: categoriaExistente, error: errorExistente } = await supabase
+        .from("categorias")
+        .select("id")
+        .eq("nombre", nombre)
+        .eq("usuarioId", usuarioId)
+        .single();
 
       if (categoriaExistente) {
-        return res.status(400).json({
-          error: "Esta categoría ya existe para este usuario.",
-        });
+        return res
+          .status(400)
+          .json({ error: "Esta categoría ya existe para este usuario." });
       }
 
-      // Crear la nueva categoría
-      const categoria = await Categoria.create({ nombre, usuarioId });
+      if (errorExistente && errorExistente.code !== "PGRST116") {
+        // PGRST116 indica que no hay coincidencias, lo cual es correcto
+        console.error(
+          "❌ Error al verificar categoría existente:",
+          errorExistente
+        );
+        return res
+          .status(500)
+          .json({ error: "Error al verificar la categoría" });
+      }
 
-      res.status(201).json({
-        mensaje: `Categoría "${categoria.nombre}" creada con éxito.`,
-        categoria,
-      });
+      // 🔹 Crear la nueva categoría en Supabase
+      const { data: categoria, error: errorInsert } = await supabase
+        .from("categorias")
+        .insert([{ nombre, usuarioId }])
+        .select()
+        .single();
+
+      if (errorInsert) {
+        console.error("❌ Error al crear categoría:", errorInsert);
+        return res.status(500).json({ error: "Error al crear la categoría" });
+      }
+
+      res
+        .status(201)
+        .json({
+          mensaje: `Categoría "${categoria.nombre}" creada con éxito.`,
+          categoria,
+        });
     } catch (error) {
-      console.error("Error al crear la categoría:", error);
+      console.error("❌ Error interno al crear la categoría:", error);
       res.status(500).json({ error: "Error interno del servidor" });
     }
   }
 );
 
-// Obtener todas las categorías sin duplicados
+// ✅ Obtener todas las categorías sin duplicados
 router.get("/", verificarToken, async (req, res) => {
   try {
     let categorias;
 
     if (req.usuario.rol === "admin") {
-      // Admin ve todas las categorías
-      categorias = await Categoria.findAll();
+      // 🔹 Admin ve todas las categorías
+      const { data, error } = await supabase.from("categorias").select("*");
+
+      if (error) throw error;
+      categorias = data;
     } else {
-      // Cliente solo ve sus propias categorías
-      categorias = await Categoria.findAll({
-        where: { usuarioId: req.usuario.id },
-      });
+      // 🔹 Usuario solo ve sus propias categorías
+      const { data, error } = await supabase
+        .from("categorias")
+        .select("*")
+        .eq("usuarioId", req.usuario.id);
+
+      if (error) throw error;
+      categorias = data;
     }
 
     res.json(categorias);
   } catch (error) {
-    console.error("Error al obtener categorías:", error);
+    console.error("❌ Error al obtener categorías:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Ruta para actualizar una categoría
+// ✅ Ruta para actualizar una categoría
 router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre } = req.body;
 
-    // Buscar la categoría en la base de datos
-    const categoria = await Categoria.findByPk(id);
+    // 🔹 Verificar si la categoría existe en Supabase
+    const { data: categoria, error: errorBuscar } = await supabase
+      .from("categorias")
+      .select("*")
+      .eq("id", id)
+      .single();
 
     if (!categoria) {
       return res.status(404).json({ error: "Categoría no encontrada" });
     }
 
-    // Actualizar el nombre de la categoría
-    categoria.nombre = nombre;
-    await categoria.save(); // Guardamos los cambios en la base de datos
+    if (errorBuscar) {
+      console.error("❌ Error al buscar la categoría:", errorBuscar);
+      return res.status(500).json({ error: "Error al buscar la categoría" });
+    }
 
-    res.status(200).json({
-      mensaje: `Categoría "${categoria.nombre}" actualizada correctamente`,
-      categoria,
-    });
+    // 🔹 Actualizar la categoría en Supabase
+    const { error: errorActualizar } = await supabase
+      .from("categorias")
+      .update({ nombre })
+      .eq("id", id);
+
+    if (errorActualizar) {
+      console.error("❌ Error al actualizar categoría:", errorActualizar);
+      return res
+        .status(500)
+        .json({ error: "Error al actualizar la categoría" });
+    }
+
+    res
+      .status(200)
+      .json({ mensaje: `Categoría "${nombre}" actualizada correctamente` });
   } catch (error) {
-    console.error("Error al actualizar la categoría:", error);
+    console.error("❌ Error al actualizar la categoría:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });

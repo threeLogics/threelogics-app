@@ -17,16 +17,30 @@ export function AuthProvider({ children }) {
         const decodedToken = jwtDecode(token);
         const currentTime = Date.now() / 1000;
 
-        console.log("Token expira en:", decodedToken.exp, "Tiempo actual:", currentTime);
+        console.log(
+          "Token expira en:",
+          decodedToken.exp,
+          "Tiempo actual:",
+          currentTime
+        );
 
-        if (decodedToken.exp < currentTime) {
+        if (!decodedToken.exp || decodedToken.exp < currentTime) {
           console.warn("⚠️ Token expirado, cerrando sesión...");
           cerrarSesionAutomatica();
           return;
         }
 
         const tiempoRestante = (decodedToken.exp - currentTime) * 1000;
-        console.log("⏳ Cerrando sesión en:", tiempoRestante / 1000, "segundos");
+        console.log(
+          "⏳ Cerrando sesión en:",
+          tiempoRestante / 1000,
+          "segundos"
+        );
+
+        // Aseguramos que cualquier timeout anterior se borre
+        if (logoutTimeoutRef.current) {
+          clearTimeout(logoutTimeoutRef.current);
+        }
 
         logoutTimeoutRef.current = setTimeout(() => {
           cerrarSesionAutomatica();
@@ -35,14 +49,13 @@ export function AuthProvider({ children }) {
         setUsuario(parsedUser);
       } catch (error) {
         console.error("❌ Error al procesar el token:", error);
-        localStorage.removeItem("usuario");
-        localStorage.removeItem("token");
+        logout();
       }
     }
   }, []);
 
   const cerrarSesionAutomatica = () => {
-    alert("⚠️ Tu sesión ha expirado. Inicia sesión nuevamente.");
+    console.warn("⚠️ Tu sesión ha expirado.");
     logout();
   };
 
@@ -66,6 +79,7 @@ export function AuthProvider({ children }) {
       }, tiempoRestante);
     } catch (error) {
       console.error("❌ Error al decodificar el token:", error);
+      return;
     }
 
     setUsuario(data.usuario);
@@ -86,6 +100,8 @@ export function AuthProvider({ children }) {
   };
 
   const actualizarPerfil = (datosActualizados) => {
+    if (!usuario) return;
+
     const usuarioActualizado = {
       ...usuario,
       ...datosActualizados,
@@ -93,7 +109,8 @@ export function AuthProvider({ children }) {
     };
 
     if (datosActualizados.lastPasswordChange) {
-      usuarioActualizado.lastPasswordChange = datosActualizados.lastPasswordChange;
+      usuarioActualizado.lastPasswordChange =
+        datosActualizados.lastPasswordChange;
     }
 
     localStorage.setItem("usuario", JSON.stringify(usuarioActualizado));

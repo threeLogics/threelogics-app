@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api } from "../services/api"; // Importamos la API para hacer peticiones
+import { supabase } from "../supabaseClient"; // 🔹 Importamos Supabase directamente
 import { toast } from "react-toastify";
 import { Mail, MapPin, Linkedin, Github, Instagram } from "lucide-react";
 
@@ -16,11 +16,32 @@ export default function Footer() {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/newsletter/suscribirse", { email });
-      toast.success(response.data.mensaje);
+      // 🔹 Verificar si el email ya está en la base de datos
+      const { data: existe, error: errorExiste } = await supabase
+        .from("suscriptores")
+        .select("email")
+        .eq("email", email)
+        .single();
+
+      if (existe) {
+        toast.error("❌ Este correo ya está suscrito");
+        setIsLoading(false);
+        return;
+      }
+
+      if (errorExiste && errorExiste.code !== "PGRST116") {
+        throw errorExiste;
+      }
+
+      // 🔹 Insertar el email en Supabase
+      const { error } = await supabase.from("suscriptores").insert([{ email }]);
+
+      if (error) throw error;
+
+      toast.success("✅ ¡Gracias por suscribirte!");
       setEmail("");
     } catch (error) {
-      toast.error(error.response?.data?.error || "Error al suscribirse");
+      toast.error(error.message || "Error al suscribirse");
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +94,10 @@ export default function Footer() {
               <a href="#" className="text-gray-400 hover:text-teal-400">
                 <Linkedin className="w-6 h-6 inline" /> LinkedIn
               </a>
-              <a href="https://github.com/threeLogics" className="text-gray-400 hover:text-teal-400">
+              <a
+                href="https://github.com/threeLogics"
+                className="text-gray-400 hover:text-teal-400"
+              >
                 <Github className="w-6 h-6 inline" /> GitHub
               </a>
               <a

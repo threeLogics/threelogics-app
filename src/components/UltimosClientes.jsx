@@ -1,33 +1,37 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // Importamos framer-motion
-import { api } from "../services/api"; // Asegúrate de que tu API esté configurada correctamente
+import { motion, AnimatePresence } from "framer-motion";
+import { api } from "../services/api";
 
 export default function UltimosClientes() {
   const [nuevosClientes, setNuevosClientes] = useState([]);
   const [clientesEliminados, setClientesEliminados] = useState([]);
+  const [loading, setLoading] = useState(true); // ✅ Estado de carga
 
   // Función para cargar los últimos clientes
   const fetchClientes = async () => {
     try {
+      setLoading(true);
       const response = await api.get("/usuarios/ultimos-clientes");
+
       console.log("📢 Nuevos Clientes:", response.data.nuevosClientes);
       console.log("❌ Clientes Eliminados:", response.data.clientesEliminados);
-      setNuevosClientes(response.data.nuevosClientes);
-      setClientesEliminados(response.data.clientesEliminados);
+
+      setNuevosClientes(response.data.nuevosClientes || []);
+      setClientesEliminados(response.data.clientesEliminados || []);
     } catch (error) {
       console.error("Error al cargar clientes:", error);
+      setNuevosClientes([]);
+      setClientesEliminados([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchClientes(); // Cargar los datos al montar el componente
+    fetchClientes();
 
-    // Configurar actualización automática cada 10 segundos
-    const interval = setInterval(() => {
-      fetchClientes();
-    }, 10000);
-
-    return () => clearInterval(interval); // Limpiar intervalo al desmontar
+    const interval = setInterval(fetchClientes, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Variantes de animación
@@ -37,11 +41,16 @@ export default function UltimosClientes() {
     exit: { opacity: 0, scale: 0.8, transition: { duration: 0.3 } },
   };
 
+  if (loading) {
+    return <p className="text-white">Cargando clientes...</p>;
+  }
+
   return (
     <div className="grid grid-cols-2 gap-6 p-6 bg-black text-white rounded-lg shadow-lg">
-      {/* Columna 1: Nuevos Clientes */}
       <div>
-        <h2 className="text-xl font-bold mb-3 text-teal-400">📢 Nuevos Clientes</h2>
+        <h2 className="text-xl font-bold mb-3 text-teal-400">
+          📢 Nuevos Clientes
+        </h2>
         <AnimatePresence>
           {nuevosClientes.length > 0 ? (
             nuevosClientes.map((cliente) => (
@@ -75,9 +84,10 @@ export default function UltimosClientes() {
         </AnimatePresence>
       </div>
 
-      {/* Columna 2: Clientes Eliminados */}
       <div>
-        <h2 className="text-xl font-bold mb-3 text-red-400">🚫 Clientes Dados de Baja</h2>
+        <h2 className="text-xl font-bold mb-3 text-red-400">
+          🚫 Clientes Dados de Baja
+        </h2>
         <AnimatePresence>
           {clientesEliminados.length > 0 ? (
             clientesEliminados.map((cliente) => (
