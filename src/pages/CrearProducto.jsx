@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 
 function CrearProducto() {
@@ -16,92 +16,100 @@ function CrearProducto() {
     cantidad: "",
     categoriaId: "",
   });
-  
-  const [categorias, setCategorias] = useState([]); 
-  const [nuevaCategoria, setNuevaCategoria] = useState(""); // Estado para nueva categoría
-  const [creandoCategoria, setCreandoCategoria] = useState(false); // Estado para mostrar input
 
-  // Obtener categorías
+  const [categorias, setCategorias] = useState([]);
+  const [nuevaCategoria, setNuevaCategoria] = useState("");
+  const [creandoCategoria, setCreandoCategoria] = useState(false);
+
+  // 📌 Obtener categorías al cargar el componente
   useEffect(() => {
     api.get("/categorias")
-      .then((response) => setCategorias(response.data))
-      .catch((error) => console.error("Error al obtener categorías:", error));
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setCategorias(response.data);
+        } else {
+          console.warn("⚠️ Respuesta inesperada al obtener categorías:", response.data);
+        }
+      })
+      .catch((error) => console.error("❌ Error al obtener categorías:", error));
   }, []);
 
+  // 📌 Manejar cambios en los inputs del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProducto({ ...producto, [name]: name === "categoriaId" ? Number(value) : value });
 
-    if (name === "categoriaId" && value === "crear") {
-      setCreandoCategoria(true);
-      setProducto({ ...producto, categoriaId: "" });
+    if (name === "categoriaId") {
+      if (value === "crear") {
+        setCreandoCategoria(true);
+        setProducto((prev) => ({ ...prev, categoriaId: "" }));
+      } else {
+        setCreandoCategoria(false);
+        setProducto((prev) => ({ ...prev, categoriaId: Number(value) }));
+      }
     } else {
-      setCreandoCategoria(false);
+      setProducto((prev) => ({ ...prev, [name]: value }));
     }
   };
 
+  // 📌 Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
+    // 🔹 Validar campos requeridos antes de enviar
+    if (!producto.nombre || !producto.precio || !producto.cantidad || (!producto.categoriaId && !creandoCategoria)) {
+      toast.error("❌ Todos los campos son obligatorios.");
+      return;
+    }
+
+    let categoriaIdFinal = producto.categoriaId;
+
     try {
-      let categoriaIdFinal = producto.categoriaId;
-  
-      // 🚀 Si no hay categorías disponibles, o si el usuario quiere crear una nueva categoría
-      if (!categoriaIdFinal || creandoCategoria) {
-        if (!nuevaCategoria.trim()) {
-          toast.error("❌ Debes ingresar un nombre para la nueva categoría.");
-          return;
-        }
-  
-        // 🔹 Verificar si la categoría ya existe
+      // 🆕 Si el usuario está creando una nueva categoría
+      if (creandoCategoria && nuevaCategoria.trim()) {
         const existeCategoria = categorias.find(
           (c) => c.nombre.toLowerCase() === nuevaCategoria.toLowerCase()
         );
-  
+
         if (existeCategoria) {
           categoriaIdFinal = existeCategoria.id;
           toast.info(`ℹ️ La categoría "${nuevaCategoria}" ya existe y será usada.`);
         } else {
-          // 🛑 Crear la categoría primero
+          // 🆕 Crear la nueva categoría
           const responseCategoria = await api.post("/categorias", { nombre: nuevaCategoria });
-  
           categoriaIdFinal = responseCategoria.data.categoria.id;
           toast.success(`✅ Categoría "${nuevaCategoria}" creada con éxito!`);
-  
-          // 🔹 Actualizar estado de categorías en el frontend
-          setCategorias((prevCategorias) => [...prevCategorias, responseCategoria.data.categoria]);
-  
-          // Resetear el estado de nueva categoría
+
+          // Actualizar estado
+          setCategorias((prev) => [...prev, responseCategoria.data.categoria]);
           setNuevaCategoria("");
           setCreandoCategoria(false);
         }
       }
-  
-      // 🚨 Validación: Si `categoriaIdFinal` sigue vacío, mostrar error
+
+      // 🛑 Si aún no hay categoría, mostrar error
       if (!categoriaIdFinal) {
         toast.error("❌ No se pudo obtener la categoría.");
         return;
       }
-  
-      // ✅ Crear el producto después de asegurar que la categoría existe
+
+      // 🚀 Crear el producto con la categoría correcta
       const responseProducto = await api.post("/productos", {
         nombre: producto.nombre,
         descripcion: producto.descripcion,
-        precio: producto.precio,
-        cantidad: producto.cantidad,
-        categoriaId: categoriaIdFinal, // 🚀 Ahora la categoría está asegurada
+        precio: Number(producto.precio),
+        cantidad: Number(producto.cantidad),
+        categoriaId: categoriaIdFinal,
         usuarioId: usuario?.id || null,
       });
-  
+
       toast.success(`✅ Producto "${responseProducto.data.nombre}" añadido con éxito!`);
       navigate("/productos");
-  
+
     } catch (error) {
-      toast.error(error.response?.data?.error || "❌ Error al añadir producto");
+      console.error("❌ Error al añadir producto:", error);
+      toast.error(error.response?.data?.error || "Error al añadir producto.");
     }
   };
-  
-
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center items-center pt-10">
@@ -233,5 +241,9 @@ function CrearProducto() {
   );
   
 }
+// 🔹 Estilos para inputs y botones
+const inputStyle = "border border-gray-700 bg-gray-800 text-white p-3 rounded-lg focus:ring-2 focus:ring-teal-400 focus:outline-none";
+const btnSubmit = "relative px-6 py-3 bg-teal-500 text-black font-semibold rounded-lg transition-all cursor-pointer hover:scale-105 hover:shadow-[0px_0px_20px_rgba(45,212,191,0.8)] hover:bg-teal-600";
+
 
 export default CrearProducto;

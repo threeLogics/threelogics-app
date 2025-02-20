@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useMemo } from "react";
 import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -9,51 +9,47 @@ export default function Productos() {
   const navigate = useNavigate();
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-
-  // Filtros de búsqueda
   const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("");
   const [stockBajo, setStockBajo] = useState(false);
   const [precioMin, setPrecioMin] = useState("");
   const [precioMax, setPrecioMax] = useState("");
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
-
-
-  // Paginación
   const [pagina, setPagina] = useState(1);
   const productosPorPagina = 8;
-
-  // Estado para edición de producto
   const [productoEditado, setProductoEditado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
 
   useEffect(() => {
     const fetchDatos = async () => {
       try {
-        const [prodResponse, catResponse] = await Promise.all([
+        const [productosRes, categoriasRes] = await Promise.allSettled([
           api.get("/productos"),
           api.get("/categorias"),
         ]);
-        setProductos(prodResponse.data);
-        setCategorias(catResponse.data);
+
+        if (productosRes.status === "fulfilled") setProductos(productosRes.value.data);
+        if (categoriasRes.status === "fulfilled") setCategorias(categoriasRes.value.data);
       } catch (error) {
-        toast.error("Error al obtener los datos: " + error.message);
+        toast.error("❌ Error al obtener los datos.");
       }
     };
 
     fetchDatos();
   }, []);
 
-  // 🔍 Aplicar filtros dinámicamente
-  const productosFiltrados = productos.filter((p) => {
-    return (
-      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) &&
-      (!filtroCategoria || p.categoriaId == filtroCategoria) &&
-      (!stockBajo || p.cantidad <= (p.stockMinimo || 5)) &&
-      (!precioMin || p.precio >= Number(precioMin)) &&
-      (!precioMax || p.precio <= Number(precioMax))
-    );
-  });
+  // 🔍 Aplicar filtros con `useMemo` para optimización
+  const productosFiltrados = useMemo(() => {
+    return productos.filter((p) => {
+      return (
+        p.nombre.toLowerCase().includes(busqueda.toLowerCase()) &&
+        (!filtroCategoria || p.categoriaId == filtroCategoria) &&
+        (!stockBajo || p.cantidad <= (p.stockMinimo || 5)) &&
+        (!precioMin || p.precio >= Number(precioMin)) &&
+        (!precioMax || p.precio <= Number(precioMax))
+      );
+    });
+  }, [productos, busqueda, filtroCategoria, stockBajo, precioMin, precioMax]);
 
   const toggleSeleccion = (id) => {
     setProductosSeleccionados((prev) =>
@@ -63,71 +59,58 @@ export default function Productos() {
 
   const eliminarProductosSeleccionados = async () => {
     if (productosSeleccionados.length === 0) {
-      toast.error("Selecciona al menos un producto para eliminar.");
+      toast.error("❌ Selecciona al menos un producto para eliminar.");
       return;
     }
-  
+
     if (!window.confirm("¿Estás seguro de eliminar los productos seleccionados?")) return;
-  
+
     try {
-      await Promise.all(
+      const eliminaciones = await Promise.allSettled(
         productosSeleccionados.map((id) => api.delete(`/productos/${id}`))
       );
-      setProductos(productos.filter((p) => !productosSeleccionados.includes(p.id)));
-      setProductosSeleccionados([]); // Resetear selección
-      toast.success("✅ Productos eliminados correctamente.");
+
+      const eliminadosExitosamente = eliminaciones
+        .filter((res) => res.status === "fulfilled")
+        .map((_, index) => productosSeleccionados[index]);
+
+      setProductos((prev) => prev.filter((p) => !eliminadosExitosamente.includes(p.id)));
+      setProductosSeleccionados([]);
+      toast.success(`✅ ${eliminadosExitosamente.length} productos eliminados.`);
     } catch (error) {
-      toast.error("❌ Error al eliminar los productos: " + error.message);
+      toast.error("❌ Error al eliminar los productos.");
     }
   };
-  
 
-  // 📌 Paginación
   const indiceInicial = (pagina - 1) * productosPorPagina;
   const productosPaginados = productosFiltrados.slice(
     indiceInicial,
     indiceInicial + productosPorPagina
   );
 
-  // Función para abrir el modal de edición
   const abrirModalEdicion = (producto) => {
     setProductoEditado(producto);
     setModalAbierto(true);
   };
 
-  // Función para manejar cambios en el formulario de edición
   const handleChangeEdicion = (e) => {
     setProductoEditado({ ...productoEditado, [e.target.name]: e.target.value });
   };
 
-  // Función para modificar un producto
   const handleModificarProducto = async (e) => {
     e.preventDefault();
     try {
       await api.put(`/productos/${productoEditado.id}`, productoEditado);
-      toast.success(
-        `✅ Producto "${productoEditado.nombre}" modificado correctamente`
+      setProductos((prev) =>
+        prev.map((p) => (p.id === productoEditado.id ? { ...p, ...productoEditado } : p))
       );
       setModalAbierto(false);
-      window.location.reload(); // Refrescar productos
+      toast.success(`✅ Producto "${productoEditado.nombre}" modificado.`);
     } catch (error) {
-      toast.error("❌ Error al modificar el producto: " + error.message);
+      toast.error("❌ Error al modificar el producto.");
     }
   };
 
-  // Función para eliminar un producto
-  const eliminarProducto = async (id) => {
-    if (!window.confirm("¿Estás seguro de que quieres eliminar este producto?"))
-      return;
-
-    try {
-      await api.delete(`/productos/${id}`);
-      setProductos(productos.filter((p) => p.id !== id));
-      toast.success("✅ Producto eliminado correctamente");
-    } catch (error) {
-      toast.error("❌ Error al eliminar el producto: " + error.message);
-    }
-  };
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-10">

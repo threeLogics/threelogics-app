@@ -14,22 +14,30 @@ export default function VerificarCuenta() {
 
       if (!token) {
         setMensaje("⚠️ Error: Token no encontrado en la URL.");
+        toast.error("❌ Token inválido.");
         return;
       }
 
       try {
         const response = await api.get(`/auth/verificar/${token}`);
-        toast.success(
-          response.data.mensaje || "✅ Cuenta verificada con éxito."
-        );
-        setMensaje("✅ Verificación completada. Redirigiendo...");
+        const msg = response.data.mensaje || "✅ Cuenta verificada con éxito.";
+        toast.success(msg);
+        setMensaje(msg);
 
         setTimeout(() => navigate("/login"), 3000);
       } catch (error) {
         console.error("❌ Error en la verificación:", error);
 
-        if (error.response?.status === 404) {
-          setMensaje("❌ Token inválido o expirado.");
+        if (error.response) {
+          console.error("📢 Respuesta del servidor:", error.response);
+          console.error("📢 Código de error:", error.response.status);
+          console.error("📢 Mensaje del error:", error.response.data);
+        } else {
+          console.error("❌ No se recibió respuesta del servidor");
+        }
+
+        if (error.response?.status === 400) {
+          setMensaje("❌ Token inválido o ya verificado.");
           toast.error("❌ Token inválido o expirado.");
         } else {
           setMensaje("❌ Error en el servidor al verificar la cuenta.");

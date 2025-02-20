@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ function Categorias() {
   const [categorias, setCategorias] = useState([]);
   const [editarCategoria, setEditarCategoria] = useState(null);
   const [nuevoNombre, setNuevoNombre] = useState("");
-  const [notificacionMostrada, setNotificacionMostrada] = useState(false);
+  const notificacionMostrada = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,29 +22,29 @@ function Categorias() {
 
         setCategorias(response.data);
 
-        if (!notificacionMostrada) {
+        if (!notificacionMostrada.current) {
           toast.success("Categorías cargadas correctamente");
-          setNotificacionMostrada(true);
+          notificacionMostrada.current = true;
         }
       } catch (error) {
         console.error("Error al obtener categorías:", error);
-        if (!notificacionMostrada) {
+        if (!notificacionMostrada.current) {
           toast.error("No se pudieron cargar las categorías.");
-          setNotificacionMostrada(true);
+          notificacionMostrada.current = true;
         }
       }
     };
 
     fetchCategorias();
-  }, [notificacionMostrada]);
+  }, []);
 
-  // Función para manejar la edición de la categoría
+  // ✅ Función para manejar la edición de la categoría
   const handleEditar = (categoria) => {
     setEditarCategoria(categoria);
     setNuevoNombre(categoria.nombre);
   };
 
-  // Función para guardar la edición de la categoría
+  // ✅ Función para guardar la edición de la categoría
   const handleGuardarEdicion = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -81,9 +81,7 @@ function Categorias() {
           </h1>
           <button
             onClick={() => navigate("/crear-categoria")}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md shadow-md transition"
-            style={{cursor:'pointer'}}
-
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
           >
             ➕ Añadir Categoría
           </button>
@@ -98,12 +96,11 @@ function Categorias() {
               >
                 <div className="flex justify-between items-center">
                   <h2 className="text-xl font-semibold text-white">{categoria.nombre}</h2>
-                  
+
                   {/* Botón de editar con el ícono de lápiz */}
                   <button
                     onClick={() => handleEditar(categoria)}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                    style={{cursor:'pointer'}}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded cursor-pointer"
                   >
                     ✏️ Editar
                   </button>
@@ -126,16 +123,13 @@ function Categorias() {
             />
             <button
               onClick={handleGuardarEdicion}
-              className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md"
-              style={{cursor:'pointer'}}
-
+              className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md cursor-pointer"
             >
               Guardar Cambios
             </button>
             <button
               onClick={() => setEditarCategoria(null)}
-              className="ml-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md"
-              style={{cursor:'pointer'}}
+              className="ml-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md cursor-pointer"
             >
               Cancelar
             </button>

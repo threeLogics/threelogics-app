@@ -19,6 +19,7 @@ const generarToken = (usuario) => {
 };
 
 // ✅ Registro de usuario
+// ✅ Registro de usuario
 export const register = async (req, res) => {
   try {
     console.log("📩 Datos recibidos en backend:", req.body);
@@ -31,9 +32,9 @@ export const register = async (req, res) => {
       .from("usuarios")
       .select("*")
       .eq("email", email)
-      .single();
+      .maybeSingle(); // ✅ Usa `maybeSingle()` para evitar errores
 
-    if (errorExistente && errorExistente.code !== "PGRST116") {
+    if (errorExistente) {
       console.error("❌ Error en consulta a Supabase:", errorExistente);
       return res.status(500).json({ error: "Error en la base de datos" });
     }
@@ -59,11 +60,11 @@ export const register = async (req, res) => {
 
     if (error) throw error;
 
-    // Enlace de verificación
-    const verificationLink = `${process.env.FRONTEND_URL}verificar/${token_verificacion}`;
+    // ✅ Corregir el enlace de verificación
+    const verificationLink = `${process.env.FRONTEND_URL}/verificar/${token_verificacion}`;
     console.log("✅ Enlace de verificación generado:", verificationLink);
 
-    // Configurar email
+    // 📩 Configurar email
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -77,7 +78,7 @@ export const register = async (req, res) => {
       to: email,
       subject: "Verifica tu cuenta en ThreeLogics",
       html: `<p>Hola <strong>${nombre}</strong>,</p>
-            <p>Verifica tu cuenta haciendo clic en el siguiente enlace:</p>
+            <p>Para completar tu registro, haz clic en el siguiente enlace:</p>
             <a href="${verificationLink}" target="_blank">Verificar Cuenta</a>`,
     };
 
@@ -92,18 +93,39 @@ export const register = async (req, res) => {
 };
 
 // ✅ Verificación de cuenta
+
 export const verificarCuenta = async (req, res) => {
   try {
     const { token } = req.params;
+    console.log("🔍 Token recibido en el backend:", token);
+
+    if (!token) {
+      return res
+        .status(400)
+        .json({ error: "Token de verificación requerido." });
+    }
 
     const { data: usuario, error } = await supabase
       .from("usuarios")
       .select("*")
       .eq("token_verificacion", token)
-      .single();
+      .maybeSingle(); // ✅ Usa `maybeSingle()` para evitar errores
 
-    if (error || !usuario)
-      return res.status(400).json({ error: "Token inválido o expirado." });
+    if (error) {
+      console.error("❌ Error en consulta de verificación:", error);
+      return res.status(500).json({ error: "Error en la base de datos." });
+    }
+
+    if (!usuario) {
+      return res.status(400).json({ error: "Token inválido o ya utilizado." });
+    }
+
+    // ✅ Verificar si ya estaba activada antes
+    if (usuario.verificado) {
+      return res
+        .status(200)
+        .json({ mensaje: "Esta cuenta ya estaba verificada." });
+    }
 
     await supabase
       .from("usuarios")

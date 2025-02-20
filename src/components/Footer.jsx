@@ -18,7 +18,7 @@ export default function Footer() {
     try {
       // 🔹 Verificar si el email ya está en la base de datos
       const { data: existe, error: errorExiste } = await supabase
-        .from("suscriptores")
+        .from("suscriptors")
         .select("email")
         .eq("email", email)
         .single();
@@ -34,7 +34,7 @@ export default function Footer() {
       }
 
       // 🔹 Insertar el email en Supabase
-      const { error } = await supabase.from("suscriptores").insert([{ email }]);
+      const { error } = await supabase.from("suscriptors").insert([{ email }]);
 
       if (error) throw error;
 
