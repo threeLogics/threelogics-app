@@ -18,9 +18,9 @@ export function AuthProvider({ children }) {
         const currentTime = Date.now() / 1000;
 
         console.log(
-          "Token expira en:",
+          "🔍 Token expira en:",
           decodedToken.exp,
-          "Tiempo actual:",
+          "| Tiempo actual:",
           currentTime
         );
 
@@ -37,11 +37,12 @@ export function AuthProvider({ children }) {
           "segundos"
         );
 
-        // Aseguramos que cualquier timeout anterior se borre
+        // Limpiar cualquier timeout previo
         if (logoutTimeoutRef.current) {
           clearTimeout(logoutTimeoutRef.current);
         }
 
+        // Programar cierre de sesión
         logoutTimeoutRef.current = setTimeout(() => {
           cerrarSesionAutomatica();
         }, tiempoRestante);
@@ -55,6 +56,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   const cerrarSesionAutomatica = () => {
+    if (!usuario) return; // Evita múltiples llamadas innecesarias
     console.warn("⚠️ Tu sesión ha expirado.");
     logout();
   };

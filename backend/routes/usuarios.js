@@ -96,13 +96,14 @@ router.get("/ultimos-clientes", async (req, res) => {
       .from("usuarios")
       .select("id, nombre, email, created_at")
       .eq("rol", "usuario")
+      .is("deleted_at", null) // Solo clientes activos
       .order("created_at", { ascending: false })
       .limit(3);
 
     const { data: clientesEliminados } = await supabase
       .from("usuarios")
       .select("id, nombre, email, deleted_at")
-      .not("deleted_at", "is", null)
+      .not("deleted_at", "is", null) // Solo clientes con fecha de eliminación
       .order("deleted_at", { ascending: false })
       .limit(3);
 
@@ -116,16 +117,23 @@ router.get("/ultimos-clientes", async (req, res) => {
 // 📌 Dar de baja un usuario (Soft Delete)
 router.delete("/perfil", verificarToken, async (req, res) => {
   try {
-    await supabase
+    const userId = req.usuario.id;
+
+    // 🔥 Marcar usuario como eliminado en vez de borrarlo
+    const { error } = await supabase
       .from("usuarios")
-      .update({ deleted_at: new Date() }) // ✅ Corrección aquí
-      .eq("id", req.usuario.id);
-    return res.json({ mensaje: "✅ Cuenta dada de baja correctamente." });
+      .update({ deleted_at: new Date().toISOString() }) // Guardar fecha de eliminación
+      .eq("id", userId);
+
+    if (error) {
+      console.error("❌ Error al eliminar usuario:", error);
+      return res.status(500).json({ error: "No se pudo eliminar la cuenta" });
+    }
+
+    res.status(200).json({ mensaje: "Cuenta eliminada correctamente" });
   } catch (error) {
-    console.error("❌ Error al dar de baja al usuario:", error);
-    return res
-      .status(500)
-      .json({ error: "❌ No se pudo dar de baja la cuenta." });
+    console.error("❌ Error al dar de baja:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 });
 

@@ -7,7 +7,7 @@
   import zxcvbn from "zxcvbn"; // Biblioteca para evaluar la seguridad de la contraseña
 
   export default function Perfil() {
-    const { usuario, actualizarPerfil } = useContext(AuthContext);
+    const { usuario, actualizarPerfil, logout } = useContext(AuthContext);
 
     const navigate = useNavigate();
     const [user, setUser] = useState({ nombre: "", email: "" });
@@ -165,25 +165,28 @@
       }
     };
     
-  
-const handleBajaUsuario = async () => {
-  if (!window.confirm("⚠️ ¿Estás seguro de que quieres darte de baja? Esta acción no se puede deshacer.")) {
-    return;
-  }
-
-  navigate("/loading", { state: { mensaje: "Estamos eliminando tu cuenta..." } });
-
-  try {
-    await api.delete("/usuarios/perfil");
-
-    setUsuario(null);
-    localStorage.removeItem("usuario"); // ✅ Corrección aquí
-
-  } catch (error) {
-    console.error("❌ Error al dar de baja:", error);
-    toast.error(error.response?.data?.error || "❌ No se pudo dar de baja la cuenta.");
-  }
-};
+    const handleBajaUsuario = async () => {
+      if (!window.confirm("⚠️ ¿Estás seguro de que quieres darte de baja? Esta acción no se puede deshacer.")) {
+        return;
+      }
+    
+      navigate("/loading", { state: { mensaje: "Estamos eliminando tu cuenta..." } });
+    
+      try {
+        await api.delete("/usuarios/perfil");
+    
+        logout(); // ✅ Cerrar sesión correctamente
+    
+        setTimeout(() => {
+          navigate("/"); // ✅ Redirigir al usuario a la página principal
+        }, 1500); // Esperar 1.5s antes de redirigir (sin que el usuario lo haga manualmente)
+      } catch (error) {
+        console.error("❌ Error al dar de baja:", error);
+        toast.error(error.response?.data?.error || "❌ No se pudo dar de baja la cuenta.");
+      }
+    };
+    
+    
     
     
     
@@ -292,11 +295,11 @@ const handleBajaUsuario = async () => {
             </button>
     
             <button
-              onClick={handleBajaUsuario}
-              className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition cursor-pointer"
-            >
-              Dar de Baja Cuenta
-            </button>
+      onClick={handleBajaUsuario}
+      className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition cursor-pointer"
+    >
+      Dar de Baja Cuenta
+    </button>
           </div>
         </form>
       </div>

@@ -100,6 +100,7 @@ export const verificarCuenta = async (req, res) => {
     console.log("🔍 Token recibido en el backend:", token);
 
     if (!token) {
+      console.log("❌ No se proporcionó un token.");
       return res
         .status(400)
         .json({ error: "Token de verificación requerido." });
@@ -107,9 +108,11 @@ export const verificarCuenta = async (req, res) => {
 
     const { data: usuario, error } = await supabase
       .from("usuarios")
-      .select("*")
+      .select("id, verificado, token_verificacion")
       .eq("token_verificacion", token)
-      .maybeSingle(); // ✅ Usa `maybeSingle()` para evitar errores
+      .maybeSingle();
+
+    console.log("📢 Usuario encontrado:", usuario);
 
     if (error) {
       console.error("❌ Error en consulta de verificación:", error);
@@ -117,11 +120,12 @@ export const verificarCuenta = async (req, res) => {
     }
 
     if (!usuario) {
+      console.log("❌ Token inválido o ya utilizado.");
       return res.status(400).json({ error: "Token inválido o ya utilizado." });
     }
 
-    // ✅ Verificar si ya estaba activada antes
     if (usuario.verificado) {
+      console.log("⚠️ La cuenta ya estaba verificada.");
       return res
         .status(200)
         .json({ mensaje: "Esta cuenta ya estaba verificada." });
@@ -131,6 +135,8 @@ export const verificarCuenta = async (req, res) => {
       .from("usuarios")
       .update({ verificado: true, token_verificacion: null })
       .eq("id", usuario.id);
+
+    console.log("✅ Cuenta verificada con éxito.");
 
     res.json({
       mensaje: "Cuenta verificada con éxito. Ahora puedes iniciar sesión.",

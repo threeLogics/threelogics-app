@@ -80,19 +80,19 @@ export default function Navbar() {
           <>
             <button
               onClick={() => handleScrollToSection("testimonial-slider")}
-              className="hover:text-teal-400 transition"
+              className="hover:text-teal-400 transition cursor-pointer"
             >
               Nosotros
             </button>
             <button
               onClick={() => handleScrollToSection("services")}
-              className="hover:text-teal-400 transition"
+              className="hover:text-teal-400 transition cursor-pointer"
             >
               Servicios
             </button>
             <button
               onClick={() => handleScrollToSection("work-process")}
-              className="hover:text-teal-400 transition"
+              className="hover:text-teal-400 transition cursor-pointer"
             >
               Proceso
             </button>
