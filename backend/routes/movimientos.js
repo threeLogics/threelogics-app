@@ -14,7 +14,7 @@ router.post("/", verificarToken, async (req, res) => {
     // 🔹 Obtener el producto desde Supabase
     const { data: producto } = await supabase
       .from("productos")
-      .select("id, cantidad, usuarioId")
+      .select("id, cantidad, usuario_id")
       .eq("id", productoId)
       .single();
 
@@ -22,7 +22,7 @@ router.post("/", verificarToken, async (req, res) => {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
 
-    if (req.usuario.rol !== "admin" && producto.usuarioId !== req.usuario.id) {
+    if (req.usuario.rol !== "admin" && producto.usuario_id !== req.usuario.id) {
       return res
         .status(403)
         .json({ error: "No tienes permiso para modificar este producto" });
@@ -53,7 +53,7 @@ router.post("/", verificarToken, async (req, res) => {
     // 🔹 Registrar el movimiento en Supabase
     const { data: movimiento, error: errorMovimiento } = await supabase
       .from("movimientos")
-      .insert([{ tipo, cantidad, productoId, usuarioId: req.usuario.id }])
+      .insert([{ tipo, cantidad, productoId, usuario_id: req.usuario.id }])
       .select()
       .single();
 
@@ -79,54 +79,37 @@ router.post("/", verificarToken, async (req, res) => {
 router.get("/", verificarToken, async (req, res) => {
   try {
     const { categoriaId, dias } = req.query;
-    let filtros = {};
+    let fechaLimite = null;
 
     if (dias) {
-      const fechaLimite = new Date();
+      fechaLimite = new Date();
       fechaLimite.setDate(fechaLimite.getDate() - parseInt(dias));
-      filtros.fecha = { gte: fechaLimite.toISOString() };
+      fechaLimite = fechaLimite.toISOString();
     }
 
-    let movimientos;
+    let query = supabase
+      .from("movimientos")
+      .select(
+        `id, tipo, cantidad, fecha, producto_id, productos (id, nombre, categoria_id)`
+      ) // 📌 Relación correcta con "productos"
+      .order("fecha", { ascending: false });
 
-    if (req.usuario.rol === "admin") {
-      // 🔹 Obtener movimientos con información del producto
-      const { data, error } = await supabase
-        .from("movimientos")
-        .select(
-          "id, tipo, cantidad, fecha, productoId, productos (nombre, categoriaId)"
-        )
-        .match(filtros)
-        .order("fecha", { ascending: false });
-
-      if (error) throw error;
-      movimientos = data;
-
-      if (categoriaId) {
-        movimientos = movimientos.filter(
-          (mov) => mov.productos?.categoriaId == categoriaId
-        );
-      }
-    } else {
-      // 🔹 Obtener movimientos del usuario autenticado
-      const { data, error } = await supabase
-        .from("movimientos")
-        .select(
-          "id, tipo, cantidad, fecha, productoId, productos (nombre, categoriaId)"
-        )
-        .eq("usuarioId", req.usuario.id)
-        .match(filtros)
-        .order("fecha", { ascending: false });
-
-      if (error) throw error;
-      movimientos = data;
-
-      if (categoriaId) {
-        movimientos = movimientos.filter(
-          (mov) => mov.productos?.categoriaId == categoriaId
-        );
-      }
+    if (fechaLimite) {
+      query = query.gte("fecha", fechaLimite);
     }
+
+    if (categoriaId) {
+      query = query.eq("productos.categoria_id", categoriaId); // 📌 Filtrar en la BD
+    }
+
+    if (req.usuario.rol !== "admin") {
+      query = query.eq("usuario_id", req.usuario.id);
+    }
+
+    const { data: movimientos, error } = await query;
+    if (error) throw error;
+
+    console.log("📌 Movimientos obtenidos con filtro:", movimientos); // 🔍 Para depuración
 
     res.json(movimientos);
   } catch (error) {

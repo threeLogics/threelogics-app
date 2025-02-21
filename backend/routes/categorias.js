@@ -18,21 +18,22 @@ const validarCampos = (req, res, next) => {
 router.post(
   "/",
   [
-    verificarToken, // Asegurar que el usuario está autenticado
+    verificarToken,
     body("nombre").notEmpty().withMessage("El nombre es obligatorio").trim(),
   ],
   validarCampos,
   async (req, res) => {
     try {
+      console.log("✅ Datos recibidos en POST /categorias:", req.body);
       const { nombre } = req.body;
       const usuarioId = req.usuario.id;
 
-      // 🔹 Verificar si la categoría ya existe para este usuario en Supabase
+      console.log("🔍 Verificando categoría existente en Supabase...");
       const { data: categoriaExistente, error: errorExistente } = await supabase
         .from("categorias")
         .select("id")
         .eq("nombre", nombre)
-        .eq("usuarioId", usuarioId)
+        .eq("usuario_id", usuarioId)
         .single();
 
       if (categoriaExistente) {
@@ -42,7 +43,6 @@ router.post(
       }
 
       if (errorExistente && errorExistente.code !== "PGRST116") {
-        // PGRST116 indica que no hay coincidencias, lo cual es correcto
         console.error(
           "❌ Error al verificar categoría existente:",
           errorExistente
@@ -52,10 +52,10 @@ router.post(
           .json({ error: "Error al verificar la categoría" });
       }
 
-      // 🔹 Crear la nueva categoría en Supabase
+      console.log("🆕 Insertando nueva categoría en Supabase...");
       const { data: categoria, error: errorInsert } = await supabase
         .from("categorias")
-        .insert([{ nombre, usuarioId }])
+        .insert([{ nombre, usuario_id: usuarioId }])
         .select()
         .single();
 
@@ -64,12 +64,10 @@ router.post(
         return res.status(500).json({ error: "Error al crear la categoría" });
       }
 
-      res
-        .status(201)
-        .json({
-          mensaje: `Categoría "${categoria.nombre}" creada con éxito.`,
-          categoria,
-        });
+      res.status(201).json({
+        mensaje: `Categoría "${categoria.nombre}" creada con éxito.`,
+        categoria,
+      });
     } catch (error) {
       console.error("❌ Error interno al crear la categoría:", error);
       res.status(500).json({ error: "Error interno del servidor" });
@@ -93,7 +91,7 @@ router.get("/", verificarToken, async (req, res) => {
       const { data, error } = await supabase
         .from("categorias")
         .select("*")
-        .eq("usuarioId", req.usuario.id);
+        .eq("usuario_id", req.usuario.id);
 
       if (error) throw error;
       categorias = data;

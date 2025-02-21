@@ -7,7 +7,8 @@
   import zxcvbn from "zxcvbn"; // Biblioteca para evaluar la seguridad de la contraseña
 
   export default function Perfil() {
-    const { usuario, setUsuario } = useContext(AuthContext);
+    const { usuario, actualizarPerfil } = useContext(AuthContext);
+
     const navigate = useNavigate();
     const [user, setUser] = useState({ nombre: "", email: "" });
     const [nuevoPassword, setNuevoPassword] = useState(""); // Nueva contraseña
@@ -19,11 +20,12 @@
     const [isFormValid, setIsFormValid] = useState(false); // Control de validación
     const [imagenPerfil, setImagenPerfil] = useState(null); // Imagen del usuario
     const [imagenPreview, setImagenPreview] = useState(null); // Previsualización de imagen
-
+   
+    
     // Cargar datos del usuario autenticado al montar el componente
     useEffect(() => {
       async function fetchUserData() {
-        if (!usuario) return; // 🚀 Evitar llamadas innecesarias si ya se eliminó el usuario
+        if (!usuario) return;
     
         try {
           const response = await api.get("/usuarios/perfil");
@@ -32,30 +34,26 @@
             email: response.data.usuario.email,
           });
     
-          // Si el usuario tiene una imagen, cargarla
-          if (response.data.usuario.imagenPerfil) {
-            setImagenPerfil(response.data.usuario.imagenPerfil);
+          // ✅ Cambiado imagen_perfil en lugar de imagenPerfil
+          if (response.data.usuario.imagen_perfil) {
+            setImagenPerfil(response.data.usuario.imagen_perfil);
           }
         } catch (error) {
           console.error("❌ Error al obtener perfil:", error);
     
-          // ✅ Si el usuario no existe o ha sido dado de baja, llevar a la pantalla de carga en lugar de login
           if (error.response?.status === 404 || error.response?.status === 403) {
             setUsuario(null);
             localStorage.removeItem("usuario");
             navigate("/loading", { state: { mensaje: "Estamos procesando tu salida..." } });
-            return; // 🔥 Evita que se muestre cualquier `toast.error()`
+            return;
           }
     
-          // ⚠️ Solo mostrar error si no es un 404/403
           toast.error("❌ Error al obtener el perfil. Intenta de nuevo.");
         }
       }
     
       fetchUserData();
     }, [usuario]);
-    
-    
     // Manejar la subida de imágenes y previsualización
     const handleImagenChange = (e) => {
       const file = e.target.files[0];
@@ -142,27 +140,22 @@
           formData.append("imagenPerfil", imagenPerfil);
         }
     
-        console.log("🔍 Enviando FormData:", Object.fromEntries(formData.entries()));
-    
         const response = await api.put("/usuarios/perfil", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         });
-    
-        // Si el usuario fue eliminado, no intentar navegar a /perfil
-        if (!usuario) return;
     
         const updatedUser = {
           ...usuario,
           nombre: user.nombre,
           email: user.email,
-          imagenPerfil: response.data.usuario.imagenPerfil,
+          imagenPerfil: response.data.usuario.imagen_perfil, // ✅ Corrección aquí
         };
-        setUsuario(updatedUser);
+        actualizarPerfil(updatedUser);
+
         localStorage.setItem("usuario", JSON.stringify(updatedUser));
     
         toast.success("✅ Perfil actualizado con éxito");
     
-        // ✅ Evita navegar a /perfil si el usuario fue dado de baja
         setTimeout(() => {
           if (usuario) navigate("/perfil");
         }, 1500);
@@ -172,26 +165,25 @@
       }
     };
     
-    const handleBajaUsuario = async () => {
-      if (!window.confirm("⚠️ ¿Estás seguro de que quieres darte de baja? Esta acción no se puede deshacer.")) {
-        return;
-      }
-    
-      // ✅ Redirigir primero a la pantalla de carga con un mensaje personalizado
-      navigate("/loading", { state: { mensaje: "Estamos eliminando tu cuenta..." } });
-    
-      try {
-        await api.delete("/usuarios/perfil");
-    
-        // 🔹 Eliminar usuario inmediatamente para evitar errores
-        setUsuario(null);
-        localStorage.removeItem("usuario");
-    
-      } catch (error) {
-        console.error("❌ Error al dar de baja:", error);
-        toast.error(error.response?.data?.error || "❌ No se pudo dar de baja la cuenta.");
-      }
-    };
+  
+const handleBajaUsuario = async () => {
+  if (!window.confirm("⚠️ ¿Estás seguro de que quieres darte de baja? Esta acción no se puede deshacer.")) {
+    return;
+  }
+
+  navigate("/loading", { state: { mensaje: "Estamos eliminando tu cuenta..." } });
+
+  try {
+    await api.delete("/usuarios/perfil");
+
+    setUsuario(null);
+    localStorage.removeItem("usuario"); // ✅ Corrección aquí
+
+  } catch (error) {
+    console.error("❌ Error al dar de baja:", error);
+    toast.error(error.response?.data?.error || "❌ No se pudo dar de baja la cuenta.");
+  }
+};
     
     
     

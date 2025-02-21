@@ -7,19 +7,19 @@ export default function UltimosClientes() {
   const [clientesEliminados, setClientesEliminados] = useState([]);
   const [loading, setLoading] = useState(true); // ✅ Estado de carga
 
-  // Función para cargar los últimos clientes
+  // 📌 Función para cargar los últimos clientes
   const fetchClientes = async () => {
     try {
       setLoading(true);
       const response = await api.get("/usuarios/ultimos-clientes");
 
-      console.log("📢 Nuevos Clientes:", response.data.nuevosClientes);
-      console.log("❌ Clientes Eliminados:", response.data.clientesEliminados);
+      console.log("📢 Respuesta de la API:", response.data);
 
-      setNuevosClientes(response.data.nuevosClientes || []);
-      setClientesEliminados(response.data.clientesEliminados || []);
+      // ✅ Verificar si la respuesta contiene los datos esperados
+      setNuevosClientes(Array.isArray(response.data.nuevosClientes) ? response.data.nuevosClientes : []);
+      setClientesEliminados(Array.isArray(response.data.clientesEliminados) ? response.data.clientesEliminados : []);
     } catch (error) {
-      console.error("Error al cargar clientes:", error);
+      console.error("❌ Error al cargar clientes:", error);
       setNuevosClientes([]);
       setClientesEliminados([]);
     } finally {
@@ -34,7 +34,7 @@ export default function UltimosClientes() {
     return () => clearInterval(interval);
   }, []);
 
-  // Variantes de animación
+  // 📌 Variantes de animación
   const scaleIn = {
     hidden: { opacity: 0, scale: 0.8 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
@@ -47,10 +47,9 @@ export default function UltimosClientes() {
 
   return (
     <div className="grid grid-cols-2 gap-6 p-6 bg-black text-white rounded-lg shadow-lg">
+      {/* 📢 Nuevos Clientes */}
       <div>
-        <h2 className="text-xl font-bold mb-3 text-teal-400">
-          📢 Nuevos Clientes
-        </h2>
+        <h2 className="text-xl font-bold mb-3 text-teal-400">📢 Nuevos Clientes</h2>
         <AnimatePresence>
           {nuevosClientes.length > 0 ? (
             nuevosClientes.map((cliente) => (
@@ -65,7 +64,7 @@ export default function UltimosClientes() {
                 <p className="font-semibold">{cliente.nombre}</p>
                 <p className="text-sm text-gray-400">{cliente.email}</p>
                 <p className="text-xs text-gray-500">
-                  📅 {new Date(cliente.createdAt).toLocaleDateString()}
+                  📅 {cliente.created_at ? new Date(cliente.created_at).toLocaleDateString() : "Fecha no disponible"}
                 </p>
               </motion.div>
             ))
@@ -84,10 +83,9 @@ export default function UltimosClientes() {
         </AnimatePresence>
       </div>
 
+      {/* 🚫 Clientes Eliminados */}
       <div>
-        <h2 className="text-xl font-bold mb-3 text-red-400">
-          🚫 Clientes Dados de Baja
-        </h2>
+        <h2 className="text-xl font-bold mb-3 text-red-400">🚫 Clientes Dados de Baja</h2>
         <AnimatePresence>
           {clientesEliminados.length > 0 ? (
             clientesEliminados.map((cliente) => (
@@ -102,7 +100,7 @@ export default function UltimosClientes() {
                 <p className="font-semibold">{cliente.nombre}</p>
                 <p className="text-sm text-gray-400">{cliente.email}</p>
                 <p className="text-xs text-gray-500">
-                  ❌ {new Date(cliente.deletedAt).toLocaleDateString()}
+                  ❌ {cliente.deleted_at ? new Date(cliente.deleted_at).toLocaleDateString() : "Fecha no disponible"}
                 </p>
               </motion.div>
             ))

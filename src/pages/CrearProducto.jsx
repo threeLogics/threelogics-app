@@ -14,7 +14,7 @@ function CrearProducto() {
     descripcion: "",
     precio: "",
     cantidad: "",
-    categoriaId: "",
+    categoria_id: "",
   });
 
   const [categorias, setCategorias] = useState([]);
@@ -33,83 +33,102 @@ function CrearProducto() {
       })
       .catch((error) => console.error("❌ Error al obtener categorías:", error));
   }, []);
-
-  // 📌 Manejar cambios en los inputs del formulario
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    if (name === "categoriaId") {
+  
+    if (name === "categoria_id") {
       if (value === "crear") {
         setCreandoCategoria(true);
-        setProducto((prev) => ({ ...prev, categoriaId: "" }));
+        setProducto((prev) => ({ ...prev, categoria_id: "" }));
       } else {
         setCreandoCategoria(false);
-        setProducto((prev) => ({ ...prev, categoriaId: Number(value) }));
+        setProducto((prev) => ({ ...prev, categoria_id: value })); // ✅ Mantenerlo como string
       }
     } else {
       setProducto((prev) => ({ ...prev, [name]: value }));
     }
   };
+  
+  
 
   // 📌 Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // 🔹 Validar campos requeridos antes de enviar
-    if (!producto.nombre || !producto.precio || !producto.cantidad || (!producto.categoriaId && !creandoCategoria)) {
+  
+    if (!producto.nombre || !producto.precio || !producto.cantidad || (!producto.categoria_id && !creandoCategoria)) {
       toast.error("❌ Todos los campos son obligatorios.");
       return;
     }
-
-    let categoriaIdFinal = producto.categoriaId;
-
+  
+    let categoriaIdFinal = producto.categoria_id;
+  
     try {
       // 🆕 Si el usuario está creando una nueva categoría
       if (creandoCategoria && nuevaCategoria.trim()) {
         const existeCategoria = categorias.find(
           (c) => c.nombre.toLowerCase() === nuevaCategoria.toLowerCase()
         );
-
+  
         if (existeCategoria) {
           categoriaIdFinal = existeCategoria.id;
           toast.info(`ℹ️ La categoría "${nuevaCategoria}" ya existe y será usada.`);
         } else {
-          // 🆕 Crear la nueva categoría
+          // 🔹 Crear la nueva categoría en Supabase
           const responseCategoria = await api.post("/categorias", { nombre: nuevaCategoria });
+  
+          if (!responseCategoria.data || !responseCategoria.data.categoria) {
+            throw new Error("No se pudo crear la categoría.");
+          }
+  
           categoriaIdFinal = responseCategoria.data.categoria.id;
           toast.success(`✅ Categoría "${nuevaCategoria}" creada con éxito!`);
-
+  
           // Actualizar estado
           setCategorias((prev) => [...prev, responseCategoria.data.categoria]);
           setNuevaCategoria("");
           setCreandoCategoria(false);
         }
       }
-
-      // 🛑 Si aún no hay categoría, mostrar error
+  
+      // ❌ Si `categoriaIdFinal` aún es null o vacío, error
       if (!categoriaIdFinal) {
         toast.error("❌ No se pudo obtener la categoría.");
         return;
       }
-
+  
+      console.log("📌 Enviando producto con datos:", {
+        nombre: producto.nombre,
+        descripcion: producto.descripcion,
+        precio: Number(producto.precio),
+        cantidad: Number(producto.cantidad),
+        categoria_id: categoriaIdFinal, // ✅ UUID en string
+        usuarioId: usuario?.id || null,
+      });
+  
       // 🚀 Crear el producto con la categoría correcta
       const responseProducto = await api.post("/productos", {
         nombre: producto.nombre,
         descripcion: producto.descripcion,
         precio: Number(producto.precio),
         cantidad: Number(producto.cantidad),
-        categoriaId: categoriaIdFinal,
-        usuarioId: usuario?.id || null,
+        categoria_id: categoriaIdFinal, // ✅ Enviamos como string
+        usuario_id: usuario?.id || null, // Asegurar que coincida con la BD
       });
-
+  
+      if (!responseProducto.data || !responseProducto.data.nombre) {
+        throw new Error("No se pudo crear el producto.");
+      }
+  
       toast.success(`✅ Producto "${responseProducto.data.nombre}" añadido con éxito!`);
       navigate("/productos");
-
+  
     } catch (error) {
       console.error("❌ Error al añadir producto:", error);
       toast.error(error.response?.data?.error || "Error al añadir producto.");
     }
   };
+  
+  
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center items-center pt-10">
@@ -161,8 +180,8 @@ function CrearProducto() {
   
             {/* Selección de Categoría */}
             <select
-              name="categoriaId"
-              value={producto.categoriaId}
+              name="categoria_id"
+              value={producto.categoria_id}
               onChange={handleChange}
               className="border border-gray-700 bg-gray-800 text-white p-3 rounded-lg focus:ring-2 focus:ring-teal-400 focus:outline-none cursor-pointer"
               required={!creandoCategoria}

@@ -17,8 +17,14 @@ export default function Dashboard() {
 
     api
       .get("/dashboard/estadisticas")
-      .then((response) => setEstadisticas(response.data))
-      .catch(() => setError("Error al cargar datos"))
+      .then((response) => {
+        if (!response.data) throw new Error("Datos no disponibles");
+        setEstadisticas(response.data);
+      })
+      .catch((error) => {
+        console.error("❌ Error al obtener estadísticas:", error);
+        setError("❌ No se pudieron cargar los datos.");
+      })
       .finally(() => setLoading(false));
   }, [usuario]);
 
@@ -32,7 +38,7 @@ export default function Dashboard() {
 
   if (contenidoDashboard) return contenidoDashboard;
 
-  // Validación de valores numéricos
+  // ✅ Validación de valores numéricos
   const movimientosEntrada = Number(estadisticas?.movimientosEntrada) || 0;
   const movimientosSalida = Number(estadisticas?.movimientosSalida) || 0;
 
@@ -50,6 +56,7 @@ export default function Dashboard() {
       }))
     : [];
 
+  // 📥 Descargar PDF
   const descargarPDF = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -75,9 +82,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error("❌ Error al descargar el PDF:", error);
       setError("❌ No se pudo descargar el reporte.");
-      alert(
-        "❌ No se pudo descargar el reporte. Inténtalo de nuevo más tarde."
-      );
+      alert("❌ No se pudo descargar el reporte. Inténtalo de nuevo más tarde.");
     }
   };
 
@@ -90,7 +95,7 @@ export default function Dashboard() {
       {/* Contenedor del título y el botón en la misma fila */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">📊 Dashboard de Estadísticas</h1>
-  
+
         {/* Botón de Modo Claro/Oscuro */}
         <button
           onClick={() => setModoOscuro(!modoOscuro)}
@@ -99,7 +104,7 @@ export default function Dashboard() {
           {modoOscuro ? "🌞 Modo Claro" : "🌙 Modo Oscuro"}
         </button>
       </div>
-  
+
       {/* 📌 Estadísticas principales */}
       <div className="grid grid-cols-3 gap-6">
         <PanelEstadistica
@@ -118,16 +123,15 @@ export default function Dashboard() {
           color="bg-yellow-100"
         />
       </div>
-  
+
       {/* 📥 Botón para generar reporte PDF */}
       <button
         onClick={descargarPDF}
         className="mt-6 bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-3 rounded-lg shadow-md focus:ring-2 focus:ring-blue-300 cursor-pointer"
-        
       >
         📥 Descargar Reporte PDF
       </button>
-  
+
       {/* 📊 Comparación de Entradas vs Salidas */}
       <div className="mt-6 border-b border-gray-700 pb-6">
         <h2 className="text-2xl font-semibold">🔄 Entradas vs Salidas</h2>
@@ -139,7 +143,7 @@ export default function Dashboard() {
           aria-label="Gráfico de comparación de Entradas y Salidas"
         />
       </div>
-  
+
       {/* 📊 Productos Más Movidos */}
       <div className="mt-6">
         <h2 className="text-2xl font-semibold">🔝 Productos Más Movidos</h2>
@@ -151,7 +155,7 @@ export default function Dashboard() {
           aria-label="Gráfico de los productos más movidos"
         />
       </div>
-  
+
       {/* 🔥 Categoría Más Popular */}
       <div className="mt-6 p-4 border rounded bg-yellow-100">
         <h2 className="text-xl font-semibold">🔥 Categoría Más Popular</h2>
@@ -161,6 +165,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-  
-  
 }

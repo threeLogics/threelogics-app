@@ -19,13 +19,15 @@ function Movimientos() {
   const fetchMovimientos = async () => {
     try {
       const response = await api.get("/movimientos", {
-        params: { categoriaId: filtroCategoria, dias: filtroFecha },
+        params: { categoriaId: filtroCategoria || null, dias: filtroFecha || null },
       });
+      console.log("📌 Movimientos recibidos:", response.data); // 🛠 Depuración
       setMovimientos(response.data);
     } catch (error) {
-      console.error("Error al obtener movimientos:", error);
+      console.error("❌ Error al obtener movimientos:", error.response?.data || error);
     }
   };
+  
 
 
   const fetchProductos = async () => {
@@ -208,7 +210,7 @@ function Movimientos() {
                 movimientosFiltrados.map((mov) => (
                   <tr key={mov.id} className="hover:bg-gray-700 transition">
                     <td className="border px-4 py-2">{mov.id}</td>
-                    <td className="border px-4 py-2">{mov.Producto ? mov.Producto.nombre : "N/A"}</td>
+                    <td className="border px-4 py-2">{mov.productos ? mov.productos.nombre : "N/A"}</td>
                     <td className={`border px-4 py-2 ${mov.tipo === "entrada" ? "text-green-400" : "text-red-400"}`}>
                       {mov.tipo}
                     </td>

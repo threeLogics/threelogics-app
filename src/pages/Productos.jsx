@@ -43,7 +43,7 @@ export default function Productos() {
     return productos.filter((p) => {
       return (
         p.nombre.toLowerCase().includes(busqueda.toLowerCase()) &&
-        (!filtroCategoria || p.categoriaId == filtroCategoria) &&
+        (!filtroCategoria || p.categoria_id == filtroCategoria) &&
         (!stockBajo || p.cantidad <= (p.stockMinimo || 5)) &&
         (!precioMin || p.precio >= Number(precioMin)) &&
         (!precioMax || p.precio <= Number(precioMax))

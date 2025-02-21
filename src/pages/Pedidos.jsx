@@ -236,14 +236,14 @@ const [precioMax, setPrecioMax] = useState("");
                 {/* 🛒 Productos en el pedido */}
                 <h3 className="mt-3 font-semibold text-white">🛍️ Productos:</h3>
                 <ul className="list-disc pl-5 text-gray-400">
-                  {pedido.DetallePedidos?.map((detalle) => (
-                    <li key={detalle.id}>
-                      {detalle.Producto?.nombre} - {detalle.cantidad} unidades -
-                      💲
-                      {detalle.subtotal.toFixed(2)}
-                    </li>
-                  ))}
-                </ul>
+  {pedido.detallepedidos?.map((detalle) => (
+    <li key={detalle.id}>
+      {detalle.productos?.nombre} - {detalle.cantidad} unidades - 💲
+      {detalle.subtotal.toFixed(2)}
+    </li>
+  ))}
+</ul>
+
 
                 {/* 🗑 Botón para eliminar pedido (Solo si está "pendiente") */}
                 {pedido.estado === "pendiente" && (

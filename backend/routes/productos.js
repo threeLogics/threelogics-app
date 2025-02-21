@@ -12,8 +12,8 @@ router.post("/", verificarToken, async (req, res) => {
       descripcion,
       precio,
       cantidad,
-      categoriaId,
-      categoriaNombre,
+      categoria_id,
+      categoriaNombre, // ✅ Se usa cuando el usuario quiere crear una nueva categoría
     } = req.body;
 
     if (!nombre || !precio || cantidad === undefined) {
@@ -22,8 +22,8 @@ router.post("/", verificarToken, async (req, res) => {
         .json({ error: "Todos los campos son obligatorios." });
     }
 
-    // 🚀 Si no se envía una categoría ID, se busca o crea con el nombre
-    if (!categoriaId && categoriaNombre) {
+    // 🚀 Si no se envía `categoria_id`, se busca o crea con el nombre
+    if (!categoria_id && categoriaNombre) {
       const { data: categoriaExistente } = await supabase
         .from("categorias")
         .select("id")
@@ -31,19 +31,19 @@ router.post("/", verificarToken, async (req, res) => {
         .single();
 
       if (categoriaExistente) {
-        categoriaId = categoriaExistente.id;
+        categoria_id = categoriaExistente.id;
       } else {
         const { data: nuevaCategoria } = await supabase
           .from("categorias")
-          .insert([{ nombre: categoriaNombre, usuarioId: req.usuario.id }])
+          .insert([{ nombre: categoriaNombre, usuario_id: req.usuario.id }]) // ✅ Corregido `usuarioId` → `usuario_id`
           .select()
           .single();
 
-        categoriaId = nuevaCategoria.id;
+        categoria_id = nuevaCategoria.id;
       }
     }
 
-    if (!categoriaId) {
+    if (!categoria_id) {
       return res
         .status(400)
         .json({ error: "No se pudo determinar una categoría válida." });
@@ -58,8 +58,8 @@ router.post("/", verificarToken, async (req, res) => {
           descripcion,
           precio,
           cantidad,
-          categoriaId,
-          usuarioId: req.usuario.id,
+          categoria_id, // ✅ Corregido `categoriaId` → `categoria_id`
+          usuario_id: req.usuario.id, // ✅ Corregido `usuarioId` → `usuario_id`
         },
       ])
       .select()
@@ -92,7 +92,7 @@ router.get("/", verificarToken, async (req, res) => {
       const { data, error } = await supabase
         .from("productos")
         .select("*, categorias(nombre)")
-        .eq("usuarioId", req.usuario.id);
+        .eq("usuario_id", req.usuario.id);
 
       if (error) throw error;
       productos = data;
@@ -130,7 +130,7 @@ router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { data: producto } = await supabase
       .from("productos")
-      .select("id, usuarioId")
+      .select("id, usuario_id")
       .eq("id", req.params.id)
       .single();
 
@@ -139,17 +139,17 @@ router.put("/:id", verificarToken, async (req, res) => {
     }
 
     // Solo el dueño del producto o el admin pueden actualizarlo
-    if (req.usuario.rol !== "admin" && producto.usuarioId !== req.usuario.id) {
+    if (req.usuario.rol !== "admin" && producto.usuario_id !== req.usuario.id) {
       return res
         .status(403)
         .json({ error: "No tienes permiso para modificar este producto" });
     }
 
-    const { nombre, descripcion, precio, cantidad, categoriaId } = req.body;
+    const { nombre, descripcion, precio, cantidad, categoria_id } = req.body;
 
     const { error } = await supabase
       .from("productos")
-      .update({ nombre, descripcion, precio, cantidad, categoriaId })
+      .update({ nombre, descripcion, precio, cantidad, categoria_id }) // ✅ Corregido `categoriId` → `categoria_id`
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -166,7 +166,7 @@ router.delete("/:id", verificarToken, async (req, res) => {
   try {
     const { data: producto } = await supabase
       .from("productos")
-      .select("id, usuarioId")
+      .select("id, usuario_id")
       .eq("id", req.params.id)
       .single();
 
@@ -175,7 +175,7 @@ router.delete("/:id", verificarToken, async (req, res) => {
     }
 
     // Solo el dueño del producto o el admin pueden eliminarlo
-    if (req.usuario.rol !== "admin" && producto.usuarioId !== req.usuario.id) {
+    if (req.usuario.rol !== "admin" && producto.usuario_id !== req.usuario.id) {
       return res
         .status(403)
         .json({ error: "No tienes permiso para eliminar este producto" });

@@ -15,7 +15,7 @@ router.get("/perfil", verificarToken, async (req, res) => {
   try {
     const { data: usuario, error } = await supabase
       .from("usuarios")
-      .select("nombre, email, imagenPerfil")
+      .select("nombre, email, imagen_perfil")
       .eq("id", req.usuario.id)
       .single();
 
@@ -27,8 +27,8 @@ router.get("/perfil", verificarToken, async (req, res) => {
       usuario: {
         nombre: usuario.nombre,
         email: usuario.email,
-        imagenPerfil: usuario.imagenPerfil
-          ? `data:image/png;base64,${usuario.imagenPerfil}`
+        imagenPerfil: usuario.imagen_perfil
+          ? `data:image/png;base64,${usuario.imagen_perfil}`
           : null,
       },
     });
@@ -46,7 +46,9 @@ router.put(
   async (req, res) => {
     try {
       const { nombre, email, nuevoPassword } = req.body;
-      const imagenPerfil = req.file ? req.file.buffer.toString("base64") : null;
+      const imagen_perfil = req.file
+        ? req.file.buffer.toString("base64")
+        : null;
 
       const { data: usuario } = await supabase
         .from("usuarios")
@@ -64,7 +66,7 @@ router.put(
         ...(nuevoPassword && {
           password: await bcrypt.hash(nuevoPassword, 10),
         }),
-        ...(imagenPerfil && { imagenPerfil }),
+        ...(imagen_perfil && { imagen_perfil }),
       };
 
       await supabase
@@ -77,7 +79,7 @@ router.put(
         usuario: {
           nombre,
           email,
-          imagenPerfil: imagenPerfil || null,
+          imagenPerfil: imagen_perfil || null,
         },
       });
     } catch (error) {
@@ -92,16 +94,16 @@ router.get("/ultimos-clientes", async (req, res) => {
   try {
     const { data: nuevosClientes } = await supabase
       .from("usuarios")
-      .select("id, nombre, email, createdAt")
+      .select("id, nombre, email, created_at")
       .eq("rol", "usuario")
-      .order("createdAt", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(3);
 
     const { data: clientesEliminados } = await supabase
       .from("usuarios")
-      .select("id, nombre, email, deletedAt")
-      .not("deletedAt", "is", null)
-      .order("deletedAt", { ascending: false })
+      .select("id, nombre, email, deleted_at")
+      .not("deleted_at", "is", null)
+      .order("deleted_at", { ascending: false })
       .limit(3);
 
     res.json({ nuevosClientes, clientesEliminados });
@@ -116,7 +118,7 @@ router.delete("/perfil", verificarToken, async (req, res) => {
   try {
     await supabase
       .from("usuarios")
-      .update({ deletedAt: new Date() })
+      .update({ deleted_at: new Date() }) // ✅ Corrección aquí
       .eq("id", req.usuario.id);
     return res.json({ mensaje: "✅ Cuenta dada de baja correctamente." });
   } catch (error) {

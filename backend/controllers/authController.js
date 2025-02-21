@@ -61,7 +61,7 @@ export const register = async (req, res) => {
     if (error) throw error;
 
     // ✅ Corregir el enlace de verificación
-    const verificationLink = `${process.env.FRONTEND_URL}/verificar/${token_verificacion}`;
+    const verificationLink = `${process.env.FRONTEND_URL}verificar/${token_verificacion}`;
     console.log("✅ Enlace de verificación generado:", verificationLink);
 
     // 📩 Configurar email
