@@ -1,8 +1,8 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useMemo } from "react";
 import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify"; // ✅ Importar para notificaciones
+import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 
 export default function Pedidos() {
@@ -10,12 +10,14 @@ export default function Pedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // 📌 Filtros
   const [filtroEstado, setFiltroEstado] = useState("");
-const [fechaInicio, setFechaInicio] = useState("");
-const [fechaFin, setFechaFin] = useState("");
-const [busquedaProducto, setBusquedaProducto] = useState("");
-const [precioMin, setPrecioMin] = useState("");
-const [precioMax, setPrecioMax] = useState("");
+  const [fechaInicio, setFechaInicio] = useState("");
+  const [fechaFin, setFechaFin] = useState("");
+  const [busquedaProducto, setBusquedaProducto] = useState("");
+  const [precioMin, setPrecioMin] = useState("");
+  const [precioMax, setPrecioMax] = useState("");
 
   const navigate = useNavigate();
 
@@ -27,74 +29,99 @@ const [precioMax, setPrecioMax] = useState("");
     try {
       const response = await api.get("/pedidos");
       setPedidos(response.data);
-      setLoading(false);
     } catch (err) {
-      console.error("Error al obtener pedidos:", err);
+      console.error("❌ Error al obtener pedidos:", err);
       setError("Error al cargar pedidos");
+    } finally {
       setLoading(false);
     }
   };
-  const pedidosFiltrados = pedidos.filter((p) => {
-    const fechaPedido = new Date(p.fecha);
-    return (
-      (!filtroEstado || p.estado === filtroEstado) &&
-      (!fechaInicio || fechaPedido >= new Date(fechaInicio)) &&
-      (!fechaFin || fechaPedido <= new Date(fechaFin)) &&
-      (!precioMin || p.total >= Number(precioMin)) &&
-      (!precioMax || p.total <= Number(precioMax)) &&
-      (!busquedaProducto ||
-        p.DetallePedidos.some((detalle) =>
-          detalle.Producto?.nombre.toLowerCase().includes(busquedaProducto.toLowerCase())
-        )
-      )
-    );
-  });
-  
 
-    // ✅ Función para actualizar el estado del pedido (Solo Admin)
-    const actualizarEstado = async (pedidoId, nuevoEstado) => {
-      try {
-        await api.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado });
-
-        toast.success(`Estado actualizado a "${nuevoEstado}"`);
-
-        // 🔄 ACTUALIZAR el estado del pedido en la lista sin recargar manualmente
-        setPedidos((prevPedidos) =>
-          prevPedidos.map((pedido) =>
-            pedido.id === pedidoId ? { ...pedido, estado: nuevoEstado } : pedido
+  // ✅ Filtrado optimizado con `useMemo`
+  const pedidosFiltrados = useMemo(() => {
+    return pedidos.filter((p) => {
+      const fechaPedido = new Date(p.fecha);
+      return (
+        (!filtroEstado || p.estado === filtroEstado) &&
+        (!fechaInicio || fechaPedido >= new Date(fechaInicio)) &&
+        (!fechaFin || fechaPedido <= new Date(fechaFin)) &&
+        (!precioMin || p.total >= Number(precioMin)) &&
+        (!precioMax || p.total <= Number(precioMax)) &&
+        (!busquedaProducto ||
+          p.DetallePedidos.some((detalle) =>
+            detalle.Producto?.nombre.toLowerCase().includes(busquedaProducto.toLowerCase())
           )
-        );
-      } catch (error) {
-        console.error("Error al actualizar el estado del pedido:", error);
-        toast.error("Error al actualizar el estado del pedido");
-      }
-    };
+        )
+      );
+    });
+  }, [pedidos, filtroEstado, fechaInicio, fechaFin, precioMin, precioMax, busquedaProducto]);
 
-  // ✅ Función para eliminar un pedido (Solo si está "pendiente")
+  // ✅ Función para actualizar el estado del pedido (Solo Admin)
+  const actualizarEstado = async (pedidoId, nuevoEstado) => {
+    try {
+      await api.put(`/pedidos/${pedidoId}/estado`, { estado: nuevoEstado });
+      toast.success(`Estado actualizado a "${nuevoEstado}"`);
+      setPedidos((prev) =>
+        prev.map((pedido) =>
+          pedido.id === pedidoId ? { ...pedido, estado: nuevoEstado } : pedido
+        )
+      );
+    } catch (error) {
+      console.error("❌ Error al actualizar el estado del pedido:", error);
+      toast.error("❌ No se pudo actualizar el estado");
+    }
+  };
+
+  // ✅ Eliminar pedido (Solo si está "pendiente")
   const eliminarPedido = async (pedidoId) => {
+    if (!window.confirm("⚠️ ¿Seguro que deseas eliminar este pedido?")) return;
+
     try {
       await api.delete(`/pedidos/${pedidoId}`);
-      toast.success("Pedido eliminado con éxito");
-      cargarPedidos(); // Recargar lista después de eliminar
+      toast.success("✅ Pedido eliminado con éxito!");
+      setPedidos((prev) => prev.filter((pedido) => pedido.id !== pedidoId));
     } catch (error) {
-      console.error("Error al eliminar pedido:", error);
-      toast.error("No se pudo eliminar el pedido");
+      console.error("❌ Error al eliminar pedido:", error);
+      toast.error("❌ No se pudo eliminar el pedido");
     }
   };
 
+  // ✅ Pagar pedido
   const pagarPedido = async (pedidoId) => {
     try {
       await api.put(`/pedidos/${pedidoId}/pagar`);
       toast.success("✅ Pedido pagado con éxito!");
-      cargarPedidos(); // 🔄 Refrescar la lista de pedidos
+      setPedidos((prev) =>
+        prev.map((pedido) =>
+          pedido.id === pedidoId ? { ...pedido, estado: "Pagado" } : pedido
+        )
+      );
     } catch (error) {
       console.error("❌ Error al pagar el pedido:", error);
       toast.error("❌ No se pudo pagar el pedido");
     }
   };
 
-  if (loading) return <p>Cargando pedidos...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  // ✅ Pantalla de carga con animación
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.8 }}
+          transition={{ duration: 0.5 }}
+          className="text-xl"
+        >
+          🔄 Cargando pedidos...
+        </motion.div>
+      </div>
+    );
+
+  if (error)
+    return (
+      <p className="text-red-500 text-center text-lg py-6">{error}</p>
+    );
 
   return (
 <div className="w-full min-h-screen bg-black flex justify-center pt-10">

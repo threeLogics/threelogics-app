@@ -3,18 +3,19 @@ import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import PanelEstadistica from "../components/PanelEstadistica";
 import GraficoBarras from "../components/GraficoBarras";
+import { motion } from "framer-motion";
 
 export default function Dashboard() {
   const { usuario } = useContext(AuthContext);
   const [estadisticas, setEstadisticas] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [modoOscuro, setModoOscuro] = useState(true);
+  const [modoOscuro, setModoOscuro] = useState(true); // ✅ Definir el estado
 
   useEffect(() => {
     if (!usuario) return;
-    setLoading(true);
 
+    setLoading(true);
     api
       .get("/dashboard/estadisticas")
       .then((response) => {
@@ -28,33 +29,52 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, [usuario]);
 
-  const contenidoDashboard = useMemo(() => {
-    if (loading) return <p>Cargando datos...</p>;
-    if (error) return <p className="text-red-500">{error}</p>;
-    if (!estadisticas)
-      return <p className="text-red-500">❌ No hay datos disponibles.</p>;
-    return null;
-  }, [loading, error, estadisticas]);
-
-  if (contenidoDashboard) return contenidoDashboard;
-
-  // ✅ Validación de valores numéricos
+  // ✅ Asegurar que `estadisticas` tenga valores válidos antes de usar useMemo
   const movimientosEntrada = Number(estadisticas?.movimientosEntrada) || 0;
   const movimientosSalida = Number(estadisticas?.movimientosSalida) || 0;
 
-  // 📊 Datos para el gráfico de Entradas vs Salidas
-  const datosMovimientos = [
-    { tipo: "Entrada", cantidad: movimientosEntrada },
-    { tipo: "Salida", cantidad: movimientosSalida },
-  ];
+  // 📊 Memorizar datos para gráficos
+  const datosMovimientos = useMemo(
+    () => [
+      { tipo: "Entrada", cantidad: movimientosEntrada },
+      { tipo: "Salida", cantidad: movimientosSalida },
+    ],
+    [movimientosEntrada, movimientosSalida]
+  );
 
-  // 📊 Datos para productos más movidos
-  const productosMasMovidos = Array.isArray(estadisticas?.productosMasMovidos)
-    ? estadisticas.productosMasMovidos.map((prod) => ({
-        nombre: prod?.Producto?.nombre || "Desconocido",
-        total: Number(prod.total) || 0,
-      }))
-    : [];
+  const productosMasMovidos = useMemo(
+    () =>
+      Array.isArray(estadisticas?.productosMasMovidos)
+        ? estadisticas.productosMasMovidos.map((prod) => ({
+            nombre: prod?.Producto?.nombre || "Desconocido",
+            total: Number(prod.total) || 0,
+          }))
+        : [],
+    [estadisticas]
+  );
+
+  // 📌 Mostrar animación de carga antes del render
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-xl"
+        >
+          🔄 Cargando estadísticas...
+        </motion.div>
+      </div>
+    );
+
+  // 📌 Manejo de errores
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <p className="text-red-500 text-lg">{error}</p>
+      </div>
+    );
 
   // 📥 Descargar PDF
   const descargarPDF = async () => {
@@ -85,11 +105,10 @@ export default function Dashboard() {
       alert("❌ No se pudo descargar el reporte. Inténtalo de nuevo más tarde.");
     }
   };
-
   return (
     <div
       className={`relative pt-20 p-5 ${
-        modoOscuro ? "bg-gray-900 text-gray-300" : "bg-white text-gray-900"
+        modoOscuro ? "bg-black text-gray-300" : "bg-white text-gray-900"
       }`}
     >
       {/* Contenedor del título y el botón en la misma fila */}
