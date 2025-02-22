@@ -74,12 +74,49 @@ export const register = async (req, res) => {
     });
 
     const mailOptions = {
-      from: `"ThreeLogics Soporte" <${process.env.EMAIL_USER}>`,
+      from: `"ThreeLogics | Soporte Técnico" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: "Verifica tu cuenta en ThreeLogics",
-      html: `<p>Hola <strong>${nombre}</strong>,</p>
-            <p>Para completar tu registro, haz clic en el siguiente enlace:</p>
-            <a href="${verificationLink}" target="_blank">Verificar Cuenta</a>`,
+      subject: "🔐 Verificación de cuenta en ThreeLogics",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; text-align: center;">
+          
+            <!-- Logo con tamaño fijo -->
+<div style="margin-bottom: 20px; text-align: center;">
+  <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/logos/logoBuneo.png" 
+    alt="ThreeLogics Logo" 
+    style="max-width: 120px; height: 120px; display: block; margin: 0 auto;">
+</div>
+    
+          <h2 style="color: #007BFF;">🚀 ¡Bienvenido a ThreeLogics, ${nombre}!</h2>
+          <p>Gracias por registrarte en <strong>ThreeLogics</strong>. Antes de comenzar a disfrutar de nuestros servicios, necesitamos verificar tu cuenta.</p>
+          
+          <p>Por favor, haz clic en el siguiente botón para confirmar tu dirección de correo electrónico:</p>
+          
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="${verificationLink}" target="_blank" 
+              style="background-color: #007BFF; color: #fff; text-decoration: none; 
+              padding: 12px 20px; font-size: 16px; border-radius: 5px; display: inline-block;">
+              ✅ Verificar Cuenta
+            </a>
+          </div>
+    
+          <p>Si no puedes hacer clic en el botón, también puedes copiar y pegar el siguiente enlace en tu navegador:</p>
+          <p style="background-color: #f4f4f4; padding: 10px; border-radius: 5px; word-break: break-word;">
+            <a href="${verificationLink}" target="_blank">${verificationLink}</a>
+          </p>
+    
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
+          
+          <p style="font-size: 14px; color: #555;">
+            ⚠️ Si no has solicitado esta verificación, ignora este correo. Este enlace expirará en 24 horas por motivos de seguridad.
+          </p>
+    
+          <p style="font-size: 14px; color: #555;">
+            📩 Para cualquier duda o soporte, contáctanos en 
+            <a href="mailto:threelogicsapp@gmail.com" style="color: #007BFF;">threelogicsapp@gmail.com</a>.
+          </p>
+        </div>
+      `,
     };
 
     await transporter.sendMail(mailOptions);
@@ -220,12 +257,51 @@ export const recoverPassword = async (req, res) => {
     });
 
     const mailOptions = {
-      from: `"ThreeLogics Soporte" <${process.env.EMAIL_USER}>`,
+      from: `"ThreeLogics | Soporte Técnico" <${process.env.EMAIL_USER}>`,
       to: usuario.email,
-      subject: "Recuperación de Contraseña - ThreeLogics",
-      html: `<p>Hola <strong>${usuario.nombre}</strong>,</p>
-             <p>Tu nueva contraseña temporal es: <strong>${tempPassword}</strong></p>
-             <p>Cambia tu contraseña lo antes posible.</p>`,
+      subject: "🔑 Recuperación de Contraseña - ThreeLogics",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; text-align: center;">
+          
+       <!-- Logo con tamaño fijo -->
+<div style="margin-bottom: 20px; text-align: center;">
+  <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/logos/logoBuneo.png" 
+    alt="ThreeLogics Logo" 
+    style="max-width: 120px; height: 120px; display: block; margin: 0 auto;">
+</div>
+
+    
+          <h2 style="color: #FF5733;">🔐 Recuperación de Contraseña</h2>
+          <p>Hola <strong>${usuario.nombre}</strong>,</p>
+          
+          <p>Hemos recibido una solicitud para restablecer tu contraseña en <strong>ThreeLogics</strong>.</p>
+          
+          <p>Tu nueva contraseña temporal es:</p>
+          <div style="background-color: #f4f4f4; padding: 12px; border-radius: 5px; display: inline-block; 
+                      font-size: 18px; font-weight: bold; letter-spacing: 1px;">
+            ${tempPassword}
+          </div>
+    
+          <p>🔸 <strong>IMPORTANTE:</strong> Inicia sesión y cambia tu contraseña lo antes posible.</p>
+    
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="https://yourwebsite.com/login" target="_blank" 
+              style="background-color: #007BFF; color: #fff; text-decoration: none; 
+              padding: 12px 20px; font-size: 16px; border-radius: 5px; display: inline-block;">
+              🔑 Iniciar Sesión
+            </a>
+          </div>
+    
+          <p>Si no solicitaste este cambio, ignora este correo.</p>
+    
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
+          
+          <p style="font-size: 14px; color: #555;">
+            📩 Para cualquier duda o soporte, contáctanos en 
+            <a href="mailto:threelogicsapp@gmail.com" style="color: #007BFF;">threelogicsapp@gmail.com</a>.
+          </p>
+        </div>
+      `,
     };
 
     await transporter.sendMail(mailOptions);
