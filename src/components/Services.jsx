@@ -44,9 +44,9 @@ export default function Services() {
 
           {/* Íconos representando tecnologías */}
           <div className="flex space-x-6 mt-6">
-  <img src="src/assets/paleta.webp" alt="Diseño UI" className="w-14 h-14 rounded-full" />
-  <img src="src/assets/triangulo.webp" alt="Precisión" className="w-14 h-14 rounded-full" />
-  <img src="src/assets/rayo.webp" alt="Velocidad" className="w-14 h-14 rounded-full" />
+  <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//triangulo.webp" alt="Diseño UI" className="w-14 h-14 rounded-full" />
+  <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//paleta.webp" alt="Precisión" className="w-14 h-14 rounded-full" />
+  <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//rayo.webp" alt="Velocidad" className="w-14 h-14 rounded-full" />
 </div>
 
 

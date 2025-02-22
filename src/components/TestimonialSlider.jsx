@@ -1,42 +1,41 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import githubLogo from "../assets/github1.png";
-import googleLogo from "../assets/google.png";
-import avatar1 from "../assets/1.png";
-import avatar2 from "../assets/2.png";
-import avatar3 from "../assets/3.png";
-
 const testimonials = [
   {
-    companyLogo: githubLogo,
+    companyLogo:
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/github1.png",
     companyName: "Github",
     quote:
       "El profesionalismo y las habilidades organizativas excepcionales hacen que la colaboración sea un placer. El equipo de Serge destaca en cada tarea, superando expectativas. Un verdadero placer trabajar con ellos.",
     author: "Adrián Vaquero",
     position: "CoFounder ThreeLogics",
-    avatar: avatar1,
+    avatar:
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/1.png",
   },
   {
-    companyLogo: googleLogo,
+    companyLogo:
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/google.png",
     companyName: "Google",
     quote:
       "Un equipo increíblemente dedicado y profesional. Su enfoque meticuloso y atención al detalle elevaron nuestro proyecto a otro nivel.",
     author: "Iker Domínguez",
     position: "CoFounder ThreeLogics",
-    avatar: avatar2,
+    avatar:
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/2.png",
   },
   {
-    companyLogo: githubLogo,
+    companyLogo:
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/github1.png",
     companyName: "Github",
     quote:
       "El profesionalismo y las habilidades organizativas excepcionales hacen que la colaboración sea un placer. El equipo de Serge destaca en cada tarea, superando expectativas. Un verdadero placer trabajar con ellos.",
     author: "Daniel Ramiro",
     position: "CoFounder ThreeLogics",
-    avatar: avatar3,
+    avatar:
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/3.png",
   },
 ];
-
 export default function TestimonialSlider() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);

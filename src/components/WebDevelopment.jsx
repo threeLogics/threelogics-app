@@ -39,7 +39,7 @@ export default function WebDevelopment() {
           {/* Tecnologías utilizadas */}
           <div className="flex space-x-6 mt-6">
             <img
-              src="./react.svg"
+              src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//react.png"
               alt="React"
               className="w-8 h-8 transition duration-300 hover:scale-110 hover:text-teal-400"
             />
