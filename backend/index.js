@@ -14,6 +14,7 @@ import dashboardRoutes from "./routes/dashboard.js";
 import pedidosRoutes from "./routes/pedidos.js";
 import usuarioRoutes from "./routes/usuarios.js";
 import newsletterRoutes from "./routes/newsletter.js";
+import communityRoutes from "./routes/communityRoutes.js"; // 🔹 Importar las rutas
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/newsletter", newsletterRoutes);
+app.use("/api/community", communityRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {

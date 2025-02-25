@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { supabase } from "../supabaseClient";
+import { AuthContext } from "../context/AuthContext"; // ✅ Importar el contexto de autenticación
+
 import { MessageCircle, User, Send, Clock } from "lucide-react";
 
 const formatDate = (dateString) => {
@@ -14,50 +16,86 @@ const Community = () => {
   const [newQuestion, setNewQuestion] = useState("");
   const [answers, setAnswers] = useState({});
   const [newAnswers, setNewAnswers] = useState({});
+  const { usuario } = useContext(AuthContext); // Asegurar que el contexto de autenticación está disponible
+
 
   useEffect(() => {
     fetchQuestions();
   }, []);
 
   const fetchQuestions = async () => {
-    let { data, error } = await supabase.from("questions").select("*").order("created_at", { ascending: false });
-    if (error) console.error(error);
-    else setQuestions(data);
-  };
-
-  const handleSendQuestion = async () => {
-    if (!newQuestion.trim()) return;
-
-    const { data, error } = await supabase.from("questions").insert([
-      { username: "Anónimo", text: newQuestion, created_at: new Date() },
-    ]);
-
-    if (error) console.error(error);
-    else {
-      setNewQuestion("");
-      fetchQuestions();
+    try {
+      const res = await fetch("http://localhost:5000/api/community/questions");
+      const data = await res.json();
+      setQuestions(data);
+    } catch (error) {
+      console.error("❌ Error al recuperar preguntas:", error);
     }
   };
+  
+  
+  
+  const handleSendQuestion = async () => {
+    if (!newQuestion.trim()) return;
+  
+    try {
+      const res = await fetch("http://localhost:5000/api/community/questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Token de autenticación
+        },
+        body: JSON.stringify({ text: newQuestion }),
+      });
+  
+      const data = await res.json();
+      if (res.ok) {
+        setNewQuestion("");
+        fetchQuestions(); // Recargar preguntas
+      } else {
+        console.error("❌ Error al insertar pregunta:", data.error);
+      }
+    } catch (error) {
+      console.error("❌ Error de red:", error);
+    }
+  };
+  
+  
+  
 
   const fetchAnswers = async (questionId) => {
-    let { data, error } = await supabase.from("answers").select("*").eq("question_id", questionId).order("created_at", { ascending: true });
-    if (error) console.error(error);
-    else setAnswers((prev) => ({ ...prev, [questionId]: data }));
+    try {
+      const res = await fetch(`http://localhost:5000/api/community/answers/${questionId}`);
+      const data = await res.json();
+      setAnswers((prev) => ({ ...prev, [questionId]: data }));
+    } catch (error) {
+      console.error("❌ Error al recuperar respuestas:", error);
+    }
   };
+  
+  
 
   const handleSendAnswer = async (questionId) => {
     if (!newAnswers[questionId]?.trim()) return;
-
+  
+    const userId = usuario ? usuario.id : null; // Tomar el ID del usuario autenticado
+  
     const { data, error } = await supabase.from("answers").insert([
-      { username: "Anónimo", text: newAnswers[questionId], question_id: questionId, created_at: new Date() },
+      {
+        text: newAnswers[questionId],
+        question_id: questionId,
+        usuario_id: userId,
+        created_at: new Date(),
+      },
     ]);
-
-    if (error) console.error(error);
+  
+    if (error) console.error("❌ Error al insertar respuesta:", error);
     else {
       setNewAnswers({ ...newAnswers, [questionId]: "" });
       fetchAnswers(questionId);
     }
   };
+  
 
   return (
     <div className="bg-black min-h-screen flex flex-col items-center p-6 mt-14">
@@ -86,7 +124,7 @@ const Community = () => {
               <div className="flex items-start">
                 <User className="w-6 h-6 text-teal-400 mr-3" />
                 <div>
-                  <p className="font-semibold">{question.user}</p>
+                <p className="font-semibold">{question.usuarios?.nombre || "Anónimo"}</p>
                   <p className="text-gray-700">{question.text}</p>
                   <p className="text-gray-500 flex items-center text-xs mt-1">
                     <Clock className="w-4 h-4 mr-1" /> {formatDate(question.created_at)}
@@ -105,7 +143,7 @@ const Community = () => {
                 <div className="mt-4 space-y-2">
                   {answers[question.id].map((answer) => (
                     <div key={answer.id} className="p-3 bg-gray-200 rounded-lg text-sm">
-                      <p className="font-semibold">{answer.user}</p>
+    <p className="font-semibold">{answer.usuarios?.nombre || "Anónimo"}</p>
                       <p className="text-gray-700">{answer.text}</p>
                       <p className="text-gray-500 flex items-center text-xs mt-1">
                         <Clock className="w-4 h-4 mr-1" /> {formatDate(answer.created_at)}
