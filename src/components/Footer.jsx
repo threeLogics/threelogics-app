@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient"; // 🔹 Importamos Supabase directamente
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 import { Mail, MapPin, Linkedin, Github, Instagram } from "lucide-react";
 
 export default function Footer() {
@@ -140,15 +141,14 @@ export default function Footer() {
             </h4>
             <ul className="text-gray-300 text-lg space-y-4">
               <li>
-                <a href="#" className="hover:text-teal-400">
-                  Blog
-                </a>
+                <Link to="/faq" className="hover:text-teal-400">
+                  Preguntas Frecuentes (FAQ)
+                </Link>
               </li>
+
               <li>
-                <a href="#" className="hover:text-teal-400">
-                  Casos de Éxito
-                </a>
-              </li>
+          <Link to="/comunidad" className="hover:text-teal-400">Comunidad</Link>
+        </li>
               <li>
                 <a href="#" className="hover:text-teal-400">
                   Webinars

@@ -18,6 +18,8 @@ import Page404 from "./components/Page404";
 import LoadingScreen from "./components/LoadingScreen";
 import Perfil from "./components/Perfil";
 import VerificarCuenta from "./pages/VerificarCuenta"; // ✅ Importación corregida
+import FAQ from "./components/FAQ"; // 👈 Importamos la página de FAQ
+import Community from "./components/Community";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -36,6 +38,8 @@ function App() {
       <Routes>
         {/* 🔹 Rutas públicas */}
         <Route path="/" element={<Home />} />
+        <Route path="/faq" element={<FAQ />} /> {/* Página de Preguntas Frecuentes */}
+        <Route path="/comunidad" element={<Community />} />
         <Route
           path="/login"
           element={usuario ? <Navigate to="/productos" /> : <Login />}
