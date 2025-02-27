@@ -22,6 +22,7 @@ import FAQ from "./components/FAQ"; // 👈 Importamos la página de FAQ
 import Community from "./components/Community";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import ChatBot from "./components/ChatBot";
 
 // ✅ Rutas privadas: Solo accesibles si el usuario está autenticado
 const PrivateRoute = () => {
@@ -35,6 +36,7 @@ function App() {
   return (
     <div>
       <Navbar />
+      <ChatBot /> {/* ✅ Agregar el chatbot flotante */}
       <Routes>
         {/* 🔹 Rutas públicas */}
         <Route path="/" element={<Home />} />
@@ -54,6 +56,7 @@ function App() {
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/loading" element={<LoadingScreen />} />
         <Route path="/pago/:id" element={<PasarelaPago />} />
+       
 
         {/* 🔒 Rutas privadas dentro de <PrivateRoute> */}
         <Route element={<PrivateRoute />}>
