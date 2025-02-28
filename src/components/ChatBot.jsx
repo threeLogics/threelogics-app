@@ -1,40 +1,62 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, MessageCircle, X } from "lucide-react";
 
+// Función para sanitizar mensajes (elimina espacios extra y caracteres raros)
+const sanitizeMessage = (text) => {
+  return text.trim().replace(/\s+/g, " ").slice(0, 200); // Máximo 200 caracteres por seguridad
+};
+
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
-  const messagesEndRef = useRef(null); // 📌 Referencia para el scroll
+  const messagesEndRef = useRef(null);
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
-    const userMessage = { role: "user", content: input };
+  // Sugerencias rápidas iniciales
+  const quickReplies = [
+    "Hola",
+    "¿Cómo inicio sesión?",
+    "¿Cómo me pongo en contacto?",
+    "¿Qué es ThreeLogics?",
+    "¿Es seguro almacenar mis datos en ThreeLogics?",
+    "¿Puedo exportar mis datos?"
+  ];
 
-    setMessages((prevMessages) => [...prevMessages, userMessage]);
+  const sendMessage = async (msg = input) => {
+    const sanitizedMessage = sanitizeMessage(msg);
+    if (!sanitizedMessage) return;
+
+    const userMessage = { role: "user", content: sanitizedMessage };
+    setMessages((prev) => [...prev, userMessage]);
 
     try {
       const res = await fetch("http://localhost:5000/api/chatbot/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: sanitizedMessage }),
       });
 
       const data = await res.json();
-      setMessages((prevMessages) => [...prevMessages, { role: "bot", content: data.reply }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", content: sanitizeMessage(data.reply) }
+      ]);
     } catch (error) {
       console.error("❌ Error en el chatbot:", error);
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", content: "Ocurrió un error, inténtalo más tarde." }
+      ]);
     }
 
-    setInput("");
+    setInput(""); // Limpiar input después de enviar
   };
 
-  // 📌 Hacer scroll automático al final cuando hay un nuevo mensaje
+  // Auto-scroll al nuevo mensaje
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // 🔹 Función para enviar mensaje con "Enter"
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -42,9 +64,12 @@ const ChatBot = () => {
     }
   };
 
+  const handleQuickReply = (text) => {
+    sendMessage(text);
+  };
+
   return (
     <div className="fixed bottom-5 right-5 z-50">
-      {/* Botón flotante para abrir/cerrar el chat */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="bg-teal-500 text-white p-3 rounded-full shadow-lg flex items-center justify-center transition-transform duration-300 transform hover:scale-105 cursor-pointer"
@@ -52,38 +77,56 @@ const ChatBot = () => {
         {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </button>
 
-      {/* Contenedor del chat */}
       {isOpen && (
-        <div className="absolute bottom-16 right-0 w-80 bg-white border rounded-lg shadow-2xl p-4 flex flex-col">
+        <div className="absolute bottom-16 right-0 w-80 bg-white border rounded-lg shadow-2xl p-3 flex flex-col">
           <h3 className="text-lg font-bold text-gray-700">Chat de Soporte</h3>
-          
-          {/* Contenedor de mensajes con scroll automático */}
-          <div className="h-60 overflow-y-auto mt-3 space-y-2">
+
+          {/* Sugerencias solo al abrir (si no hay mensajes previos) */}
+          {messages.length === 0 && (
+            <div className="mt-2 mb-2 flex flex-wrap gap-2">
+              {quickReplies.map((reply, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickReply(reply)}
+                  className="bg-gray-200 text-gray-700 px-2 py-1 text-xs rounded hover:bg-gray-300 transition cursor-pointer"
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Historial de mensajes */}
+          <div className="h-60 overflow-y-auto mt-1 space-y-1">
             {messages.map((msg, i) => (
               <div
                 key={i}
-                className={`p-2 rounded-lg ${
+                className={`p-2 rounded-lg text-sm ${
                   msg.role === "user" ? "bg-blue-100 self-end text-right" : "bg-gray-100 self-start text-left"
                 }`}
               >
-                <p className="text-gray-700">{msg.role === "user" ? "🧑‍💻" : "🤖"} {msg.content}</p>
+                <p className="text-gray-700">
+                  {msg.role === "user" ? "🧑‍💻" : "🤖"} {msg.content}
+                </p>
               </div>
             ))}
-            {/* 📌 Último mensaje como referencia para hacer scroll */}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input para escribir mensaje */}
-          <div className="flex mt-3">
+          {/* Campo para escribir mensaje */}
+          <div className="flex mt-2">
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyPress} // 🔹 Detectar tecla "Enter"
-              className="border p-2 w-full rounded-l-lg text-gray-700"
+              onKeyDown={handleKeyPress}
+              className="border p-2 w-full rounded-l-lg text-gray-700 text-sm"
               placeholder="Escribe tu mensaje..."
             />
-            <button onClick={sendMessage} className="bg-teal-500 text-white px-4 rounded-r-lg flex items-center">
-              <Send className="w-5 h-5" />
+            <button
+              onClick={() => sendMessage()}
+              className="bg-teal-500 text-white px-3 rounded-r-lg flex items-center cursor-pointer"
+            >
+              <Send className="w-4 h-4" />
             </button>
           </div>
         </div>
