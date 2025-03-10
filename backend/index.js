@@ -16,6 +16,7 @@ import usuarioRoutes from "./routes/usuarios.js";
 import newsletterRoutes from "./routes/newsletter.js";
 import communityRoutes from "./routes/communityRoutes.js"; // 🔹 Importar las rutas
 import chatbotRoutes from "./routes/chatbotRoutes.js";
+import estadoRoutes from "./routes/estado.js";
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/chatbot", chatbotRoutes); // ✅ Agregar el chatbot
+app.use("/api/estado", estadoRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {
