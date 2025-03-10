@@ -5,60 +5,57 @@ import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
+  const [mensajeExpiracion, setMensajeExpiracion] = useState(""); // Mensaje de expiración
   const logoutTimeoutRef = useRef(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("usuario");
-    const token = localStorage.getItem("token");
+    const verificarToken = () => {
+      const token = localStorage.getItem("token");
 
-    if (storedUser && token) {
+      if (!token) {
+        logout();
+        return;
+      }
+
       try {
-        const parsedUser = JSON.parse(storedUser);
         const decodedToken = jwtDecode(token);
         const currentTime = Date.now() / 1000;
 
-        console.log(
-          "🔍 Token expira en:",
-          decodedToken.exp,
-          "| Tiempo actual:",
-          currentTime
-        );
-
-        if (!decodedToken.exp || decodedToken.exp < currentTime) {
+        if (decodedToken.exp < currentTime) {
           console.warn("⚠️ Token expirado, cerrando sesión...");
           cerrarSesionAutomatica();
           return;
         }
 
+        // Calcular tiempo restante hasta la expiración
         const tiempoRestante = (decodedToken.exp - currentTime) * 1000;
-        console.log(
-          "⏳ Cerrando sesión en:",
-          tiempoRestante / 1000,
-          "segundos"
-        );
+        console.log("⏳ Token válido por:", tiempoRestante / 1000, "segundos");
 
-        // Limpiar cualquier timeout previo
         if (logoutTimeoutRef.current) {
           clearTimeout(logoutTimeoutRef.current);
         }
 
-        // Programar cierre de sesión
         logoutTimeoutRef.current = setTimeout(() => {
           cerrarSesionAutomatica();
         }, tiempoRestante);
-
-        setUsuario(parsedUser);
       } catch (error) {
-        console.error("❌ Error al procesar el token:", error);
+        console.error("❌ Error al decodificar el token:", error);
         logout();
       }
-    }
+    };
+
+    verificarToken();
   }, []);
 
   const cerrarSesionAutomatica = () => {
-    if (!usuario) return; // Evita múltiples llamadas innecesarias
-    console.warn("⚠️ Tu sesión ha expirado.");
-    logout();
+    console.warn("⚠️ Token expirado. Cerrando sesión...");
+
+    setMensajeExpiracion("⚠️ Token expirado. Cerrando sesión en 2 segundos...");
+
+    setTimeout(() => {
+      logout();
+      setMensajeExpiracion("⚠️ Token expirado. Inicia sesión nuevamente.");
+    }, 2000);
   };
 
   const login = (data) => {
@@ -70,7 +67,6 @@ export function AuthProvider({ children }) {
     try {
       const decodedToken = jwtDecode(data.token);
       const tiempoRestante = (decodedToken.exp - Date.now() / 1000) * 1000;
-      console.log("⏳ Token válido por:", tiempoRestante / 1000, "segundos");
 
       if (logoutTimeoutRef.current) {
         clearTimeout(logoutTimeoutRef.current);
@@ -84,6 +80,7 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    setMensajeExpiracion(""); // Limpiar mensaje si inicia sesión nuevamente
     setUsuario(data.usuario);
     localStorage.setItem("token", data.token);
     localStorage.setItem("usuario", JSON.stringify(data.usuario));
@@ -122,6 +119,23 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider value={{ usuario, login, logout, actualizarPerfil }}>
       {children}
+      {mensajeExpiracion && (
+        <div
+          style={{
+            position: "fixed",
+            top: "20px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            backgroundColor: "red",
+            color: "white",
+            padding: "10px 20px",
+            borderRadius: "5px",
+            zIndex: 1000,
+          }}
+        >
+          {mensajeExpiracion}
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }
