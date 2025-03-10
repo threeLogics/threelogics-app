@@ -1,8 +1,158 @@
 import express from "express";
 import supabase from "../supabaseClient.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
+import multer from "multer";
+import csvParser from "csv-parser";
+import fs from "fs";
+import { Parser } from "json2csv";
 
 const router = express.Router();
+
+const upload = multer({ dest: "uploads/" });
+
+router.get("/descargar-plantilla", (req, res) => {
+  const fields = [
+    "nombre",
+    "descripcion",
+    "precio",
+    "cantidad",
+    "categoriaNombre",
+  ];
+  const json2csvParser = new Parser({ fields });
+  const csv = json2csvParser.parse([]);
+
+  res.header("Content-Type", "text/csv");
+  res.attachment("plantilla_productos.csv");
+  res.send(csv);
+});
+
+// ✅ Endpoint para subir productos desde CSV
+router.post(
+  "/cargar-csv",
+  verificarToken,
+  upload.single("archivo"),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res
+          .status(400)
+          .json({ error: "No se ha subido ningún archivo." });
+      }
+
+      const productos = [];
+
+      fs.createReadStream(req.file.path)
+        .pipe(csvParser())
+        .on("data", (row) => {
+          productos.push(row);
+        })
+        .on("end", async () => {
+          fs.unlinkSync(req.file.path); // Eliminamos el archivo después de procesarlo
+
+          const errores = [];
+          const productosProcesados = [];
+
+          for (const prod of productos) {
+            const { nombre, descripcion, precio, cantidad, categoriaNombre } =
+              prod;
+
+            if (!nombre || !precio || !cantidad) {
+              errores.push({
+                producto: nombre,
+                error: "Faltan campos obligatorios",
+              });
+              continue;
+            }
+
+            // 🔍 Buscar o crear la categoría
+            let { data: categoriaExistente } = await supabase
+              .from("categorias")
+              .select("id")
+              .eq("nombre", categoriaNombre)
+              .single();
+
+            let categoria_id = categoriaExistente
+              ? categoriaExistente.id
+              : null;
+
+            if (!categoria_id) {
+              const { data: nuevaCategoria, error: errorCategoria } =
+                await supabase
+                  .from("categorias")
+                  .insert([
+                    { nombre: categoriaNombre, usuario_id: req.usuario.id },
+                  ])
+                  .select("id")
+                  .single();
+
+              if (errorCategoria) {
+                errores.push({
+                  producto: nombre,
+                  error: "Error al crear la categoría",
+                });
+                continue;
+              }
+
+              categoria_id = nuevaCategoria.id;
+            }
+
+            // 🔄 Buscar si el producto ya existe
+            const { data: productoExistente } = await supabase
+              .from("productos")
+              .select("id")
+              .eq("nombre", nombre)
+              .single();
+
+            if (productoExistente) {
+              // 🔄 Si el producto ya existe, lo actualizamos
+              const { error: errorUpdate } = await supabase
+                .from("productos")
+                .update({ descripcion, precio, cantidad, categoria_id })
+                .eq("id", productoExistente.id);
+
+              if (errorUpdate) {
+                errores.push({
+                  producto: nombre,
+                  error: "Error al actualizar",
+                });
+                continue;
+              }
+            } else {
+              // ➕ Si no existe, lo insertamos como nuevo
+              const { error: errorInsert } = await supabase
+                .from("productos")
+                .insert([
+                  {
+                    nombre,
+                    descripcion,
+                    precio,
+                    cantidad,
+                    categoria_id,
+                    usuario_id: req.usuario.id,
+                  },
+                ]);
+
+              if (errorInsert) {
+                errores.push({ producto: nombre, error: "Error al insertar" });
+                continue;
+              }
+            }
+
+            productosProcesados.push(nombre);
+          }
+
+          res.json({
+            mensaje: "Carga completada",
+            productosProcesados,
+            errores,
+          });
+        });
+    } catch (error) {
+      console.error("❌ Error al procesar CSV:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }
+);
 
 // ✅ Crear un nuevo producto
 router.post("/", verificarToken, async (req, res) => {

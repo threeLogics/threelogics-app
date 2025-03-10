@@ -15,6 +15,7 @@
     "@tsparticles/react": "^3.0.0",
     "axios": "^1.7.9",
     "cookie-parser": "^1.4.7",
+    "csv-parser": "^3.2.0",
     "dompurify": "^3.2.4",
     "framer-motion": "^12.4.3",
     "html2canvas": "^1.4.1",

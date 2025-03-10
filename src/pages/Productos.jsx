@@ -20,6 +20,12 @@ export default function Productos() {
   const [productoEditado, setProductoEditado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
 
+  // 🆕 Estado para la carga masiva de productos
+  const [archivo, setArchivo] = useState(null);
+  const [procesados, setProcesados] = useState([]);
+  const [errores, setErrores] = useState([]);
+  const [subiendo, setSubiendo] = useState(false);
+
   useEffect(() => {
     const fetchDatos = async () => {
       try {
@@ -111,6 +117,39 @@ export default function Productos() {
     }
   };
 
+  // 🆕 Funciones para la carga masiva de productos
+  const handleArchivoSeleccionado = (e) => {
+    setArchivo(e.target.files[0]);
+  };
+
+  const handleSubirArchivo = async () => {
+    if (!archivo) {
+      toast.error("⚠️ Selecciona un archivo CSV.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("archivo", archivo);
+
+    try {
+      setSubiendo(true);
+      const response = await api.post("/productos/cargar-csv", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      setProcesados(response.data.productosProcesados);
+      setErrores(response.data.errores);
+      toast.success("✅ Carga completada correctamente");
+
+      // Recargar productos después de la subida
+      const productosRes = await api.get("/productos");
+      setProductos(productosRes.data);
+    } catch (error) {
+      toast.error("❌ Error al subir el archivo.");
+    } finally {
+      setSubiendo(false);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-10">
@@ -129,6 +168,56 @@ export default function Productos() {
             ➕ Añadir Producto
           </button>
         </div>
+
+        <div className="max-w-4xl mx-auto mt-10 p-6 bg-gray-900 text-white rounded-lg shadow-md mb-6">
+      <h2 className="text-2xl font-bold mb-4">📤 Carga Masiva de Productos</h2>
+
+      <div className="mb-4">
+        <input
+          type="file"
+          accept=".csv"
+          onChange={handleArchivoSeleccionado}
+          className="border border-gray-700 bg-gray-800 text-white p-3 w-full rounded-md"
+        />
+      </div>
+
+      <button
+        onClick={handleSubirArchivo}
+        disabled={subiendo}
+        className="bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md cursor-pointer mr-6"
+      >
+        {subiendo ? "⏳ Subiendo..." : "📥 Subir Archivo"}
+      </button>
+            {/* 🆕 Botón para descargar la plantilla */}
+            <button
+        onClick={() => window.location.href = `${api.defaults.baseURL}/productos/descargar-plantilla`}
+        className="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md cursor-pointer"
+      >
+        📄 Descargar Plantilla
+      </button>
+
+      {procesados.length > 0 && (
+        <div className="mt-6 bg-green-500 p-4 rounded-md">
+          <h3 className="text-lg font-bold">✅ Productos Cargados:</h3>
+          <ul className="mt-2">
+            {procesados.map((producto, index) => (
+              <li key={index}>✔ {producto}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {errores.length > 0 && (
+        <div className="mt-6 bg-red-500 p-4 rounded-md">
+          <h3 className="text-lg font-bold">❌ Errores en la Carga:</h3>
+          <ul className="mt-2">
+            {errores.map((error, index) => (
+              <li key={index}>⚠️ {error.producto}: {error.error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
 
         {/* 🚨 Alerta de stock bajo */}
         {productos.some((p) => p.cantidad <= (p.stockMinimo || 5)) && (
