@@ -4,6 +4,8 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { Mail, MapPin, Linkedin, Github, Instagram } from "lucide-react";
 
+
+
 export default function Footer() {
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -117,19 +119,19 @@ export default function Footer() {
             </h4>
             <ul className="text-gray-300 text-lg space-y-4">
               <li>
-                <a href="#" className="hover:text-teal-400">
-                Términos y condiciones
-                </a>
+              <Link to="/terms" className="hover:text-teal-400">
+                 Terminos y Condiciones
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-teal-400">
-                Política de privacidad
-                </a>
+              <Link to="/privacy" className="hover:text-teal-400">
+                 Politicas de privacidad
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-teal-400">
-                Estado del sistema
-                </a>
+              <Link to="/estado-sistema" className="hover:text-teal-400">
+                 Estado del Sistema
+                </Link>
               </li>
             </ul>
           </div>

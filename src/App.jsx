@@ -23,6 +23,9 @@ import Community from "./components/Community";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ChatBot from "./components/ChatBot";
+import TermsConditions from "./components/TermsConditions";
+import PrivacyPolicy from "./components/PrivacyPolicy";
+import EstadoSistema from "./components/EstadoSistema";
 
 // ✅ Rutas privadas: Solo accesibles si el usuario está autenticado
 const PrivateRoute = () => {
@@ -42,6 +45,9 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/faq" element={<FAQ />} /> {/* Página de Preguntas Frecuentes */}
         <Route path="/comunidad" element={<Community />} />
+        <Route path="/terms" element={<TermsConditions />} />
+        <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/estado-sistema" element={<EstadoSistema />} />
         <Route
           path="/login"
           element={usuario ? <Navigate to="/productos" /> : <Login />}
