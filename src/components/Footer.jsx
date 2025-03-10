@@ -113,22 +113,22 @@ export default function Footer() {
           {/* Soluciones */}
           <div className="md:text-center">
             <h4 className="text-2xl font-semibold mb-6 text-teal-400">
-              Soluciones
+             Soporte
             </h4>
             <ul className="text-gray-300 text-lg space-y-4">
               <li>
                 <a href="#" className="hover:text-teal-400">
-                  Gestión de Inventarios
+                Términos y condiciones
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-teal-400">
-                  Optimización de Almacenes
+                Política de privacidad
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:text-teal-400">
-                  Seguimiento de Pedidos
+                Estado del sistema
                 </a>
               </li>
             </ul>
@@ -159,9 +159,10 @@ export default function Footer() {
         </div>
 
         {/* Marca y derechos */}
-        <div className="mt-16 text-center text-gray-500 text-lg uppercase">
-          <p>© 2025 ThreeLogics - Todos los derechos reservados</p>
-        </div>
+        <div className="text-center text-gray-500 text-m py-4 border-t border-gray-700 mt-6">
+  © {new Date().getFullYear()} <span className="text-teal-400 font-semibold">ThreeLogics</span> — Todos los derechos reservados.
+</div>
+
       </div>
     </footer>
   );

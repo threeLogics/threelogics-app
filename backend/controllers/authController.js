@@ -14,7 +14,7 @@ const generarToken = (usuario) => {
       lastPasswordChange: usuario.lastPasswordChange || new Date(),
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1m" } // 🔹 Token válido por 1 hora
+    { expiresIn: "1h" } // 🔹 Token válido por 1 hora
   );
 };
 
