@@ -147,5 +147,46 @@ router.put("/:id", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
+// ✅ Eliminar múltiples categorías
+router.delete("/", verificarToken, async (req, res) => {
+  try {
+    const { categoriaIds } = req.body; // 📥 Recibir los IDs en el body
+
+    if (!categoriaIds || categoriaIds.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "No se enviaron categorías para eliminar." });
+    }
+
+    // 🔍 Verificar si las categorías existen antes de eliminarlas
+    const { data: categoriasExistentes, error: errorBuscar } = await supabase
+      .from("categorias")
+      .select("id")
+      .in("id", categoriaIds);
+
+    if (errorBuscar) throw errorBuscar;
+
+    if (!categoriasExistentes || categoriasExistentes.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Las categorías seleccionadas no existen." });
+    }
+
+    // 🚀 Eliminar las categorías seleccionadas
+    const { error } = await supabase
+      .from("categorias")
+      .delete()
+      .in("id", categoriaIds);
+
+    if (error) throw error;
+
+    res.status(200).json({
+      mensaje: `✅ ${categoriaIds.length} categorías eliminadas correctamente.`,
+    });
+  } catch (error) {
+    console.error("❌ Error al eliminar categorías:", error);
+    res.status(500).json({ error: "Error al eliminar las categorías." });
+  }
+});
 
 export default router;

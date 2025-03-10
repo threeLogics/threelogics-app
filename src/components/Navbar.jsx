@@ -162,18 +162,21 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link
-              to="/login"
-              className="px-4 py-2 bg-teal-500 rounded-lg text-black hover:bg-teal-400 transition"
-            >
-              Iniciar sesión
-            </Link>
-            <Link
-              to="/register"
-              className="px-4 py-2 border border-teal-500 rounded-lg text-teal-500 hover:bg-teal-500 hover:text-black transition"
-            >
-              Registrarse
-            </Link>
+  <Link
+  to="/login"
+  className="px-6 py-2 bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Iniciar sesión
+</Link>
+
+<Link
+  to="/register"
+  className="px-6 py-2 border-2 border-teal-500 text-teal-400 font-semibold rounded-lg shadow-md hover:bg-teal-500 hover:text-white transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Registrarse
+</Link>
+
+
           </>
         )}
       </div>
@@ -215,6 +218,19 @@ export default function Navbar() {
               >
                 Contacto
               </a>
+              <Link
+  to="/login"
+  className="px-6 py-2 bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Iniciar sesión
+</Link>
+
+<Link
+  to="/register"
+  className="px-6 py-2 border-2 border-teal-500 text-teal-400 font-semibold rounded-lg shadow-md hover:bg-teal-500 hover:text-white transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Registrarse
+</Link>
             </>
           ) : (
             <>
