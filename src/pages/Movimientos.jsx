@@ -7,7 +7,7 @@ function Movimientos() {
   const [movimientos, setMovimientos] = useState([]);
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [filtroCategoria, setFiltroCategoria] = useState("");
+  const [filtroCategoria, setFiltroCategoria] = useState(""); 
   const [filtroFecha, setFiltroFecha] = useState("7");
   const [nuevoMovimiento, setNuevoMovimiento] = useState({
     productoId: "",
@@ -19,7 +19,7 @@ function Movimientos() {
   const fetchMovimientos = async () => {
     try {
       const response = await api.get("/movimientos", {
-        params: { categoriaId: filtroCategoria || null, dias: filtroFecha || null },
+        params: { categoriaId: filtroCategoria || undefined, dias: filtroFecha || undefined },
       });
       console.log("📌 Movimientos recibidos:", response.data); // 🛠 Depuración
       setMovimientos(response.data);
@@ -86,19 +86,24 @@ function Movimientos() {
       toast.error(error.response?.data?.error || "❌ Error al registrar el movimiento");
     }
   };
-
+  console.log("📌 filtroCategoria:", filtroCategoria);
+  console.log("📌 Movimientos antes del filtro:", movimientos);
+  
 
   const movimientosFiltrados = movimientos.filter((mov) => {
     const fechaMovimiento = new Date(mov.fecha);
     const fechaLimite = new Date();
-    fechaLimite.setDate(fechaLimite.getDate() - parseInt(filtroFecha));
-
-
+    fechaLimite.setDate(fechaLimite.getDate() - parseInt(filtroFecha, 10));
+  
+    console.log("📌 Verificando categoría en cada movimiento:", mov.productos?.categorias?.id);
+  
     return (
-      (!filtroCategoria || Number(mov.Producto?.categoriaId) === Number(filtroCategoria)) &&
+      (!filtroCategoria || mov.productos?.categorias?.id === filtroCategoria) &&
       fechaMovimiento >= fechaLimite
     );
   });
+  
+  
 
 
   const descargarMovimientos = () => {

@@ -76,6 +76,7 @@ router.post("/", verificarToken, async (req, res) => {
 });
 
 // ✅ Obtener todos los movimientos con filtros por categoría y fecha
+
 router.get("/", verificarToken, async (req, res) => {
   try {
     const { categoriaId, dias } = req.query;
@@ -83,33 +84,44 @@ router.get("/", verificarToken, async (req, res) => {
 
     if (dias) {
       fechaLimite = new Date();
-      fechaLimite.setDate(fechaLimite.getDate() - parseInt(dias));
+      fechaLimite.setDate(fechaLimite.getDate() - parseInt(dias, 10));
       fechaLimite = fechaLimite.toISOString();
     }
 
+    // 🔹 Hacemos JOIN con productos y categorías correctamente
     let query = supabase
       .from("movimientos")
       .select(
-        `id, tipo, cantidad, fecha, producto_id, productos (id, nombre, categoria_id)`
-      ) // 📌 Relación correcta con "productos"
+        `
+        id, tipo, cantidad, fecha, producto_id,
+        productos (id, nombre, categoria_id, categorias!inner(id, nombre))
+      `
+      ) // 👈 Se fuerza la relación con `categorias` para que se incluya correctamente
       .order("fecha", { ascending: false });
 
+    // 🔹 Filtrar por fecha si está presente
     if (fechaLimite) {
       query = query.gte("fecha", fechaLimite);
     }
 
+    // 🔹 Filtrar por categoría si está presente
     if (categoriaId) {
-      query = query.eq("productos.categoria_id", categoriaId); // 📌 Filtrar en la BD
+      query = query.eq("productos.categorias.id", categoriaId);
     }
 
+    // 🔹 Restringir acceso si el usuario no es admin
     if (req.usuario.rol !== "admin") {
       query = query.eq("usuario_id", req.usuario.id);
     }
 
+    // 🔹 Ejecutar la consulta
     const { data: movimientos, error } = await query;
     if (error) throw error;
 
-    console.log("📌 Movimientos obtenidos con filtro:", movimientos); // 🔍 Para depuración
+    console.log(
+      "📌 Movimientos obtenidos con filtro:",
+      JSON.stringify(movimientos, null, 2)
+    );
 
     res.json(movimientos);
   } catch (error) {
