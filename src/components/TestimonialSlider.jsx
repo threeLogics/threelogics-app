@@ -78,7 +78,7 @@ export default function TestimonialSlider() {
   return (
     <div className="flex flex-col items-center text-center p-8 bg-black text-white">
       <h2 className="text-3xl font-semibold mb-2">
-        Únete al <span className="text-green-400">ThreeLogics Club</span>
+        Únete al <span className="text-teal-400">ThreeLogics Club</span>
       </h2>
       <p className="text-gray-400 mb-6 max-w-lg">
         Estamos construyendo una comunidad empresarial extraordinaria basada en
