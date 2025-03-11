@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 import Services from "../components/Services";
 import WebDevelopment from "../components/WebDevelopment";
 import UltimosClientes from "../components/UltimosClientes";
-
+import GoBackUp from "../components/GoBackUp"; // 🔹 Importamos el botón
 
 
 import InstagramGallery from "../components/InstragramGallery";
@@ -35,6 +35,7 @@ const Home = () => {
       </div>
       <UltimosClientes />
       <Footer />
+      <GoBackUp />
     </div>
   );
 };
