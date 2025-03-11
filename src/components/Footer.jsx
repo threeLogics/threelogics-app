@@ -93,10 +93,8 @@ export default function Footer() {
             <p className="text-gray-300 text-lg mt-2 flex items-center gap-2">
               <MapPin className="w-5 h-5 text-teal-400" /> Fuenlabrada, España
             </p>
-            <div className="flex justify-center md:justify-start space-x-6 mt-6 text-xl">
-              <a href="#" className="text-gray-400 hover:text-teal-400">
-                <Linkedin className="w-6 h-6 inline" /> LinkedIn
-              </a>
+            <div className="flex justify-center md:justify-start space-x-5 mt-5 text-xl">
+
               <a
                 href="https://github.com/threeLogics"
                 className="text-gray-400 hover:text-teal-400"
