@@ -22,7 +22,7 @@ const testimonials = [
     author: "Iker Domínguez",
     position: "CoFounder ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/2.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/ftoiker.png",
   },
   {
     companyLogo:
