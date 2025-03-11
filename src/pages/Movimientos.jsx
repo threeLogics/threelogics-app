@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
 import { toast } from "react-toastify";
-
+import { motion, AnimatePresence } from "framer-motion"; // 🎬 Librería de animaciones
 
 function Movimientos() {
   const [movimientos, setMovimientos] = useState([]);
@@ -109,14 +109,18 @@ function Movimientos() {
   const descargarMovimientos = () => {
     window.location.href = `${api.defaults.baseURL}/movimientos/descargar`;
   };
+  const fadeIn = {
+    hidden: { opacity: 0, y: 0 },
+    visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
+  };
 
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-12">
       <div className="p-6 max-w-7xl w-full">
-        <div className="flex justify-between items-center mb-6">
+      <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-teal-400">📜 Historial de Movimientos</h1>
-        </div>
+        </motion.div>
 
 
         {/* Formulario de Nuevo Movimiento */}

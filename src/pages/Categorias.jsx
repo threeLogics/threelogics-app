@@ -3,7 +3,7 @@ import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-
+import { motion, AnimatePresence } from "framer-motion"; // 🎬 Librería de animaciones
 function Categorias() {
   const { usuario } = useContext(AuthContext);
   const [categorias, setCategorias] = useState([]);
@@ -106,12 +106,16 @@ function Categorias() {
       toast.error("❌ No se pudieron eliminar las categorías.");
     }
   };
-  
+  const fadeIn = {
+    hidden: { opacity: 0, y: 0 },
+    visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
+  };
+
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-18">
       <div className="p-6 max-w-6xl w-full">
-        <div className="flex justify-between items-center mb-6">
+      <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-teal-400">
             {usuario?.rol === "admin" ? "Todas las Categorías" : "Mis Categorías"}
           </h1>
@@ -131,7 +135,7 @@ function Categorias() {
               {modoEliminar ? "❌ Cancelar" : "🗑 Eliminar Categorías"}
             </button>
           </div>
-        </div>
+      </motion.div>
 
         {categorias.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
