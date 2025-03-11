@@ -8,44 +8,44 @@ export function AuthProvider({ children }) {
   const [mensajeExpiracion, setMensajeExpiracion] = useState(""); // Mensaje de expiración
   const logoutTimeoutRef = useRef(null);
 
+  // Se ejecuta cuando el componente se monta
   useEffect(() => {
-    const verificarToken = () => {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    const storedUser = localStorage.getItem("usuario");
 
-      if (!token) {
-        logout();
-        return;
-      }
+    if (token && storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      setUsuario(parsedUser);  // Establece el usuario si existe en localStorage
 
       try {
         const decodedToken = jwtDecode(token);
         const currentTime = Date.now() / 1000;
 
+        // Si el token está expirado, se cierra la sesión automáticamente
         if (decodedToken.exp < currentTime) {
           console.warn("⚠️ Token expirado, cerrando sesión...");
           cerrarSesionAutomatica();
-          return;
+        } else {
+          const tiempoRestante = (decodedToken.exp - currentTime) * 1000;
+          console.log("⏳ Token válido por:", tiempoRestante / 1000, "segundos");
+
+          if (logoutTimeoutRef.current) {
+            clearTimeout(logoutTimeoutRef.current);
+          }
+
+          logoutTimeoutRef.current = setTimeout(() => {
+            cerrarSesionAutomatica();
+          }, tiempoRestante);
         }
-
-        // Calcular tiempo restante hasta la expiración
-        const tiempoRestante = (decodedToken.exp - currentTime) * 1000;
-        console.log("⏳ Token válido por:", tiempoRestante / 1000, "segundos");
-
-        if (logoutTimeoutRef.current) {
-          clearTimeout(logoutTimeoutRef.current);
-        }
-
-        logoutTimeoutRef.current = setTimeout(() => {
-          cerrarSesionAutomatica();
-        }, tiempoRestante);
       } catch (error) {
         console.error("❌ Error al decodificar el token:", error);
         logout();
       }
-    };
-
-    verificarToken();
-  }, []);
+    } else {
+      // Si no hay token ni usuario, cierra sesión
+      logout();
+    }
+  }, []); // Este useEffect se ejecuta una vez al iniciar
 
   const cerrarSesionAutomatica = () => {
     console.warn("⚠️ Token expirado. Cerrando sesión...");
