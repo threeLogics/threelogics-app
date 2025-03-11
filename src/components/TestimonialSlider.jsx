@@ -11,7 +11,7 @@ const testimonials = [
     author: "Adrián Vaquero",
     position: "CoFounder ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/1.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/adri.png",
   },
   {
     companyLogo:
@@ -33,7 +33,7 @@ const testimonials = [
     author: "Daniel Ramiro",
     position: "CoFounder ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/3.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/dani.png",
   },
 ];
 export default function TestimonialSlider() {
