@@ -112,7 +112,7 @@ function Movimientos() {
 
 
   return (
-    <div className="w-full min-h-screen bg-black flex justify-center pt-10">
+    <div className="w-full min-h-screen bg-black flex justify-center pt-12">
       <div className="p-6 max-w-7xl w-full">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-teal-400">📜 Historial de Movimientos</h1>
