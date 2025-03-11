@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api } from "../services/api";
 import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion"; // 🎬 Librería de animaciones
 
 
 function Movimientos() {
@@ -109,66 +110,26 @@ function Movimientos() {
   const descargarMovimientos = () => {
     window.location.href = `${api.defaults.baseURL}/movimientos/descargar`;
   };
+  const fadeIn = {
+    hidden: { opacity: 0, y: 0 },
+    visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
+  };
 
 
   return (
-    <div className="w-full min-h-screen bg-black flex justify-center pt-10">
+    <div className="w-full min-h-screen bg-black flex justify-center pt-12">
       <div className="p-6 max-w-7xl w-full">
-        <div className="flex justify-between items-center mb-6">
+      <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-teal-400">📜 Historial de Movimientos</h1>
-        </div>
-
-
-        {/* Formulario de Nuevo Movimiento */}
-        <div className="bg-gray-800 p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-semibold text-teal-400 mb-4">➕ Registrar Movimiento</h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <select
-              name="productoId"
-              value={nuevoMovimiento.productoId}
-              onChange={handleChange}
-              className="border border-gray-700 bg-gray-900 text-white p-3 w-full rounded-md"
-              required
-            >
-              <option value="">📦 Seleccione un producto</option>
-              {productos.map((producto) => (
-                <option key={producto.id} value={producto.id}>
-                  {producto.nombre} (Stock: {producto.cantidad})
-                </option>
-              ))}
-            </select>
-            <select
-              name="tipo"
-              value={nuevoMovimiento.tipo}
-              onChange={handleChange}
-              className="border border-gray-700 bg-gray-900 text-white p-3 w-full rounded-md"
-            >
-              <option value="entrada">📥 Entrada</option>
-              <option value="salida">📤 Salida</option>
-            </select>
-            <input
-              type="number"
-              name="cantidad"
-              placeholder="🔢 Cantidad"
-              value={nuevoMovimiento.cantidad}
-              onChange={handleChange}
-              className="border border-gray-700 bg-gray-900 text-white p-3 w-full rounded-md"
-              required
-            />
-            <button
-              type="submit"
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition cursor-pointer"
-            >
-              ✅ Registrar
-            </button>
-            <button
+          <button
             onClick={descargarMovimientos}
             className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition cursor-pointer"
           >
             📥 Descargar CSV
           </button>
-          </form>
-        </div>
+        </motion.div>
+
+
 
 
         {/* Filtros */}

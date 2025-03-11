@@ -3,6 +3,7 @@ import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { motion, AnimatePresence } from "framer-motion"; // 🎬 Librería de animaciones
 
 export default function Productos() {
   const { usuario } = useContext(AuthContext);
@@ -19,6 +20,7 @@ export default function Productos() {
   const productosPorPagina = 8;
   const [productoEditado, setProductoEditado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
+  const [modalCargaMasiva, setModalCargaMasiva] = useState(false);
 
   // 🆕 Estado para la carga masiva de productos
   const [archivo, setArchivo] = useState(null);
@@ -151,73 +153,119 @@ export default function Productos() {
     }
   };
 
+  const fadeIn = {
+    hidden: { opacity: 0, y: 0 },
+    visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
+  };
+
+
   return (
-    <div className="w-full min-h-screen bg-black flex justify-center pt-10">
+    <div className="w-full min-h-screen bg-black flex justify-center pt-12">
       <div className="p-6 max-w-7xl w-full">
         {/* 📌 Header */}
-        <div className="flex justify-between items-center mb-6">
+        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-teal-400">
             {usuario?.rol === "admin"
               ? "📦 Todos los Productos"
               : "📦 Mis Productos"}
           </h1>
+             {/* 📤 Botón de Carga Masiva */}
+        <button
+          onClick={() => setModalCargaMasiva(true)}
+          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-md shadow-md transition cursor-pointer ml-150 gap-2"
+        >
+          📤 Carga Masiva
+        </button>
           <button
             onClick={() => navigate("/crear-producto")}
             className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
           >
             ➕ Añadir Producto
           </button>
-        </div>
+   
+        </motion.div>
+         {/* 🆕 MODAL DE CARGA MASIVA */}
+         <AnimatePresence>
+          {modalCargaMasiva && (
+            <motion.div 
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-20 backdrop-blur-lg"
 
-        <div className="max-w-4xl mx-auto mt-10 p-6 bg-gray-900 text-white rounded-lg shadow-md mb-6">
-      <h2 className="text-2xl font-bold mb-4">📤 Carga Masiva de Productos</h2>
 
-      <div className="mb-4">
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleArchivoSeleccionado}
-          className="border border-gray-700 bg-gray-800 text-white p-3 w-full rounded-md"
-        />
-      </div>
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="bg-gray-900 p-6 rounded-lg shadow-lg w-96"
+              >
+                <h2 className="text-lg font-bold text-teal-400 mb-4">
+                  📤 Carga Masiva de Productos
+                </h2>
 
-      <button
-        onClick={handleSubirArchivo}
-        disabled={subiendo}
-        className="bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md cursor-pointer mr-6"
-      >
-        {subiendo ? "⏳ Subiendo..." : "📥 Subir Archivo"}
-      </button>
-            {/* 🆕 Botón para descargar la plantilla */}
-            <button
-        onClick={() => window.location.href = `${api.defaults.baseURL}/productos/descargar-plantilla`}
-        className="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-5 py-2 rounded-lg shadow-md cursor-pointer"
-      >
-        📄 Descargar Plantilla
-      </button>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setArchivo(e.target.files[0])}
+                  className="border border-gray-700 bg-gray-800 text-white p-2 w-full rounded-md mb-4"
+                />
 
-      {procesados.length > 0 && (
-        <div className="mt-6 bg-green-500 p-4 rounded-md">
-          <h3 className="text-lg font-bold">✅ Productos Cargados:</h3>
-          <ul className="mt-2">
-            {procesados.map((producto, index) => (
-              <li key={index}>✔ {producto}</li>
-            ))}
-          </ul>
-        </div>
-      )}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => toast.success("📥 Archivo subido correctamente")}
+                    disabled={subiendo}
+                    className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition cursor-pointer"
+                  >
+                    {subiendo ? "⏳ Subiendo..." : "📥 Subir CSV"}
+                  </button>
+                  <button
+                    onClick={() => window.location.href = `${api.defaults.baseURL}/productos/descargar-plantilla`}
+                    className="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition cursor-pointer"
+                  >
+                    📄 Descargar Plantilla
+                  </button>
+                </div>
 
-      {errores.length > 0 && (
-        <div className="mt-6 bg-red-500 p-4 rounded-md">
-          <h3 className="text-lg font-bold">❌ Errores en la Carga:</h3>
-          <ul className="mt-2">
-            {errores.map((error, index) => (
-              <li key={index}>⚠️ {error.producto}: {error.error}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
+                {/* 🚀 Resultados de carga masiva */}
+                {(procesados.length > 0 || errores.length > 0) && (
+                  <div className="mt-4 p-4 bg-gray-800 rounded-lg shadow-md">
+                    {procesados.length > 0 && (
+                      <div className="bg-green-600 text-white p-3 rounded-md mb-2">
+                        <h3 className="text-lg font-bold">✅ Productos cargados:</h3>
+                        <ul className="mt-2">
+                          {procesados.map((producto, index) => (
+                            <li key={index}>✔ {producto}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {errores.length > 0 && (
+                      <div className="bg-red-500 text-white p-3 rounded-md">
+                        <h3 className="text-lg font-bold">❌ Errores en la carga:</h3>
+                        <ul className="mt-2">
+                          {errores.map((error, index) => (
+                            <li key={index}>⚠️ {error.producto}: {error.error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ❌ Botón de Cerrar */}
+                <button
+                  onClick={() => setModalCargaMasiva(false)}
+                  className="mt-4 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-md transition cursor-pointer w-full"
+                >
+                  ❌ Cerrar
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* 🚨 Alerta de stock bajo */}
         {productos.some((p) => p.cantidad <= (p.stockMinimo || 5)) && (
