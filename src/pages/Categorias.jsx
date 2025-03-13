@@ -3,14 +3,15 @@ import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { motion, AnimatePresence } from "framer-motion"; // 🎬 Librería de animaciones
+import { motion } from "framer-motion";
+
 function Categorias() {
   const { usuario } = useContext(AuthContext);
   const [categorias, setCategorias] = useState([]);
   const [editarCategoria, setEditarCategoria] = useState(null);
   const [nuevoNombre, setNuevoNombre] = useState("");
-  const [modoEliminar, setModoEliminar] = useState(false); // 🆕 Modo de eliminación
-  const [seleccionadas, setSeleccionadas] = useState([]); // 🆕 Categorías marcadas
+  const [modoEliminar, setModoEliminar] = useState(false);
+  const [seleccionadas, setSeleccionadas] = useState([]);
   const notificacionMostrada = useRef(false);
   const navigate = useNavigate();
 
@@ -59,7 +60,9 @@ function Categorias() {
       if (response.status === 200) {
         setCategorias((prevCategorias) =>
           prevCategorias.map((cat) =>
-            cat.id === editarCategoria.id ? { ...cat, nombre: nuevoNombre } : cat
+            cat.id === editarCategoria.id
+              ? { ...cat, nombre: nuevoNombre }
+              : cat
           )
         );
         setEditarCategoria(null);
@@ -87,17 +90,24 @@ function Categorias() {
       toast.error("⚠️ No has seleccionado ninguna categoría.");
       return;
     }
-  
-    if (!window.confirm(`¿Seguro que quieres eliminar ${seleccionadas.length} categorías?`)) return;
-  
+
+    if (
+      !window.confirm(
+        `¿Seguro que quieres eliminar ${seleccionadas.length} categorías?`
+      )
+    )
+      return;
+
     try {
       // ✅ Hacer una única petición DELETE enviando los IDs en el body
       await api.delete("/categorias", {
         data: { categoriaIds: seleccionadas }, // 👈 Enviar IDs en `data`
       });
-  
+
       // ✅ Actualizar el estado eliminando las categorías borradas
-      setCategorias((prev) => prev.filter((cat) => !seleccionadas.includes(cat.id)));
+      setCategorias((prev) =>
+        prev.filter((cat) => !seleccionadas.includes(cat.id))
+      );
       setSeleccionadas([]);
       setModoEliminar(false);
       toast.success(`✅ ${seleccionadas.length} categorías eliminadas.`);
@@ -111,13 +121,19 @@ function Categorias() {
     visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
   };
 
-
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-18">
       <div className="p-6 max-w-6xl w-full">
-      <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex justify-between items-center mb-6">
+        <motion.div
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+          className="flex justify-between items-center mb-6"
+        >
           <h1 className="text-3xl font-bold text-teal-400">
-            {usuario?.rol === "admin" ? "Todas las Categorías" : "Mis Categorías"}
+            {usuario?.rol === "admin"
+              ? "Todas las Categorías"
+              : "Mis Categorías"}
           </h1>
           <div className="flex gap-4">
             <button
@@ -129,13 +145,15 @@ function Categorias() {
             <button
               onClick={() => setModoEliminar(!modoEliminar)}
               className={`px-5 py-2 rounded-md shadow-md transition cursor-pointer ${
-                modoEliminar ? "bg-red-700 hover:bg-red-800" : "bg-red-500 hover:bg-red-600"
+                modoEliminar
+                  ? "bg-red-700 hover:bg-red-800"
+                  : "bg-red-500 hover:bg-red-600"
               } text-white`}
             >
               {modoEliminar ? "❌ Cancelar" : "🗑 Eliminar Categorías"}
             </button>
           </div>
-      </motion.div>
+        </motion.div>
 
         {categorias.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -153,7 +171,9 @@ function Categorias() {
                       className="w-5 h-5"
                     />
                   )}
-                  <h2 className="text-xl font-semibold text-white">{categoria.nombre}</h2>
+                  <h2 className="text-xl font-semibold text-white">
+                    {categoria.nombre}
+                  </h2>
                 </div>
 
                 {!modoEliminar && (
@@ -168,7 +188,9 @@ function Categorias() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-center">No hay categorías registradas.</p>
+          <p className="text-gray-400 text-center">
+            No hay categorías registradas.
+          </p>
         )}
 
         {/* 🗑 Botón de eliminación masiva */}
@@ -178,7 +200,10 @@ function Categorias() {
               onClick={eliminarSeleccionadas}
               className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-md"
             >
-              🗑 Eliminar {seleccionadas.length > 0 ? `${seleccionadas.length} categorías` : ""}
+              🗑 Eliminar{" "}
+              {seleccionadas.length > 0
+                ? `${seleccionadas.length} categorías`
+                : ""}
             </button>
           </div>
         )}

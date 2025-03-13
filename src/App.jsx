@@ -17,8 +17,8 @@ import CrearPedido from "./pages/CrearPedido";
 import Page404 from "./components/Page404";
 import LoadingScreen from "./components/LoadingScreen";
 import Perfil from "./components/Perfil";
-import VerificarCuenta from "./pages/VerificarCuenta"; // ✅ Importación corregida
-import FAQ from "./components/FAQ"; // 👈 Importamos la página de FAQ
+import VerificarCuenta from "./pages/VerificarCuenta";
+import FAQ from "./components/FAQ";
 import Community from "./components/Community";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,7 +27,6 @@ import TermsConditions from "./components/TermsConditions";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import EstadoSistema from "./components/EstadoSistema";
 
-// ✅ Rutas privadas: Solo accesibles si el usuario está autenticado
 const PrivateRoute = () => {
   const { usuario } = useContext(AuthContext);
   return usuario ? <Outlet /> : <Navigate to="/login" />;
@@ -43,7 +42,8 @@ function App() {
       <Routes>
         {/* 🔹 Rutas públicas */}
         <Route path="/" element={<Home />} />
-        <Route path="/faq" element={<FAQ />} /> {/* Página de Preguntas Frecuentes */}
+        <Route path="/faq" element={<FAQ />} />{" "}
+        {/* Página de Preguntas Frecuentes */}
         <Route path="/comunidad" element={<Community />} />
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -57,13 +57,10 @@ function App() {
           element={usuario ? <Navigate to="/productos" /> : <Register />}
         />
         <Route path="/verificar-cuenta" element={<VerificarCuenta />} />
-
         {/* 🔹 Otras rutas públicas */}
         <Route path="/perfil" element={<Perfil />} />
         <Route path="/loading" element={<LoadingScreen />} />
         <Route path="/pago/:id" element={<PasarelaPago />} />
-       
-
         {/* 🔒 Rutas privadas dentro de <PrivateRoute> */}
         <Route element={<PrivateRoute />}>
           <Route path="/productos" element={<Productos />} />
@@ -75,11 +72,9 @@ function App() {
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/crear-pedido" element={<CrearPedido />} />
         </Route>
-
         {/* 🔹 Ruta 404 */}
         <Route path="*" element={<Page404 />} />
       </Routes>
-
       {/* Notificaciones con react-toastify */}
       <ToastContainer position="top-right" autoClose={1500} />
     </div>
