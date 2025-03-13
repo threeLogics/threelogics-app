@@ -14,7 +14,7 @@ router.post("/", verificarToken, async (req, res) => {
     // 🔹 Obtener el producto desde Supabase
     const { data: producto } = await supabase
       .from("productos")
-      .select("id, cantidad, usuario_id")
+      .select("id, cantidad, user_id")
       .eq("id", productoId)
       .single();
 
@@ -111,7 +111,7 @@ router.get("/", verificarToken, async (req, res) => {
 
     // 🔹 Restringir acceso si el usuario no es admin
     if (req.usuario.rol !== "admin") {
-      query = query.eq("usuario_id", req.usuario.id);
+      query = query.eq("user_id", req.usuario.id);
     }
 
     // 🔹 Ejecutar la consulta

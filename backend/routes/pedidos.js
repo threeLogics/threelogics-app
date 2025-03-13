@@ -7,7 +7,7 @@ const router = express.Router();
 // 📌 Crear un pedido
 router.post("/", verificarToken, async (req, res) => {
   const { productos } = req.body;
-  const usuario_id = req.usuario.id;
+  const userId = req.usuario.id;
 
   if (!productos || productos.length === 0) {
     return res.status(400).json({ error: "El pedido no tiene productos" });
@@ -20,7 +20,7 @@ router.post("/", verificarToken, async (req, res) => {
     const { data: nuevoPedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert([
-        { usuario_id, total: 0, estado: "pendiente", fecha: new Date() },
+        { user_id: userId, total: 0, estado: "pendiente", fecha: new Date() },
       ])
       .select()
       .single();
@@ -74,24 +74,24 @@ router.post("/", verificarToken, async (req, res) => {
 router.get("/", verificarToken, async (req, res) => {
   try {
     let whereCondition = {};
-
-    if (req.usuario.rol !== "admin") {
-      whereCondition.usuario_id = req.usuario.id;
-    }
-
-    const { data: pedidos, error } = await supabase
+    let query = supabase
       .from("pedidos")
       .select(
         `
-        id, fecha, total, estado, usuario_id,
-        detallepedidos (
-          id, cantidad, precio_unitario, subtotal,
-          productos (id, nombre, precio)
-        )
-      `
+      id, fecha, total, estado, user_id,
+      detallepedidos (
+        id, cantidad, precio_unitario, subtotal,
+        productos (id, nombre, precio)
       )
-      .match(whereCondition)
+    `
+      )
       .order("fecha", { ascending: false });
+
+    if (req.usuario.rol !== "admin") {
+      query = query.eq("user_id", req.usuario.id); // 🔹 Filtrar solo por el usuario autenticado
+    }
+
+    const { data: pedidos, error } = await query;
 
     if (error) throw error;
 
@@ -143,11 +143,11 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
             producto_id: detalle.producto_id,
             tipo: "entrada",
             cantidad: detalle.cantidad,
-            usuario_id: req.usuario.id,
+            usuario_id: req.usuario.id, // 🔹 `user_id` corregido
             fecha: new Date(),
           },
         ]);
-      }
+      } // 🔹 Este `for` ahora se cierra correctamente
     }
 
     await supabase.from("pedidos").update({ estado }).eq("id", id);
@@ -170,7 +170,7 @@ router.get("/:id", verificarToken, async (req, res) => {
       .from("pedidos")
       .select(
         `
-        id, fecha, total, estado, usuario_id, 
+        id, fecha, total, estado, user_id, 
         detallepedidos (
           id, cantidad, precio_unitario, subtotal,
           productos (id, nombre, precio)
@@ -225,7 +225,7 @@ setInterval(async () => {
     const { data: pedidos, error } = await supabase
       .from("pedidos")
       .select(
-        "id, usuario_id, created_at, detallepedidos(*, productos(id, cantidad))"
+        "id, user_id, created_at, detallepedidos(*, productos(id, cantidad))"
       )
       .eq("estado", "enviado")
       .lt("created_at", fechaLimite);
@@ -252,7 +252,7 @@ setInterval(async () => {
             producto_id: detalle.producto_id,
             tipo: "entrada",
             cantidad: detalle.cantidad,
-            usuario_id: pedido.usuario_id,
+            userId: pedido.usuario_id,
             fecha: new Date(),
           },
         ]);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from "react";
-import { supabase } from "../supabaseClient";
+import supabase from "../supabaseClient"; // ✅ Sin llaves { }
+
 import { AuthContext } from "../context/AuthContext"; // ✅ Importar el contexto de autenticación
 
 import { MessageCircle, User, Send, Clock } from "lucide-react";
@@ -27,36 +28,50 @@ const Community = () => {
     try {
       const res = await fetch("http://localhost:5000/api/community/questions");
       const data = await res.json();
+  
+      console.log("📌 Preguntas obtenidas:", data);
+  
+      if (!Array.isArray(data)) {
+        throw new Error("La API no devolvió un array válido");
+      }
+  
       setQuestions(data);
     } catch (error) {
       console.error("❌ Error al recuperar preguntas:", error);
+      setQuestions([]); // ✅ Evita errores dejando un array vacío
     }
   };
   
   
-  
   const handleSendQuestion = async () => {
     if (!newQuestion.trim()) return;
+  
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ No hay token, usuario no autenticado.");
+      return;
+    }
   
     try {
       const res = await fetch("http://localhost:5000/api/community/questions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Token de autenticación
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ text: newQuestion }),
       });
   
       const data = await res.json();
-      if (res.ok) {
-        setNewQuestion("");
-        fetchQuestions(); // Recargar preguntas
-      } else {
-        console.error("❌ Error al insertar pregunta:", data.error);
+  
+      if (!res.ok) {
+        throw new Error(data.error || "Error desconocido al insertar pregunta");
       }
+  
+      setNewQuestion("");
+      fetchQuestions(); // Recargar preguntas
     } catch (error) {
-      console.error("❌ Error de red:", error);
+      console.error("❌ Error al insertar pregunta:", error.message);
     }
   };
   
@@ -78,23 +93,38 @@ const Community = () => {
   const handleSendAnswer = async (questionId) => {
     if (!newAnswers[questionId]?.trim()) return;
   
-    const userId = usuario ? usuario.id : null; // Tomar el ID del usuario autenticado
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ No hay token, usuario no autenticado.");
+      return;
+    }
   
-    const { data, error } = await supabase.from("answers").insert([
-      {
-        text: newAnswers[questionId],
-        question_id: questionId,
-        usuario_id: userId,
-        created_at: new Date(),
-      },
-    ]);
+    try {
+      const res = await fetch("http://localhost:5000/api/community/answers", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ Enviar el token para autenticación
+        },
+        body: JSON.stringify({
+          text: newAnswers[questionId],
+          question_id: questionId,
+        }),
+      });
   
-    if (error) console.error("❌ Error al insertar respuesta:", error);
-    else {
+      const data = await res.json();
+  
+      if (!res.ok) {
+        throw new Error(data.error || "Error desconocido al insertar respuesta");
+      }
+  
       setNewAnswers({ ...newAnswers, [questionId]: "" });
-      fetchAnswers(questionId);
+      fetchAnswers(questionId); // Recargar respuestas
+    } catch (error) {
+      console.error("❌ Error al insertar respuesta:", error.message);
     }
   };
+  
   
 
   return (
@@ -124,7 +154,7 @@ const Community = () => {
               <div className="flex items-start">
                 <User className="w-6 h-6 text-teal-400 mr-3" />
                 <div>
-                <p className="font-semibold">{question.usuarios?.nombre || "Anónimo"}</p>
+                <p className="font-semibold">{question.nombre_usuario || "Anónimo"}</p>
                   <p className="text-gray-700">{question.text}</p>
                   <p className="text-gray-500 flex items-center text-xs mt-1">
                     <Clock className="w-4 h-4 mr-1" /> {formatDate(question.created_at)}
@@ -143,7 +173,7 @@ const Community = () => {
                 <div className="mt-4 space-y-2">
                   {answers[question.id].map((answer) => (
                     <div key={answer.id} className="p-3 bg-gray-200 rounded-lg text-sm">
-    <p className="font-semibold">{answer.usuarios?.nombre || "Anónimo"}</p>
+    <p className="font-semibold">{answer.nombre_usuario || "Anónimo"}</p>
                       <p className="text-gray-700">{answer.text}</p>
                       <p className="text-gray-500 flex items-center text-xs mt-1">
                         <Clock className="w-4 h-4 mr-1" /> {formatDate(answer.created_at)}

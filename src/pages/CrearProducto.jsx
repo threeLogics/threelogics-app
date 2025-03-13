@@ -102,7 +102,7 @@ function CrearProducto() {
         precio: Number(producto.precio),
         cantidad: Number(producto.cantidad),
         categoria_id: categoriaIdFinal, // ✅ UUID en string
-        usuarioId: usuario?.id || null,
+        user_id: usuario?.id || null,
       });
   
       // 🚀 Crear el producto con la categoría correcta
@@ -112,7 +112,7 @@ function CrearProducto() {
         precio: Number(producto.precio),
         cantidad: Number(producto.cantidad),
         categoria_id: categoriaIdFinal, // ✅ Enviamos como string
-        usuario_id: usuario?.id || null, // Asegurar que coincida con la BD
+        user_id: usuario?.id || null, // Asegurar que coincida con la BD
       });
   
       if (!responseProducto.data || !responseProducto.data.nombre) {

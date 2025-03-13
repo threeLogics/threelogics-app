@@ -80,7 +80,7 @@ router.post(
                 await supabase
                   .from("categorias")
                   .insert([
-                    { nombre: categoriaNombre, usuario_id: req.usuario.id },
+                    { nombre: categoriaNombre, user_id: req.usuario.id },
                   ])
                   .select("id")
                   .single();
@@ -128,7 +128,7 @@ router.post(
                     precio,
                     cantidad,
                     categoria_id,
-                    usuario_id: req.usuario.id,
+                    user_id: req.usuario.id,
                   },
                 ]);
 
@@ -185,7 +185,7 @@ router.post("/", verificarToken, async (req, res) => {
       } else {
         const { data: nuevaCategoria } = await supabase
           .from("categorias")
-          .insert([{ nombre: categoriaNombre, usuario_id: req.usuario.id }]) // ✅ Corregido `usuarioId` → `usuario_id`
+          .insert([{ nombre: categoriaNombre, user_id: req.usuario.id }]) // ✅ Corregido `usuarioId` → `usuario_id`
           .select()
           .single();
 
@@ -209,7 +209,7 @@ router.post("/", verificarToken, async (req, res) => {
           precio,
           cantidad,
           categoria_id, // ✅ Corregido `categoriaId` → `categoria_id`
-          usuario_id: req.usuario.id, // ✅ Corregido `usuarioId` → `usuario_id`
+          user_id: req.usuario.id, // ✅ Corregido `usuarioId` → `usuario_id`
         },
       ])
       .select()
@@ -242,7 +242,7 @@ router.get("/", verificarToken, async (req, res) => {
       const { data, error } = await supabase
         .from("productos")
         .select("*, categorias(nombre)")
-        .eq("usuario_id", req.usuario.id);
+        .eq("user_id", req.usuario.id);
 
       if (error) throw error;
       productos = data;
@@ -280,7 +280,7 @@ router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { data: producto } = await supabase
       .from("productos")
-      .select("id, usuario_id")
+      .select("id, user_id")
       .eq("id", req.params.id)
       .single();
 
@@ -289,7 +289,7 @@ router.put("/:id", verificarToken, async (req, res) => {
     }
 
     // Solo el dueño del producto o el admin pueden actualizarlo
-    if (req.usuario.rol !== "admin" && producto.usuario_id !== req.usuario.id) {
+    if (req.usuario.rol !== "admin" && producto.user_id !== req.usuario.id) {
       return res
         .status(403)
         .json({ error: "No tienes permiso para modificar este producto" });
@@ -316,7 +316,7 @@ router.delete("/:id", verificarToken, async (req, res) => {
   try {
     const { data: producto } = await supabase
       .from("productos")
-      .select("id, usuario_id")
+      .select("id, user_id")
       .eq("id", req.params.id)
       .single();
 
@@ -325,7 +325,7 @@ router.delete("/:id", verificarToken, async (req, res) => {
     }
 
     // Solo el dueño del producto o el admin pueden eliminarlo
-    if (req.usuario.rol !== "admin" && producto.usuario_id !== req.usuario.id) {
+    if (req.usuario.rol !== "admin" && producto.user_id !== req.usuario.id) {
       return res
         .status(403)
         .json({ error: "No tienes permiso para eliminar este producto" });

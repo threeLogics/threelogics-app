@@ -2,15 +2,19 @@ import express from "express";
 import {
   register,
   login,
+  logout,
+  getUser,
   recoverPassword,
-  verificarCuenta, // ✅ Agregamos esta función al router
+  updatePassword, // ✅ Agregamos esta función al router
 } from "../controllers/authController.js";
 
 const router = express.Router();
 
 router.post("/register", register);
 router.post("/login", login);
+router.post("/logout", logout);
+router.get("/user", getUser);
 router.post("/recover-password", recoverPassword);
-router.get("/verificar/:token", verificarCuenta);
+router.post("/update-password", updatePassword);
 
 export default router; // ✅ Exportamos por defecto
