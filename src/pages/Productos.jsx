@@ -3,7 +3,7 @@ import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { motion, AnimatePresence } from "framer-motion"; // 🎬 Librería de animaciones
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Productos() {
   const { usuario } = useContext(AuthContext);
@@ -12,7 +12,7 @@ export default function Productos() {
   const [categorias, setCategorias] = useState([]);
   const [busqueda, setBusqueda] = useState("");
   const [filtroCategoria, setFiltroCategoria] = useState("");
-  const [stockBajo, setStockBajo] = useState(false);
+  const [stockBajo] = useState(false);
   const [precioMin, setPrecioMin] = useState("");
   const [precioMax, setPrecioMax] = useState("");
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
@@ -36,9 +36,11 @@ export default function Productos() {
           api.get("/categorias"),
         ]);
 
-        if (productosRes.status === "fulfilled") setProductos(productosRes.value.data);
-        if (categoriasRes.status === "fulfilled") setCategorias(categoriasRes.value.data);
-      } catch (error) {
+        if (productosRes.status === "fulfilled")
+          setProductos(productosRes.value.data);
+        if (categoriasRes.status === "fulfilled")
+          setCategorias(categoriasRes.value.data);
+      } catch {
         toast.error("❌ Error al obtener los datos.");
       }
     };
@@ -71,7 +73,10 @@ export default function Productos() {
       return;
     }
 
-    if (!window.confirm("¿Estás seguro de eliminar los productos seleccionados?")) return;
+    if (
+      !window.confirm("¿Estás seguro de eliminar los productos seleccionados?")
+    )
+      return;
 
     try {
       const eliminaciones = await Promise.allSettled(
@@ -82,10 +87,14 @@ export default function Productos() {
         .filter((res) => res.status === "fulfilled")
         .map((_, index) => productosSeleccionados[index]);
 
-      setProductos((prev) => prev.filter((p) => !eliminadosExitosamente.includes(p.id)));
+      setProductos((prev) =>
+        prev.filter((p) => !eliminadosExitosamente.includes(p.id))
+      );
       setProductosSeleccionados([]);
-      toast.success(`✅ ${eliminadosExitosamente.length} productos eliminados.`);
-    } catch (error) {
+      toast.success(
+        `✅ ${eliminadosExitosamente.length} productos eliminados.`
+      );
+    } catch {
       toast.error("❌ Error al eliminar los productos.");
     }
   };
@@ -110,18 +119,22 @@ export default function Productos() {
     try {
       await api.put(`/productos/${productoEditado.id}`, productoEditado);
       setProductos((prev) =>
-        prev.map((p) => (p.id === productoEditado.id ? { ...p, ...productoEditado } : p))
+        prev.map((p) =>
+          p.id === productoEditado.id ? { ...p, ...productoEditado } : p
+        )
       );
       setModalAbierto(false);
       toast.success(`✅ Producto "${productoEditado.nombre}" modificado.`);
-    } catch (error) {
+    } catch {
       toast.error("❌ Error al modificar el producto.");
     }
   };
 
   // 🆕 Funciones para la carga masiva de productos
   const handleArchivoSeleccionado = (e) => {
-    setArchivo(e.target.files[0]);
+    const file = e.target.files[0];
+    console.log("📂 Archivo seleccionado:", file);
+    setArchivo(file);
   };
 
   const handleSubirArchivo = async () => {
@@ -139,14 +152,20 @@ export default function Productos() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      console.log("✅ Respuesta de la API:", response.data);
+
       setProcesados(response.data.productosProcesados);
       setErrores(response.data.errores);
       toast.success("✅ Carga completada correctamente");
 
-      // Recargar productos después de la subida
-      const productosRes = await api.get("/productos");
-      setProductos(productosRes.data);
+      // 🚨 Forzar actualización de productos después de la carga
+      setTimeout(async () => {
+        const productosRes = await api.get("/productos");
+        console.log("📦 Productos después de la carga:", productosRes.data);
+        setProductos(productosRes.data);
+      }, 1000); // Espera breve antes de recargar (para asegurar que el backend procese los datos)
     } catch (error) {
+      console.error("❌ Error al subir el archivo:", error);
       toast.error("❌ Error al subir el archivo.");
     } finally {
       setSubiendo(false);
@@ -158,44 +177,45 @@ export default function Productos() {
     visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
   };
 
-
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-12">
       <div className="p-6 max-w-7xl w-full">
         {/* 📌 Header */}
-        <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex justify-between items-center mb-6">
+        <motion.div
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+          className="flex justify-between items-center mb-6"
+        >
           <h1 className="text-3xl font-bold text-teal-400">
             {usuario?.rol === "admin"
               ? "📦 Todos los Productos"
               : "📦 Mis Productos"}
           </h1>
-             {/* 📤 Botón de Carga Masiva */}
-        <button
-          onClick={() => setModalCargaMasiva(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-md shadow-md transition cursor-pointer ml-150 gap-2"
-        >
-          📤 Carga Masiva
-        </button>
+          {/* 📤 Botón de Carga Masiva */}
+          <button
+            onClick={() => setModalCargaMasiva(true)}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-md shadow-md transition cursor-pointer ml-150 gap-2"
+          >
+            📤 Carga Masiva
+          </button>
           <button
             onClick={() => navigate("/crear-producto")}
             className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
           >
             ➕ Añadir Producto
           </button>
-   
         </motion.div>
-         {/* 🆕 MODAL DE CARGA MASIVA */}
-         <AnimatePresence>
+        {/* 🆕 MODAL DE CARGA MASIVA */}
+        <AnimatePresence>
           {modalCargaMasiva && (
-            <motion.div 
-            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-20 backdrop-blur-lg"
-
-
+            <motion.div
+              className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-20 backdrop-blur-lg"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <motion.div 
+              <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
@@ -209,20 +229,22 @@ export default function Productos() {
                 <input
                   type="file"
                   accept=".csv"
-                  onChange={(e) => setArchivo(e.target.files[0])}
+                  onChange={handleArchivoSeleccionado}
                   className="border border-gray-700 bg-gray-800 text-white p-2 w-full rounded-md mb-4"
                 />
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => toast.success("📥 Archivo subido correctamente")}
+                    onClick={handleSubirArchivo} // ✅ Ahora llama correctamente a la función
                     disabled={subiendo}
                     className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition cursor-pointer"
                   >
                     {subiendo ? "⏳ Subiendo..." : "📥 Subir CSV"}
                   </button>
                   <button
-                    onClick={() => window.location.href = `${api.defaults.baseURL}/productos/descargar-plantilla`}
+                    onClick={() =>
+                      (window.location.href = `${api.defaults.baseURL}/productos/descargar-plantilla`)
+                    }
                     className="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition cursor-pointer"
                   >
                     📄 Descargar Plantilla
@@ -234,7 +256,9 @@ export default function Productos() {
                   <div className="mt-4 p-4 bg-gray-800 rounded-lg shadow-md">
                     {procesados.length > 0 && (
                       <div className="bg-green-600 text-white p-3 rounded-md mb-2">
-                        <h3 className="text-lg font-bold">✅ Productos cargados:</h3>
+                        <h3 className="text-lg font-bold">
+                          ✅ Productos cargados:
+                        </h3>
                         <ul className="mt-2">
                           {procesados.map((producto, index) => (
                             <li key={index}>✔ {producto}</li>
@@ -244,10 +268,14 @@ export default function Productos() {
                     )}
                     {errores.length > 0 && (
                       <div className="bg-red-500 text-white p-3 rounded-md">
-                        <h3 className="text-lg font-bold">❌ Errores en la carga:</h3>
+                        <h3 className="text-lg font-bold">
+                          ❌ Errores en la carga:
+                        </h3>
                         <ul className="mt-2">
                           {errores.map((error, index) => (
-                            <li key={index}>⚠️ {error.producto}: {error.error}</li>
+                            <li key={index}>
+                              ⚠️ {error.producto}: {error.error}
+                            </li>
                           ))}
                         </ul>
                       </div>
@@ -314,68 +342,83 @@ export default function Productos() {
           />
         </div>
 
-      {/* 📋 Tabla de productos con fondo oscuro */}
-<div className="overflow-x-auto rounded-lg shadow-md">
-  {productosSeleccionados.length > 0 && (
-    <button
-      onClick={eliminarProductosSeleccionados}
-      className="mb-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
-    >
-      🗑 Eliminar Seleccionados ({productosSeleccionados.length})
-    </button>
-  )}
-
-<table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
-  <thead className="bg-gray-900 text-white">
-    <tr>
-      <th className="border px-4 py-2">🛠</th>
-      <th className="border px-4 py-2">ID</th>
-      <th className="border px-4 py-2">Nombre</th>
-      <th className="border px-4 py-2">Cantidad</th>
-      <th className="border px-4 py-2">Precio U.</th>
-      <th className="border px-4 py-2">💰 Total</th>
-      {usuario?.rol === "admin" && <th className="border px-4 py-2">Creado por</th>}
-      <th className="border px-4 py-2">Acciones</th>
-    </tr>
-  </thead>
-  <tbody>
-    {productosPaginados.length > 0 ? (
-      productosPaginados.map((producto) => (
-        <tr key={producto.id} className="hover:bg-gray-700 transition">
-          <td className="border px-4 py-2 text-center">
-            <input
-              type="checkbox"
-              checked={productosSeleccionados.includes(producto.id)}
-              onChange={() => toggleSeleccion(producto.id)}
-            />
-          </td>
-          <td className="border px-4 py-2">{producto.id}</td>
-          <td className="border px-4 py-2 font-semibold">{producto.nombre}</td>
-          <td className="border px-4 py-2">{producto.cantidad}</td>
-          <td className="border px-4 py-2">${producto.precio}</td>
-          <td className="border px-4 py-2 font-bold text-green-400">${producto.precio * producto.cantidad}</td>
-          {usuario?.rol === "admin" && <td className="border px-4 py-2">{producto.Usuario?.nombre || "Desconocido"}</td>}
-          <td className="border px-4 py-2 flex gap-2 justify-center">
+        {/* 📋 Tabla de productos con fondo oscuro */}
+        <div className="overflow-x-auto rounded-lg shadow-md">
+          {productosSeleccionados.length > 0 && (
             <button
-              onClick={() => abrirModalEdicion(producto)}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded cursor-pointer"
+              onClick={eliminarProductosSeleccionados}
+              className="mb-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
             >
-              ✏️ Editar
+              🗑 Eliminar Seleccionados ({productosSeleccionados.length})
             </button>
-          </td>
-        </tr>
-      ))
-    ) : (
-      <tr>
-        <td colSpan="8" className="border px-4 py-2 text-center text-gray-400">
-          No hay productos registrados
-        </td>
-      </tr>
-    )}
-  </tbody>
-</table>
+          )}
 
-</div>
+          <table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
+            <thead className="bg-gray-900 text-white">
+              <tr>
+                <th className="border px-4 py-2">🛠</th>
+                <th className="border px-4 py-2">ID</th>
+                <th className="border px-4 py-2">Nombre</th>
+                <th className="border px-4 py-2">Cantidad</th>
+                <th className="border px-4 py-2">Precio U.</th>
+                <th className="border px-4 py-2">💰 Total</th>
+                {usuario?.rol === "admin" && (
+                  <th className="border px-4 py-2">Creado por</th>
+                )}
+                <th className="border px-4 py-2">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {productosPaginados.length > 0 ? (
+                productosPaginados.map((producto) => (
+                  <tr
+                    key={producto.id}
+                    className="hover:bg-gray-700 transition"
+                  >
+                    <td className="border px-4 py-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={productosSeleccionados.includes(producto.id)}
+                        onChange={() => toggleSeleccion(producto.id)}
+                      />
+                    </td>
+                    <td className="border px-4 py-2">{producto.id}</td>
+                    <td className="border px-4 py-2 font-semibold">
+                      {producto.nombre}
+                    </td>
+                    <td className="border px-4 py-2">{producto.cantidad}</td>
+                    <td className="border px-4 py-2">${producto.precio}</td>
+                    <td className="border px-4 py-2 font-bold text-green-400">
+                      ${producto.precio * producto.cantidad}
+                    </td>
+                    {usuario?.rol === "admin" && (
+                      <td className="border px-4 py-2">
+                        {producto.Usuario?.nombre || "Desconocido"}
+                      </td>
+                    )}
+                    <td className="border px-4 py-2 flex gap-2 justify-center">
+                      <button
+                        onClick={() => abrirModalEdicion(producto)}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded cursor-pointer"
+                      >
+                        ✏️ Editar
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="8"
+                    className="border px-4 py-2 text-center text-gray-400"
+                  >
+                    No hay productos registrados
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
         {/* 📄 Paginación */}
         <div className="flex justify-center mt-6 space-x-2">
@@ -429,20 +472,22 @@ export default function Productos() {
                 className="border p-2 w-full rounded-md"
                 required
               />
-          
-<select
-  name="categoriaId"
-  value={productoEditado.categoriaId || ""}
-  onChange={handleChangeEdicion}
-  className="border p-2 w-full rounded-md"
->
-  <option value="" disabled>Selecciona una categoría</option>
-  {categorias.map((categoria) => (
-    <option key={categoria.id} value={categoria.id}>
-      {categoria.nombre}
-    </option>
-  ))}
-</select>
+
+              <select
+                name="categoriaId"
+                value={productoEditado.categoriaId || ""}
+                onChange={handleChangeEdicion}
+                className="border p-2 w-full rounded-md"
+              >
+                <option value="" disabled>
+                  Selecciona una categoría
+                </option>
+                {categorias.map((categoria) => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nombre}
+                  </option>
+                ))}
+              </select>
 
               <div className="flex justify-end gap-2">
                 <button
