@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
 
     if (token && storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      setUsuario(parsedUser);  // Establece el usuario si existe en localStorage
+      setUsuario(parsedUser); // Establece el usuario si existe en localStorage
 
       try {
         const decodedToken = jwtDecode(token);
@@ -27,7 +27,11 @@ export function AuthProvider({ children }) {
           cerrarSesionAutomatica();
         } else {
           const tiempoRestante = (decodedToken.exp - currentTime) * 1000;
-          console.log("⏳ Token válido por:", tiempoRestante / 1000, "segundos");
+          console.log(
+            "⏳ Token válido por:",
+            tiempoRestante / 1000,
+            "segundos"
+          );
 
           if (logoutTimeoutRef.current) {
             clearTimeout(logoutTimeoutRef.current);
@@ -63,40 +67,39 @@ export function AuthProvider({ children }) {
       console.error("❌ Datos inválidos en login:", data);
       return;
     }
-  
+
     try {
       const decodedToken = jwtDecode(data.token);
-      
+
       // Extraer correctamente el nombre desde user_metadata
       const usuario = {
         id: decodedToken.sub, // ID del usuario en Supabase
         nombre: decodedToken.user_metadata?.nombre || "Usuario", // 👈 Extrae correctamente el nombre
         email: decodedToken.email,
         rol: decodedToken.user_metadata?.rol || "usuario",
-        imagenPerfil: decodedToken.user_metadata?.imagenPerfil || "src/assets/avatar.png",
+        imagenPerfil:
+          decodedToken.user_metadata?.imagenPerfil || "src/assets/avatar.png",
       };
-  
+
       if (logoutTimeoutRef.current) {
         clearTimeout(logoutTimeoutRef.current);
       }
-  
+
       logoutTimeoutRef.current = setTimeout(() => {
         cerrarSesionAutomatica();
       }, (decodedToken.exp - Date.now() / 1000) * 1000);
-  
+
       setMensajeExpiracion(""); // Limpiar mensaje si inicia sesión nuevamente
       setUsuario(usuario);
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(usuario));
-  
+
       console.log("✅ Usuario autenticado:", usuario); // Verifica los datos en la consola
     } catch (error) {
       console.error("❌ Error al decodificar el token:", error);
       return;
     }
   };
-  
-  
 
   const logout = () => {
     console.log("🚪 Cerrando sesión...");
