@@ -233,7 +233,7 @@ router.get("/", verificarToken, async (req, res) => {
       // ✅ Admin ve todos los productos
       const { data, error } = await supabase
         .from("productos")
-        .select("*, categorias(nombre), usuarios(nombre)");
+        .select("*, categorias(nombre)");
 
       if (error) throw error;
       productos = data;
@@ -248,7 +248,24 @@ router.get("/", verificarToken, async (req, res) => {
       productos = data;
     }
 
-    res.json(productos);
+    // 🔍 Obtener todos los usuarios desde Supabase Auth
+    const { data: users, error: userError } =
+      await supabase.auth.admin.listUsers();
+    if (userError) throw userError;
+
+    // 🔄 Mapear IDs de usuario a nombres
+    const userMap = users.users.reduce((acc, user) => {
+      acc[user.id] = user.user_metadata?.nombre || "Anónimo";
+      return acc;
+    }, {});
+
+    // 🔗 Agregar el nombre de usuario a cada producto
+    const productosWithUsers = productos.map((p) => ({
+      ...p,
+      nombre_usuario: userMap[p.user_id] || "Anónimo",
+    }));
+
+    res.json(productosWithUsers);
   } catch (error) {
     console.error("❌ Error al obtener productos:", error);
     res.status(500).json({ error: error.message });

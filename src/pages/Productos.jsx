@@ -378,7 +378,7 @@ export default function Productos() {
 </div>
 
         {/* 📄 Paginación */}
-        <div className="flex justify-center mt-6 space-x-2">
+        <div className="flex justify-center mt-6 space-x-2 cursor-">
           {Array.from({
             length: Math.ceil(productosFiltrados.length / productosPorPagina),
           }).map((_, index) => (
@@ -388,7 +388,7 @@ export default function Productos() {
                 pagina === index + 1
                   ? "bg-teal-500 text-black"
                   : "bg-gray-700 text-white"
-              } transition`}
+              } transition cursor-pointer`}
               onClick={() => setPagina(index + 1)}
             >
               {index + 1}
