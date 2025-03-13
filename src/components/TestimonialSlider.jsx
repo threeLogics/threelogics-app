@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+
 const testimonials = [
   {
     companyLogo:
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/github1.png",
     companyName: "Github",
     quote:
-      "El profesionalismo y las habilidades organizativas excepcionales hacen que la colaboración sea un placer. El equipo de Serge destaca en cada tarea, superando expectativas. Un verdadero placer trabajar con ellos.",
+      "Colaborar con ThreeLogics ha sido una experiencia excepcional. Su enfoque innovador y su capacidad para adaptarse a nuevos desafíos han llevado nuestros proyectos a otro nivel.",
     author: "Adrián Vaquero",
     position: "CoFounder ThreeLogics",
     avatar:
@@ -18,7 +19,7 @@ const testimonials = [
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/google.png",
     companyName: "Google",
     quote:
-      "Un equipo increíblemente dedicado y profesional. Su enfoque meticuloso y atención al detalle elevaron nuestro proyecto a otro nivel.",
+      "El equipo de ThreeLogics demuestra un nivel de profesionalismo y dedicación inigualable. Su visión estratégica y atención al detalle han sido clave en la optimización de nuestros procesos.",
     author: "Iker Domínguez",
     position: "CoFounder ThreeLogics",
     avatar:
@@ -29,39 +30,49 @@ const testimonials = [
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/github1.png",
     companyName: "Github",
     quote:
-      "El profesionalismo y las habilidades organizativas excepcionales hacen que la colaboración sea un placer. El equipo de Serge destaca en cada tarea, superando expectativas. Un verdadero placer trabajar con ellos.",
+      "Desde la planificación hasta la ejecución, ThreeLogics ha demostrado ser un socio confiable y altamente competente. Su compromiso con la excelencia es evidente en cada entrega.",
     author: "Daniel Ramiro",
     position: "CoFounder ThreeLogics",
     avatar:
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/dani.png",
   },
 ];
+
 export default function TestimonialSlider() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [direction, setDirection] = useState(1); // Dirección del slider (1 = derecha, -1 = izquierda)
+  const [direction, setDirection] = useState(1);
   const intervalRef = useRef(null);
 
   const nextTestimonial = useCallback(() => {
-    setDirection(1); // Se mueve a la derecha
+    setDirection(1);
     setCurrent((prev) => (prev + 1) % testimonials.length);
   }, []);
 
   const prevTestimonial = useCallback(() => {
-    setDirection(-1); // Se mueve a la izquierda
+    setDirection(-1);
     setCurrent((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
   }, []);
 
+  // 🔹 Manejo de auto-slide con pausa/reanudación
   useEffect(() => {
     if (isPaused) return;
     intervalRef.current = setInterval(nextTestimonial, 5000);
+
     return () => clearInterval(intervalRef.current);
   }, [isPaused, nextTestimonial]);
+
+  // 🔹 Función para pausar el slider temporalmente
+  const handlePause = () => {
+    setIsPaused(true);
+    clearInterval(intervalRef.current);
+    setTimeout(() => setIsPaused(false), 8000); // Reanuda después de 8s
+  };
 
   const slideVariants = {
     hidden: (dir) => ({
       opacity: 0,
-      x: dir > 0 ? 100 : -100, // Dirección de entrada
+      x: dir > 0 ? 100 : -100,
     }),
     visible: {
       opacity: 1,
@@ -70,7 +81,7 @@ export default function TestimonialSlider() {
     },
     exit: (dir) => ({
       opacity: 0,
-      x: dir < 0 ? 100 : -100, // Dirección de salida
+      x: dir < 0 ? 100 : -100,
       transition: { duration: 0.5, ease: "easeInOut" },
     }),
   };
@@ -88,10 +99,10 @@ export default function TestimonialSlider() {
       <div className="relative w-full max-w-2xl bg-gray-800 p-6 rounded-xl shadow-xl overflow-hidden">
         {/* Botón Izquierdo */}
         <button
-          className=" cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-all duration-300"
+          className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-all duration-300"
           onClick={() => {
             prevTestimonial();
-            setIsPaused(true);
+            handlePause();
           }}
         >
           <ChevronLeft className="text-white w-6 h-6" />
@@ -101,7 +112,7 @@ export default function TestimonialSlider() {
         <div className="relative h-60 flex justify-center items-center overflow-hidden">
           <AnimatePresence custom={direction} mode="wait">
             <motion.div
-              key={current} // Clave para que Framer Motion detecte cambios
+              key={current}
               className="absolute flex flex-col items-center"
               custom={direction}
               variants={slideVariants}
@@ -139,10 +150,10 @@ export default function TestimonialSlider() {
 
         {/* Botón Derecho */}
         <button
-          className=" cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-all duration-300"
+          className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-all duration-300"
           onClick={() => {
             nextTestimonial();
-            setIsPaused(true);
+            handlePause();
           }}
         >
           <ChevronRight className="text-white w-6 h-6" />
