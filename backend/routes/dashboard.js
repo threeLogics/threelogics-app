@@ -19,17 +19,23 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     // 📦 Cantidad total de productos en stock (según usuario)
     const { count: totalProductos } = await supabase
       .from("productos")
-      .select("id", { count: "exact" })
-      .match(whereCondition);
+      .select("*", { count: "exact" }) // 🔹 Corregido: Se usa `*` en vez de `"id"`
+      .eq("user_id", usuario.id); // 🔹 Se usa `eq` en lugar de `match`
 
-    const { data: stockData } = await supabase
+    const { data: stockData, error: errorStock } = await supabase
       .from("productos")
       .select("cantidad")
-      .match(whereCondition);
+      .eq("user_id", usuario.id);
 
-    const totalStock = stockData
-      ? stockData.reduce((acc, prod) => acc + prod.cantidad, 0)
-      : 0;
+    if (errorStock || !stockData) {
+      console.error("❌ Error obteniendo stock:", errorStock);
+      return res.status(500).json({ error: "Error al obtener stock." });
+    }
+
+    const totalStock = stockData.reduce(
+      (acc, prod) => acc + (prod.cantidad || 0),
+      0
+    );
 
     // 📊 Cantidad de movimientos en los últimos 30 días
     const fechaLimite = new Date();
@@ -37,29 +43,29 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
 
     const { count: totalMovimientos } = await supabase
       .from("movimientos")
-      .select("id", { count: "exact" })
-      .gte("fecha", fechaLimite.toISOString())
-      .match(whereCondition);
+      .select("*", { count: "exact" }) // 🔹 `*` en vez de `"id"`
+      .eq("user_id", usuario.id)
+      .gte("fecha", fechaLimite.toISOString());
 
     const { count: movimientosEntrada } = await supabase
       .from("movimientos")
-      .select("id", { count: "exact" })
+      .select("*", { count: "exact" }) // 🔹 Se usa `*` en vez de `"id"`
       .eq("tipo", "entrada")
-      .gte("fecha", fechaLimite.toISOString())
-      .match(whereCondition);
+      .eq("user_id", usuario.id) // ✅ Filtramos por usuario directamente
+      .gte("fecha", fechaLimite.toISOString());
 
     const { count: movimientosSalida } = await supabase
       .from("movimientos")
-      .select("id", { count: "exact" })
+      .select("*", { count: "exact" })
       .eq("tipo", "salida")
-      .gte("fecha", fechaLimite.toISOString())
-      .match(whereCondition);
+      .eq("user_id", usuario.id) // ✅ Filtramos por usuario directamente
+      .gte("fecha", fechaLimite.toISOString());
 
     // 🔹 Obtener todos los movimientos para agrupar manualmente
     const { data: movimientosData, error: errorMovimientos } = await supabase
       .from("movimientos")
       .select("producto_id")
-      .match(whereCondition);
+      .eq("user_id", usuario.id); // ✅ Filtramos solo por usuario sin `match()`
 
     if (errorMovimientos) throw errorMovimientos;
 
@@ -77,7 +83,8 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       .sort((a, b) => b[1] - a[1])
       .map(([producto_id, total]) => ({ producto_id, total }));
 
-    const productosMasMovidos = productosOrdenados.slice(0, 5);
+    const productosMasMovidos =
+      productosOrdenados.length > 0 ? productosOrdenados.slice(0, 5) : [];
     const categoriaMasPopular =
       productosOrdenados.length > 0 ? productosOrdenados[0].producto_id : "N/A";
 

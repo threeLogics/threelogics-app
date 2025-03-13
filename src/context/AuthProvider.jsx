@@ -63,28 +63,40 @@ export function AuthProvider({ children }) {
       console.error("❌ Datos inválidos en login:", data);
       return;
     }
-
+  
     try {
       const decodedToken = jwtDecode(data.token);
-      const tiempoRestante = (decodedToken.exp - Date.now() / 1000) * 1000;
-
+      
+      // Extraer correctamente el nombre desde user_metadata
+      const usuario = {
+        id: decodedToken.sub, // ID del usuario en Supabase
+        nombre: decodedToken.user_metadata?.nombre || "Usuario", // 👈 Extrae correctamente el nombre
+        email: decodedToken.email,
+        rol: decodedToken.user_metadata?.rol || "usuario",
+        imagenPerfil: decodedToken.user_metadata?.imagenPerfil || "src/assets/avatar.png",
+      };
+  
       if (logoutTimeoutRef.current) {
         clearTimeout(logoutTimeoutRef.current);
       }
-
+  
       logoutTimeoutRef.current = setTimeout(() => {
         cerrarSesionAutomatica();
-      }, tiempoRestante);
+      }, (decodedToken.exp - Date.now() / 1000) * 1000);
+  
+      setMensajeExpiracion(""); // Limpiar mensaje si inicia sesión nuevamente
+      setUsuario(usuario);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("usuario", JSON.stringify(usuario));
+  
+      console.log("✅ Usuario autenticado:", usuario); // Verifica los datos en la consola
     } catch (error) {
       console.error("❌ Error al decodificar el token:", error);
       return;
     }
-
-    setMensajeExpiracion(""); // Limpiar mensaje si inicia sesión nuevamente
-    setUsuario(data.usuario);
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("usuario", JSON.stringify(data.usuario));
   };
+  
+  
 
   const logout = () => {
     console.log("🚪 Cerrando sesión...");

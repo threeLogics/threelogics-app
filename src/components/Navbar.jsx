@@ -26,7 +26,8 @@ export default function Navbar() {
       setImagenPerfil(usuario.imagenPerfil.startsWith("http") 
         ? usuario.imagenPerfil 
         : `data:image/png;base64,${usuario.imagenPerfil}`);
-    }
+
+    }console.log("📌 Usuario en Navbar:", usuario);
   }, [usuario]);
   
   useEffect(() => {
@@ -131,12 +132,14 @@ export default function Navbar() {
           <>
             {/* Imagen de usuario + Nombre */}
             <button
-              onClick={() => setIsModalOpen(!isModalOpen)}
-              className="text-sm flex items-center space-x-2 hover:text-teal-400 transition cursor-pointer"
-            >
-              <img src={imagenPerfil} alt="Perfil" className="w-8 h-8 rounded-full border-2 border-teal-500" />
-              <span>{usuario?.nombre || "Usuario"}</span>
-            </button>
+  onClick={() => setIsModalOpen(!isModalOpen)}
+  className="text-sm flex items-center space-x-2 hover:text-teal-400 transition cursor-pointer"
+>
+<img src={usuario?.imagenPerfil || "src/assets/avatar.png"} alt="Perfil" className="w-8 h-8 rounded-full border-2 border-teal-500" />
+
+  <span>{usuario?.nombre || "Usuario"}</span> {/* Asegura que se usa `nombre` */}
+</button>
+
 
             {/* Modal en la esquina superior derecha */}
             {isModalOpen && window.location.pathname !== "/perfil" && (

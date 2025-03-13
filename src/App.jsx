@@ -56,7 +56,7 @@ function App() {
           path="/register"
           element={usuario ? <Navigate to="/productos" /> : <Register />}
         />
-        <Route path="/verificar/:token" element={<VerificarCuenta />} />
+        <Route path="/verificar-cuenta" element={<VerificarCuenta />} />
 
         {/* 🔹 Otras rutas públicas */}
         <Route path="/perfil" element={<Perfil />} />

@@ -30,7 +30,7 @@ function CrearCategoria() {
     try {
       const response = await api.post("/categorias", {
         nombre: categoria.nombre,
-        usuarioId: usuario.id,
+        user_id: usuario.id,
       });
 
       if (response.status === 201) {

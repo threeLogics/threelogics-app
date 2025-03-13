@@ -1,25 +1,8 @@
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import supabase from "../supabaseClient.js";
 import nodemailer from "nodemailer";
 import crypto from "crypto"; // ✅ Para generar el token de verificación
 
-const generarToken = (usuario) => {
-  return jwt.sign(
-    {
-      id: usuario.id,
-      nombre: usuario.nombre,
-      email: usuario.email,
-      rol: usuario.rol,
-      lastPasswordChange: usuario.lastPasswordChange || new Date(),
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "1h" } // 🔹 Token válido por 1 hora
-  );
-};
-
-// ✅ Registro de usuario
-// ✅ Registro de usuario
+// ✅ Registro de usuario con Supabase Auth
 export const register = async (req, res) => {
   try {
     console.log("📩 Datos recibidos en backend:", req.body);
@@ -27,101 +10,22 @@ export const register = async (req, res) => {
     let { nombre, email, password, rol } = req.body;
     if (!rol || (rol !== "admin" && rol !== "usuario")) rol = "usuario";
 
-    // Verificar si el usuario ya existe
-    const { data: usuarioExistente, error: errorExistente } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("email", email)
-      .maybeSingle(); // ✅ Usa `maybeSingle()` para evitar errores
-
-    if (errorExistente) {
-      console.error("❌ Error en consulta a Supabase:", errorExistente);
-      return res.status(500).json({ error: "Error en la base de datos" });
-    }
-
-    if (usuarioExistente) {
-      return res.status(400).json({ error: "El email ya está registrado." });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const token_verificacion = crypto.randomBytes(32).toString("hex");
-
-    const { error } = await supabase.from("usuarios").insert([
-      {
-        nombre,
-        email,
-        password: hashedPassword,
-        rol,
-        verificado: false,
-        token_verificacion,
-        last_password_change: new Date().toISOString(), // 🔹 Asegura que se inserte un valor
-      },
-    ]);
-
-    if (error) throw error;
-
-    // ✅ Corregir el enlace de verificación
-    const verificationLink = `${process.env.FRONTEND_URL}verificar/${token_verificacion}`;
-    console.log("✅ Enlace de verificación generado:", verificationLink);
-
-    // 📩 Configurar email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { nombre, rol },
+        emailRedirectTo: "http://localhost:5173/verificar-cuenta",
       },
     });
 
-    const mailOptions = {
-      from: `"ThreeLogics | Soporte Técnico" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "🔐 Verificación de cuenta en ThreeLogics",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; text-align: center;">
-          
-            <!-- Logo con tamaño fijo -->
-<div style="margin-bottom: 20px; text-align: center;">
-  <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/logos/logoBuneo.png" 
-    alt="ThreeLogics Logo" 
-    style="max-width: 120px; height: 120px; display: block; margin: 0 auto;">
-</div>
-    
-          <h2 style="color: #007BFF;">🚀 ¡Bienvenido a ThreeLogics, ${nombre}!</h2>
-          <p>Gracias por registrarte en <strong>ThreeLogics</strong>. Antes de comenzar a disfrutar de nuestros servicios, necesitamos verificar tu cuenta.</p>
-          
-          <p>Por favor, haz clic en el siguiente botón para confirmar tu dirección de correo electrónico:</p>
-          
-          <div style="text-align: center; margin: 20px 0;">
-            <a href="${verificationLink}" target="_blank" 
-              style="background-color: #007BFF; color: #fff; text-decoration: none; 
-              padding: 12px 20px; font-size: 16px; border-radius: 5px; display: inline-block;">
-              ✅ Verificar Cuenta
-            </a>
-          </div>
-    
-          <p>Si no puedes hacer clic en el botón, también puedes copiar y pegar el siguiente enlace en tu navegador:</p>
-          <p style="background-color: #f4f4f4; padding: 10px; border-radius: 5px; word-break: break-word;">
-            <a href="${verificationLink}" target="_blank">${verificationLink}</a>
-          </p>
-    
-          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
-          
-          <p style="font-size: 14px; color: #555;">
-            ⚠️ Si no has solicitado esta verificación, ignora este correo. Este enlace expirará en 24 horas por motivos de seguridad.
-          </p>
-    
-          <p style="font-size: 14px; color: #555;">
-            📩 Para cualquier duda o soporte, contáctanos en 
-            <a href="mailto:threelogicsapp@gmail.com" style="color: #007BFF;">threelogicsapp@gmail.com</a>.
-          </p>
-        </div>
-      `,
-    };
+    if (error) {
+      console.error("❌ Error en Supabase:", error);
+      return res.status(400).json({ error: error.message });
+    }
 
-    await transporter.sendMail(mailOptions);
     res.status(201).json({
-      mensaje: "Registro exitoso. Revisa tu correo para verificar la cuenta.",
+      mensaje: "Registro exitoso. Revisa tu correo para verificar tu cuenta.",
     });
   } catch (error) {
     console.error("❌ Error al registrar usuario:", error);
@@ -129,185 +33,94 @@ export const register = async (req, res) => {
   }
 };
 
-// ✅ Verificación de cuenta
-
-export const verificarCuenta = async (req, res) => {
-  try {
-    const { token } = req.params;
-    console.log("🔍 Token recibido en el backend:", token);
-
-    if (!token) {
-      console.log("❌ No se proporcionó un token.");
-      return res
-        .status(400)
-        .json({ error: "Token de verificación requerido." });
-    }
-
-    const { data: usuario, error } = await supabase
-      .from("usuarios")
-      .select("id, verificado, token_verificacion")
-      .eq("token_verificacion", token)
-      .maybeSingle();
-
-    console.log("📢 Usuario encontrado:", usuario);
-
-    if (error) {
-      console.error("❌ Error en consulta de verificación:", error);
-      return res.status(500).json({ error: "Error en la base de datos." });
-    }
-
-    if (!usuario) {
-      console.log("❌ Token inválido o ya utilizado.");
-      return res.status(400).json({ error: "Token inválido o ya utilizado." });
-    }
-
-    if (usuario.verificado) {
-      console.log("⚠️ La cuenta ya estaba verificada.");
-      return res
-        .status(200)
-        .json({ mensaje: "Esta cuenta ya estaba verificada." });
-    }
-
-    await supabase
-      .from("usuarios")
-      .update({ verificado: true, token_verificacion: null })
-      .eq("id", usuario.id);
-
-    console.log("✅ Cuenta verificada con éxito.");
-
-    res.json({
-      mensaje: "Cuenta verificada con éxito. Ahora puedes iniciar sesión.",
-    });
-  } catch (error) {
-    console.error("❌ Error al verificar cuenta:", error);
-    res.status(500).json({ error: "Error al verificar la cuenta." });
-  }
-};
-
-// ✅ Login de usuario
+// ✅ Inicio de sesión con Supabase Auth
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const { data: usuario } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("email", email)
-      .single();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    if (!usuario || !(await bcrypt.compare(password, usuario.password))) {
-      return res
-        .status(400)
-        .json({ error: "Usuario o contraseña incorrectos." });
+    if (error) {
+      console.error("❌ Error en login:", error.message);
+      return res.status(400).json({ error: error.message });
     }
 
-    if (!usuario.verificado) {
-      return res
-        .status(403)
-        .json({ error: "Debes verificar tu correo antes de iniciar sesión." });
-    }
-
-    const token = generarToken(usuario);
+    console.log("📢 Respuesta de Supabase:", data);
 
     res.json({
-      token,
-      usuario: {
-        id: usuario.id,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        rol: usuario.rol,
-      },
+      token: data.session.access_token, // 🔹 Verifica que este campo existe
+      usuario: data.user, // 🔹 Asegúrate de que `data.user` existe
     });
   } catch (error) {
-    console.error("❌ Error en login:", error);
+    console.error("❌ Error en el servidor:", error);
     res.status(500).json({ error: "Error en el servidor." });
   }
 };
 
-// ✅ Recuperación de contraseña
+// ✅ Cerrar sesión con Supabase Auth
+export const logout = async (req, res) => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) return res.status(400).json({ error: error.message });
+
+    res.json({ mensaje: "Sesión cerrada correctamente." });
+  } catch (error) {
+    res.status(500).json({ error: "Error al cerrar sesión." });
+  }
+};
+
+// ✅ Obtener usuario autenticado con Supabase Auth
+export const getUser = async (req, res) => {
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error) return res.status(400).json({ error: error.message });
+
+    res.json({ usuario: user });
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener usuario." });
+  }
+};
+// ✅ Recuperación de contraseña con Supabase Auth
 export const recoverPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const { data: usuario } = await supabase
-      .from("usuarios")
-      .select("*")
-      .eq("email", email)
-      .single();
-
-    if (!usuario)
-      return res
-        .status(404)
-        .json({ error: "No existe una cuenta con este correo." });
-
-    const tempPassword = Math.random().toString(36).slice(-6) + "A@";
-    const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
-    await supabase
-      .from("usuarios")
-      .update({ password: hashedPassword })
-      .eq("id", usuario.id);
-
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${process.env.FRONTEND_URL}/reset-password`,
     });
 
-    const mailOptions = {
-      from: `"ThreeLogics | Soporte Técnico" <${process.env.EMAIL_USER}>`,
-      to: usuario.email,
-      subject: "🔑 Recuperación de Contraseña - ThreeLogics",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; text-align: center;">
-          
-       <!-- Logo con tamaño fijo -->
-<div style="margin-bottom: 20px; text-align: center;">
-  <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/logos/logoBuneo.png" 
-    alt="ThreeLogics Logo" 
-    style="max-width: 120px; height: 120px; display: block; margin: 0 auto;">
-</div>
+    if (error) return res.status(400).json({ error: error.message });
 
-    
-          <h2 style="color: #FF5733;">🔐 Recuperación de Contraseña</h2>
-          <p>Hola <strong>${usuario.nombre}</strong>,</p>
-          
-          <p>Hemos recibido una solicitud para restablecer tu contraseña en <strong>ThreeLogics</strong>.</p>
-          
-          <p>Tu nueva contraseña temporal es:</p>
-          <div style="background-color: #f4f4f4; padding: 12px; border-radius: 5px; display: inline-block; 
-                      font-size: 18px; font-weight: bold; letter-spacing: 1px;">
-            ${tempPassword}
-          </div>
-    
-          <p>🔸 <strong>IMPORTANTE:</strong> Inicia sesión y cambia tu contraseña lo antes posible.</p>
-    
-          <div style="text-align: center; margin: 20px 0;">
-            <a href="https://yourwebsite.com/login" target="_blank" 
-              style="background-color: #007BFF; color: #fff; text-decoration: none; 
-              padding: 12px 20px; font-size: 16px; border-radius: 5px; display: inline-block;">
-              🔑 Iniciar Sesión
-            </a>
-          </div>
-    
-          <p>Si no solicitaste este cambio, ignora este correo.</p>
-    
-          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
-          
-          <p style="font-size: 14px; color: #555;">
-            📩 Para cualquier duda o soporte, contáctanos en 
-            <a href="mailto:threelogicsapp@gmail.com" style="color: #007BFF;">threelogicsapp@gmail.com</a>.
-          </p>
-        </div>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    res.json({ mensaje: "Se ha enviado una nueva contraseña a tu correo." });
+    res.json({
+      mensaje:
+        "Si el correo está registrado, recibirás un enlace para restablecer tu contraseña.",
+    });
   } catch (error) {
     console.error("❌ Error en recuperación de contraseña:", error);
     res.status(500).json({ error: "Error al recuperar la contraseña." });
+  }
+};
+
+// ✅ Cambiar la contraseña después de recibir el token
+export const updatePassword = async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+
+    const { data, error } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (error) return res.status(400).json({ error: error.message });
+
+    res.json({ mensaje: "Contraseña actualizada correctamente." });
+  } catch (error) {
+    console.error("❌ Error al actualizar contraseña:", error);
+    res.status(500).json({ error: "Error al actualizar la contraseña." });
   }
 };

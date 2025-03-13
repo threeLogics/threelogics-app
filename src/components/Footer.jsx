@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { supabase } from "../supabaseClient"; // 🔹 Importamos Supabase directamente
+import supabase from "../supabaseClient"; // ✅ Sin llaves { }
+
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import { Mail, MapPin, Linkedin, Github, Instagram } from "lucide-react";

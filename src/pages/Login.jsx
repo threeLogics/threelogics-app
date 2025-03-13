@@ -1,5 +1,6 @@
 import { useState, useContext, useRef } from "react";
-import { api } from "../services/api";
+import supabase from "../supabaseClient"; // ✅ Sin llaves { }
+
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -12,16 +13,17 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const passwordRef = useRef(null);
   const { login } = useContext(AuthContext);
-  const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [recovering, setRecovering] = useState(false); // Estado para recuperación de contraseña
-  const [recoveryEmail, setRecoveryEmail] = useState(""); // Correo para recuperar contraseña
+  const [recovering, setRecovering] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
 
   const sanitizeInput = (input) => {
     return DOMPurify.sanitize(input.trim());
   };
 
+  // ✅ Función para iniciar sesión con Supabase Auth
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -30,32 +32,39 @@ export default function Login() {
     const sanitizedPassword = sanitizeInput(passwordRef.current.value.trim());
   
     try {
-      const response = await api.post("/auth/login", {
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: sanitizedEmail,
         password: sanitizedPassword,
       });
   
-      login(response.data);
+      console.log("📢 Datos recibidos en login:", data); // 🔹 Verifica qué devuelve
+  
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+  
+      if (!data.session || !data.user) {
+        toast.error("⚠️ Error en la autenticación.");
+        return;
+      }
+  
+      login({
+        token: data.session.access_token,
+        usuario: data.user,
+      });
+  
       toast.success("Inicio de sesión exitoso.");
       navigate("/productos");
-  
     } catch (error) {
-      const errorMessage = error.response?.data?.error || "Error en el servidor.";
-      const tipoError = error.response?.data?.tipoError; // Capturamos el tipo de error enviado desde el backend
-  
-      if (tipoError === "cuenta_eliminada") {
-        toast.error("Esta cuenta ha sido dada de baja. Contacta con soporte si deseas recuperarla.");
-      } else if (tipoError === "correo_no_verificado") {
-        toast.error("Debes verificar tu correo antes de iniciar sesión.");
-      } else {
-        toast.error("Credenciales incorrectas. Por favor, inténtalo de nuevo.");
-      }
+      toast.error("Error en el servidor.");
     } finally {
       setLoading(false);
     }
   };
   
 
+  // ✅ Función para recuperar la contraseña con Supabase Auth
   const handleRecoverPassword = async () => {
     if (!recoveryEmail.trim()) {
       toast.error("Por favor, ingresa tu correo electrónico.");
@@ -63,11 +72,18 @@ export default function Login() {
     }
 
     try {
-      await api.post("/auth/recover-password", { email: recoveryEmail });
-      toast.success("✅ Se ha enviado una nueva contraseña a tu correo.");
-      setRecovering(false);
+      const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
+        redirectTo: `${import.meta.env.VITE_FRONTEND_URL}/reset-password`,
+      });
+
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("✅ Se ha enviado un enlace de recuperación a tu correo.");
+        setRecovering(false);
+      }
     } catch (error) {
-      toast.error(error.response?.data?.error || "❌ Error al recuperar la contraseña.");
+      toast.error("❌ Error al recuperar la contraseña.");
     }
   };
 
@@ -128,18 +144,18 @@ export default function Login() {
             </button>
 
             <button
-  onClick={() => {
-    if (!email.trim()) {
-      toast.error("⚠️ Por favor, ingresa tu correo antes de recuperar tu contraseña.");
-      return;
-    }
-    setRecoveryEmail(email);
-    setRecovering(true);
-  }}
-  className="text-sm text-teal-400 hover:text-teal-300 transition text-center cursor-pointer"
->
-  ¿Olvidaste tu contraseña?
-</button>
+              onClick={() => {
+                if (!email.trim()) {
+                  toast.error("⚠️ Por favor, ingresa tu correo antes de recuperar tu contraseña.");
+                  return;
+                }
+                setRecoveryEmail(email);
+                setRecovering(true);
+              }}
+              className="text-sm text-teal-400 hover:text-teal-300 transition text-center cursor-pointer"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
           </form>
         ) : (
           <div className="grid space-y-4">
@@ -157,7 +173,7 @@ export default function Login() {
               onClick={handleRecoverPassword}
               className="px-6 py-3 bg-teal-500 text-black font-semibold rounded-lg transition-all cursor-pointer"
             >
-              Enviar Nueva Contraseña
+              Enviar Enlace de Recuperación
             </button>
             <button
               onClick={() => setRecovering(false)}

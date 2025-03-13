@@ -29,21 +29,28 @@
     
         try {
           const response = await api.get("/usuarios/perfil");
+          
+          // 🔹 Validar que el usuario existe antes de actualizar el estado
+          if (!response.data || !response.data.usuario) {
+            console.error("❌ No se encontró información del usuario en la respuesta.");
+            return;
+          }
+    
           setUser({
-            nombre: response.data.usuario.nombre,
-            email: response.data.usuario.email,
+            nombre: response.data.usuario.nombre || "",
+            email: response.data.usuario.email || "",
           });
     
-          // ✅ Cambiado imagen_perfil en lugar de imagenPerfil
+          // 🔹 Manejar imagen de perfil
           if (response.data.usuario.imagen_perfil) {
             setImagenPerfil(response.data.usuario.imagen_perfil);
           }
+    
         } catch (error) {
           console.error("❌ Error al obtener perfil:", error);
     
           if (error.response?.status === 404 || error.response?.status === 403) {
-            setUsuario(null);
-            localStorage.removeItem("usuario");
+            logout(); // Cerrar sesión si el usuario no existe
             navigate("/loading", { state: { mensaje: "Estamos procesando tu salida..." } });
             return;
           }
@@ -54,6 +61,7 @@
     
       fetchUserData();
     }, [usuario]);
+    
     // Manejar la subida de imágenes y previsualización
     const handleImagenChange = (e) => {
       const file = e.target.files[0];
