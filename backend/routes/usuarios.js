@@ -93,17 +93,23 @@ router.put(
 // 📌 Obtener últimos 3 clientes nuevos y últimos 3 dados de baja
 router.get("/ultimos-clientes", async (req, res) => {
   try {
-    const { data: nuevosClientes, error: errorNuevos } =
-      await supabase.auth.admin.listUsers();
+    // ✅ Obtener todos los usuarios desde Supabase
+    const { data: usuarios, error } = await supabase.auth.admin.listUsers();
 
-    if (errorNuevos) {
-      throw errorNuevos;
+    if (error) {
+      throw error;
     }
 
-    const clientesFiltrados = nuevosClientes.users
-      .filter((user) => user.user_metadata?.rol === "usuario")
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 3)
+    // ✅ Filtrar SOLO clientes (usuarios con rol "usuario")
+    const clientes = usuarios.users.filter(
+      (user) => user.user_metadata?.rol === "usuario"
+    );
+
+    // ✅ Separar clientes nuevos y clientes dados de baja
+    const nuevosClientes = clientes
+      .filter((user) => !user.user_metadata?.deleted_at) // Solo los que NO tienen "deleted_at"
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Ordenar por fecha de creación
+      .slice(0, 3) // Tomar los 3 más recientes
       .map((user) => ({
         id: user.id,
         nombre: user.user_metadata?.nombre || "Sin nombre",
@@ -111,12 +117,25 @@ router.get("/ultimos-clientes", async (req, res) => {
         created_at: user.created_at,
       }));
 
-    res.json({ nuevosClientes: clientesFiltrados });
+    const clientesEliminados = clientes
+      .filter((user) => user.user_metadata?.deleted_at) // Solo los que TIENEN "deleted_at"
+      .sort((a, b) => new Date(b.user_metadata.deleted_at) - new Date(a.user_metadata.deleted_at)) // Ordenar por fecha de eliminación
+      .slice(0, 3) // Tomar los 3 más recientes
+      .map((user) => ({
+        id: user.id,
+        nombre: user.user_metadata?.nombre || "Sin nombre",
+        email: user.email,
+        deleted_at: user.user_metadata.deleted_at,
+      }));
+
+    // ✅ Enviar respuesta con clientes nuevos y eliminados
+    res.json({ nuevosClientes, clientesEliminados });
   } catch (error) {
     console.error("❌ Error al obtener clientes:", error);
     res.status(500).json({ error: "❌ Error al obtener clientes" });
   }
 });
+
 
 // 📌 Dar de baja un usuario (Soft Delete)
 router.delete("/perfil", verificarToken, async (req, res) => {

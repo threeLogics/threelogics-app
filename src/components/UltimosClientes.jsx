@@ -12,10 +12,9 @@ export default function UltimosClientes() {
     try {
       setLoading(true);
       const response = await api.get("/usuarios/ultimos-clientes");
-
+  
       console.log("📢 Respuesta de la API:", response.data);
-
-      // ✅ Verificar si la respuesta contiene los datos esperados
+  
       setNuevosClientes(Array.isArray(response.data.nuevosClientes) ? response.data.nuevosClientes : []);
       setClientesEliminados(Array.isArray(response.data.clientesEliminados) ? response.data.clientesEliminados : []);
     } catch (error) {
@@ -26,6 +25,7 @@ export default function UltimosClientes() {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchClientes();
