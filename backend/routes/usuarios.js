@@ -9,13 +9,18 @@ const router = express.Router();
 // 📌 Configuración de `multer` para manejar la subida de imágenes
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-
+const AVATARS = {
+  default:
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar.png",
+  avatar4:
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar4.png",
+  avatar5:
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
+};
 // 📌 Obtener perfil del usuario autenticado
 router.get("/perfil", verificarToken, async (req, res) => {
   try {
     const userId = req.usuario.id;
-
-    // 📌 Obtener datos del usuario desde Supabase Auth
     const { data, error } = await supabase.auth.admin.getUserById(userId);
 
     if (error || !data?.user) {
@@ -23,13 +28,14 @@ router.get("/perfil", verificarToken, async (req, res) => {
     }
 
     const user = data.user;
+    const avatarUrl = user.user_metadata?.imagenPerfil || AVATARS.default; // Si no tiene avatar, usa el default
 
     res.json({
       usuario: {
         id: user.id,
         nombre: user.user_metadata?.nombre || "Sin nombre",
         email: user.email,
-        imagen_perfil: user.user_metadata?.imagenPerfil || null, // La imagen se almacena en `user_metadata`
+        imagen_perfil: avatarUrl, // ✅ Siempre devolver una URL válida
       },
     });
   } catch (error) {
@@ -38,57 +44,50 @@ router.get("/perfil", verificarToken, async (req, res) => {
   }
 });
 
-// 📌 Actualizar perfil del usuario
-router.put(
-  "/perfil",
-  verificarToken,
-  upload.single("imagenPerfil"),
-  async (req, res) => {
-    try {
-      const userId = req.usuario.id;
-      const { nombre, email, nuevoPassword } = req.body;
-      let imagenPerfil = null;
+// 📌 Actualizar perfil del usuario (incluyendo imagen de perfil en Supabase Storage)
+// 📌 Actualizar perfil del usuario (solo permite elegir entre avatares predefinidos)
+router.put("/perfil", verificarToken, async (req, res) => {
+  try {
+    const userId = req.usuario.id;
+    const { nombre, email, nuevoPassword, imagenPerfil } = req.body;
 
-      if (req.file) {
-        imagenPerfil = `data:image/png;base64,${req.file.buffer.toString(
-          "base64"
-        )}`;
-      }
+    // 📌 Validar que la imagen seleccionada sea una de las predefinidas
+    const imagenPerfilUrl = Object.values(AVATARS).includes(imagenPerfil)
+      ? imagenPerfil
+      : AVATARS.default;
 
-      // 📌 Obtener usuario desde Supabase Auth
-      const { data, error } = await supabase.auth.admin.updateUserById(userId, {
-        email,
-        password: nuevoPassword
-          ? await bcrypt.hash(nuevoPassword, 10)
-          : undefined,
-        user_metadata: {
-          nombre,
-          ...(imagenPerfil && { imagenPerfil }),
-        },
-      });
+    const updateData = {
+      email,
+      password: nuevoPassword
+        ? await bcrypt.hash(nuevoPassword, 10)
+        : undefined,
+      user_metadata: { nombre, imagenPerfil: imagenPerfilUrl },
+    };
 
-      if (error) {
-        console.error("❌ Error en la actualización:", error);
-        return res
-          .status(500)
-          .json({ error: "No se pudo actualizar el perfil" });
-      }
+    const { data, error } = await supabase.auth.admin.updateUserById(
+      userId,
+      updateData
+    );
 
-      res.json({
-        mensaje: "✅ Perfil actualizado con éxito",
-        usuario: {
-          id: data.user.id,
-          nombre: data.user.user_metadata?.nombre || "Sin nombre",
-          email: data.user.email,
-          imagen_perfil: data.user.user_metadata?.imagenPerfil || null,
-        },
-      });
-    } catch (error) {
-      console.error("❌ Error al actualizar perfil:", error);
-      res.status(500).json({ error: "❌ No se pudo actualizar el perfil" });
+    if (error) {
+      console.error("❌ Error en la actualización:", error);
+      return res.status(500).json({ error: "No se pudo actualizar el perfil" });
     }
+
+    res.json({
+      mensaje: "✅ Perfil actualizado con éxito",
+      usuario: {
+        id: data.user.id,
+        nombre: data.user.user_metadata?.nombre || "Sin nombre",
+        email: data.user.email,
+        imagen_perfil: data.user.user_metadata?.imagenPerfil || AVATARS.default,
+      },
+    });
+  } catch (error) {
+    console.error("❌ Error al actualizar perfil:", error);
+    res.status(500).json({ error: "❌ No se pudo actualizar el perfil" });
   }
-);
+});
 
 // 📌 Obtener últimos 3 clientes nuevos y últimos 3 dados de baja
 router.get("/ultimos-clientes", async (req, res) => {
@@ -119,7 +118,11 @@ router.get("/ultimos-clientes", async (req, res) => {
 
     const clientesEliminados = clientes
       .filter((user) => user.user_metadata?.deleted_at) // Solo los que TIENEN "deleted_at"
-      .sort((a, b) => new Date(b.user_metadata.deleted_at) - new Date(a.user_metadata.deleted_at)) // Ordenar por fecha de eliminación
+      .sort(
+        (a, b) =>
+          new Date(b.user_metadata.deleted_at) -
+          new Date(a.user_metadata.deleted_at)
+      ) // Ordenar por fecha de eliminación
       .slice(0, 3) // Tomar los 3 más recientes
       .map((user) => ({
         id: user.id,
@@ -135,7 +138,6 @@ router.get("/ultimos-clientes", async (req, res) => {
     res.status(500).json({ error: "❌ Error al obtener clientes" });
   }
 });
-
 
 // 📌 Dar de baja un usuario (Soft Delete)
 router.delete("/perfil", verificarToken, async (req, res) => {

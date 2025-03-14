@@ -20,7 +20,12 @@
     const [isFormValid, setIsFormValid] = useState(false); // Control de validación
     const [imagenPerfil, setImagenPerfil] = useState(null); // Imagen del usuario
     const [imagenPreview, setImagenPreview] = useState(null); // Previsualización de imagen
-   
+    // Avatares predefinidos
+  const AVATARS = [
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar.png",
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar4.png",
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
+  ];
     
     // Cargar datos del usuario autenticado al montar el componente
     useEffect(() => {
@@ -62,30 +67,7 @@
       fetchUserData();
     }, [usuario]);
     
-    // Manejar la subida de imágenes y previsualización
-    const handleImagenChange = (e) => {
-      const file = e.target.files[0];
-      const MAX_SIZE_MB = 16; // Tamaño máximo permitido en MB
 
-      if (file) {
-        // Verificar que el archivo sea una imagen
-        if (!file.type.startsWith("image/")) {
-          toast.error("❌ El archivo debe ser una imagen.");
-          return;
-        }
-
-        // Verificar que el tamaño no exceda 16MB
-        if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-          toast.error(
-            `❌ La imagen es demasiado grande. Máximo permitido: ${MAX_SIZE_MB}MB.`
-          );
-          return;
-        }
-
-        setImagenPreview(URL.createObjectURL(file)); // Mostrar imagen antes de subirla
-        setImagenPerfil(file); // Guardar el archivo en el estado
-      }
-    };
 
     // Validar contraseña en tiempo real
     const validarPassword = (password) => {
@@ -138,28 +120,32 @@
       }
     
       try {
-        const formData = new FormData();
-        formData.append("nombre", user.nombre);
-        formData.append("email", user.email);
-        if (nuevoPassword) {
-          formData.append("nuevoPassword", nuevoPassword);
-        }
-        if (imagenPerfil instanceof File) {
-          formData.append("imagenPerfil", imagenPerfil);
-        }
+        // 📌 Verificar si la imagen seleccionada es válida, si no, usar la predeterminada
+        const imagenPerfilUrl = AVATARS.includes(imagenPerfil) ? imagenPerfil : AVATARS[0];
     
-        const response = await api.put("/usuarios/perfil", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-    
-        const updatedUser = {
-          ...usuario,
+        // 📌 Crear el objeto de datos a enviar
+        const updateData = {
           nombre: user.nombre,
           email: user.email,
-          imagenPerfil: response.data.usuario.imagen_perfil, // ✅ Corrección aquí
+          imagenPerfil: imagenPerfilUrl,
         };
+    
+        if (nuevoPassword) {
+          updateData.nuevoPassword = nuevoPassword;
+        }
+    
+        // 📌 Enviar actualización al backend
+        const response = await api.put("/usuarios/perfil", updateData);
+    
+        // 📌 Actualizar datos en el contexto y localStorage
+        const updatedUser = {
+          ...usuario,
+          nombre: response.data.usuario.nombre,
+          email: response.data.usuario.email,
+          imagenPerfil: response.data.usuario.imagen_perfil,
+        };
+    
         actualizarPerfil(updatedUser);
-
         localStorage.setItem("usuario", JSON.stringify(updatedUser));
     
         toast.success("✅ Perfil actualizado con éxito");
@@ -172,6 +158,8 @@
         toast.error(error.response?.data?.error || "❌ No se pudo actualizar el perfil");
       }
     };
+    
+    
     
     const handleBajaUsuario = async () => {
       if (!window.confirm("⚠️ ¿Estás seguro de que quieres darte de baja? Esta acción no se puede deshacer.")) {
@@ -210,23 +198,22 @@
         </button>
     
         <h2 className="text-2xl font-bold mb-4">Editar Perfil</h2>
-    
-        {/* Imagen de perfil */}
-        <div className="mb-4">
-          <label className="block text-gray-400 mt-4">Imagen de Perfil</label>
-          <div className="flex justify-center mt-4">
-            <img
-              src={imagenPreview || imagenPerfil || "src/assets/avatar.png"}
-              alt="Perfil"
-              className="w-24 h-24 rounded-full object-cover border-2 border-gray-500"
-            />
+     {/* Selector de imagen de perfil */}
+     <div className="mb-4">
+          <label className="block text-gray-400 mt-4">Selecciona tu avatar</label>
+          <div className="flex justify-center gap-4 mt-4">
+            {AVATARS.map((avatar, index) => (
+              <img
+                key={index}
+                src={avatar}
+                alt={`Avatar ${index + 1}`}
+                className={`w-20 h-20 rounded-full border-4 cursor-pointer ${
+                  imagenPerfil === avatar ? "border-teal-400" : "border-gray-500"
+                }`}
+                onClick={() => setImagenPerfil(avatar)}
+              />
+            ))}
           </div>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImagenChange}
-            className="mt-4 text-gray-300 cursor-pointer"
-          />
         </div>
     
         {/* FORMULARIO - Dos columnas */}

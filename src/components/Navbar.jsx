@@ -7,29 +7,43 @@ export default function Navbar() {
   const { usuario, logout } = useContext(AuthContext);
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado del menú móvil
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  // Estado para controlar la apertura del modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [imagenPerfil, setImagenPerfil] = useState(() => {
-    // Intenta cargar desde localStorage en la primera renderización
+  const [imagenPerfil, setImagenPerfil] = useState(null);
+
+  // 📌 Definir imágenes de perfil predeterminadas
+  const AVATARS = {
+    default: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar_default.png",
+    avatar4: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar4.png",
+    avatar5: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
+  };
+
+  // 📌 Función para obtener la imagen de perfil desde localStorage o usar una predeterminada
+  const obtenerImagenPerfil = () => {
     const storedUser = localStorage.getItem("usuario");
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      return parsedUser.imagenPerfil || "src/assets/avatar.png";
+      return AVATARS[parsedUser.imagenPerfil] || AVATARS.default;
     }
-    return "src/assets/avatar.png"; // Imagen por defecto
-  });
-  
-  useEffect(() => {
-    if (usuario?.imagenPerfil) {
-      setImagenPerfil(usuario.imagenPerfil.startsWith("http") 
-        ? usuario.imagenPerfil 
-        : `data:image/png;base64,${usuario.imagenPerfil}`);
+    return AVATARS.default;
+  };
 
-    }console.log("📌 Usuario en Navbar:", usuario);
-  }, [usuario]);
+  // 📌 Actualiza la imagen de perfil cuando el usuario cambia
+  useEffect(() => {
+    const obtenerImagenPerfil = () => {
+      const storedUser = localStorage.getItem("usuario");
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        return parsedUser.imagenPerfil || AVATARS.default;
+      }
+      return AVATARS.default;
+    };
   
+    setImagenPerfil(obtenerImagenPerfil());
+  }, [usuario]);
+
+  // 📌 Manejo de scroll para ocultar/mostrar navbar
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -43,6 +57,8 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
+  
+
   const handleScrollToSection = (sectionId) => {
     if (location.pathname !== "/") {
       window.location.href = `/#${sectionId}`;
@@ -51,7 +67,7 @@ export default function Navbar() {
         .getElementById(sectionId)
         ?.scrollIntoView({ behavior: "smooth" });
     }
-    setIsMenuOpen(false); // Cierra el menú en móvil después de hacer scroll
+    setIsMenuOpen(false);
   };
 
   return (
@@ -60,8 +76,8 @@ export default function Navbar() {
         showNavbar ? "translate-y-0" : "-translate-y-full"
       }`}
     >
-      {/* Logo con imagen - Ahora lleva a Hero */}
-      <div className="flex items-center space-x-3">
+       {/* Logo con imagen */}
+       <div className="flex items-center space-x-3">
         <button
           onClick={() => handleScrollToSection("hero")}
           className="flex items-center space-x-3 bg-transparent border-none cursor-pointer"

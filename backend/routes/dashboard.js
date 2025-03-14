@@ -110,16 +110,18 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     console.log("📥 Generando reporte en PDF...");
 
     const { usuario } = req;
-    let whereCondition = {};
+    let whereCondition = {}; // Aseguramos que existe la condición
 
     if (usuario.rol !== "admin") {
       whereCondition = { usuario_id: usuario.id };
     }
 
-    // Obtener movimientos según usuario/admin
+    // Obtener movimientos con información del producto y del usuario
     const { data: movimientos, error } = await supabase
       .from("movimientos")
-      .select("id, producto_id, tipo, cantidad, fecha")
+      .select(
+        "id, tipo, cantidad, fecha, producto:productos(nombre), usuario:auth.users(nombre)"
+      ) // ⬅ Agregamos el nombre del usuario
       .match(whereCondition)
       .order("fecha", { ascending: false });
 
@@ -148,7 +150,9 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     // 🏷️ Datos del Usuario
     doc
       .fontSize(12)
-      .text(`Usuario: ${usuario.nombre || "Desconocido"}`, { align: "left" })
+      .text(`Usuario: ${movimientos[0]?.usuario?.nombre || "Desconocido"}`, {
+        align: "left",
+      }) // ⬅ Ahora se obtiene el nombre del usuario real
       .text(`Fecha: ${new Date().toLocaleDateString()}`, { align: "left" })
       .moveDown();
 
@@ -174,11 +178,7 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     let currentY = tableTop + rowHeight;
     movimientos.forEach((mov) => {
       doc.text(mov.id.toString(), startX, currentY);
-      doc.text(
-        mov.producto_id ? mov.producto_id.toString() : "N/A",
-        startX + columnSpacing,
-        currentY
-      );
+      doc.text(mov.producto?.nombre || "N/A", startX + columnSpacing, currentY);
       doc.text(
         mov.tipo === "entrada" ? "Entrada" : "Salida",
         startX + columnSpacing * 2,
