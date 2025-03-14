@@ -14,7 +14,7 @@ const validarCampos = (req, res, next) => {
   next();
 };
 
-// ✅ Crear categoría con validación, usuarioId y evitar duplicados
+// ✅ Crear categoría con validación y evitar duplicados
 router.post(
   "/",
   [
@@ -26,26 +26,14 @@ router.post(
     try {
       console.log("✅ Datos recibidos en POST /categorias:", req.body);
 
-      if (!req.usuario || !req.usuario.id) {
-        return res.status(403).json({ error: "⚠️ Usuario no autenticado." });
-      }
-
       const { nombre } = req.body;
-      const userId = req.usuario.id;
 
       console.log("🔍 Verificando si la categoría ya existe...");
       const { data: categoriaExistente, error: errorExistente } = await supabase
         .from("categorias")
         .select("id")
-        .eq("nombre", nombre)
-        .eq("user_id", userId) // ✅ CORREGIDO
+        .ilike("nombre", nombre) // 🔍 Ignora mayúsculas/minúsculas
         .single();
-
-      if (categoriaExistente) {
-        return res
-          .status(400)
-          .json({ error: "⚠️ Esta categoría ya existe para este usuario." });
-      }
 
       if (errorExistente && errorExistente.code !== "PGRST116") {
         console.error(
@@ -57,23 +45,31 @@ router.post(
           .json({ error: "Error al verificar la categoría." });
       }
 
-      console.log("🆕 Insertando nueva categoría...");
-      const { data: categoria, error: errorInsert } = await supabase
-        .from("categorias")
-        .insert([{ nombre, user_id: userId }]) // ✅ CORREGIDO
-        .select()
-        .single();
+      let categoriaId;
 
-      if (errorInsert) {
-        console.error("❌ Error al crear categoría:", errorInsert);
-        return res
-          .status(500)
-          .json({ error: "⚠️ Error al crear la categoría." });
+      if (categoriaExistente) {
+        categoriaId = categoriaExistente.id; // ✅ Usa la categoría existente en lugar de crear otra
+      } else {
+        console.log("🆕 Insertando nueva categoría...");
+        const { data: nuevaCategoria, error: errorInsert } = await supabase
+          .from("categorias")
+          .insert([{ nombre }]) // 🔄 Ahora las categorías son globales
+          .select("id")
+          .single();
+
+        if (errorInsert) {
+          console.error("❌ Error al crear categoría:", errorInsert);
+          return res
+            .status(500)
+            .json({ error: "⚠️ Error al crear la categoría." });
+        }
+
+        categoriaId = nuevaCategoria.id;
       }
 
       res.status(201).json({
-        mensaje: `✅ Categoría "${categoria.nombre}" creada con éxito.`,
-        categoria,
+        mensaje: `✅ Categoría "${nombre}" creada con éxito.`,
+        categoria: { id: categoriaId, nombre },
       });
     } catch (error) {
       console.error("❌ Error interno al crear la categoría:", error);
@@ -85,26 +81,22 @@ router.post(
 // ✅ Obtener todas las categorías sin duplicados
 router.get("/", verificarToken, async (req, res) => {
   try {
-    let categorias;
+    // 🔹 Todos los usuarios verán la misma lista de categorías
+    const { data, error } = await supabase
+      .from("categorias")
+      .select("id, nombre");
 
-    if (req.usuario.rol === "admin") {
-      // 🔹 Admin ve todas las categorías
-      const { data, error } = await supabase.from("categorias").select("*");
+    if (error) throw error;
 
-      if (error) throw error;
-      categorias = data;
-    } else {
-      // 🔹 Usuario solo ve sus propias categorías
-      const { data, error } = await supabase
-        .from("categorias")
-        .select("*")
-        .eq("user_id", req.usuario.id);
+    // 🔍 Eliminar duplicados basados en el nombre de la categoría (por si hay errores previos en la BD)
+    const categoriasUnicas = Object.values(
+      data.reduce((acc, categoria) => {
+        acc[categoria.nombre.toLowerCase()] = categoria;
+        return acc;
+      }, {})
+    );
 
-      if (error) throw error;
-      categorias = data;
-    }
-
-    res.json(categorias);
+    res.json(categoriasUnicas);
   } catch (error) {
     console.error("❌ Error al obtener categorías:", error);
     res.status(500).json({ error: error.message });
@@ -154,6 +146,7 @@ router.put("/:id", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
+
 // ✅ Eliminar múltiples categorías
 router.delete("/", verificarToken, async (req, res) => {
   try {

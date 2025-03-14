@@ -1,6 +1,4 @@
 import supabase from "../supabaseClient.js";
-import nodemailer from "nodemailer";
-import crypto from "crypto"; // ✅ Para generar el token de verificación
 
 // ✅ Registro de usuario con Supabase Auth
 export const register = async (req, res) => {
@@ -67,7 +65,7 @@ export const logout = async (req, res) => {
     if (error) return res.status(400).json({ error: error.message });
 
     res.json({ mensaje: "Sesión cerrada correctamente." });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error al cerrar sesión." });
   }
 };
@@ -82,7 +80,7 @@ export const getUser = async (req, res) => {
     if (error) return res.status(400).json({ error: error.message });
 
     res.json({ usuario: user });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error al obtener usuario." });
   }
 };

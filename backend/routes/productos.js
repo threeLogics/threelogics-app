@@ -227,45 +227,26 @@ router.post("/", verificarToken, async (req, res) => {
 // ✅ Obtener productos (admin ve todos, cliente solo los suyos)
 router.get("/", verificarToken, async (req, res) => {
   try {
-    let productos;
+    let query = supabase
+      .from("productos")
+      .select(
+        "id, nombre, descripcion, precio, cantidad, categoria_id, categorias(nombre)"
+      );
 
     if (req.usuario.rol === "admin") {
-      // ✅ Admin ve todos los productos
-      const { data, error } = await supabase
+      query = supabase
         .from("productos")
-        .select("*, categorias(nombre)");
-
-      if (error) throw error;
-      productos = data;
+        .select(
+          "id, nombre, descripcion, precio, cantidad, categoria_id, user_id, categorias(nombre)"
+        );
     } else {
-      // ✅ Cliente solo ve sus productos
-      const { data, error } = await supabase
-        .from("productos")
-        .select("*, categorias(nombre)")
-        .eq("user_id", req.usuario.id);
-
-      if (error) throw error;
-      productos = data;
+      query = query.eq("user_id", req.usuario.id);
     }
 
-    // 🔍 Obtener todos los usuarios desde Supabase Auth
-    const { data: users, error: userError } =
-      await supabase.auth.admin.listUsers();
-    if (userError) throw userError;
+    const { data, error } = await query;
+    if (error) throw error;
 
-    // 🔄 Mapear IDs de usuario a nombres
-    const userMap = users.users.reduce((acc, user) => {
-      acc[user.id] = user.user_metadata?.nombre || "Anónimo";
-      return acc;
-    }, {});
-
-    // 🔗 Agregar el nombre de usuario a cada producto
-    const productosWithUsers = productos.map((p) => ({
-      ...p,
-      nombre_usuario: userMap[p.user_id] || "Anónimo",
-    }));
-
-    res.json(productosWithUsers);
+    res.json(data);
   } catch (error) {
     console.error("❌ Error al obtener productos:", error);
     res.status(500).json({ error: error.message });

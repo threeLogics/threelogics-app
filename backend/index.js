@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 // Configuración de variables de entorno
 dotenv.config();
 
-// Importar rutas (ya no importamos modelos)
+// Importar rutas
 import categoriasRoutes from "./routes/categorias.js";
 import productosRoutes from "./routes/productos.js";
 import movimientosRoutes from "./routes/movimientos.js";
@@ -14,14 +14,23 @@ import dashboardRoutes from "./routes/dashboard.js";
 import pedidosRoutes from "./routes/pedidos.js";
 import usuarioRoutes from "./routes/usuarios.js";
 import newsletterRoutes from "./routes/newsletter.js";
-import communityRoutes from "./routes/communityRoutes.js"; // 🔹 Importar las rutas
+import communityRoutes from "./routes/communityRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import estadoRoutes from "./routes/estado.js";
+import productosVistaRoutes from "./routes/productos.js";
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// 📌 Configurar CORS correctamente
+app.use(
+  cors({
+    origin: "http://localhost:5173", // Permitir peticiones desde el frontend
+    credentials: true, // Habilita el envío de cookies o tokens
+    methods: ["GET", "POST", "PUT", "DELETE"], // Métodos HTTP permitidos
+    allowedHeaders: ["Content-Type", "Authorization"], // Headers permitidos en las peticiones
+  })
+);
+
 app.use(express.json());
 
 // Rutas
@@ -34,8 +43,9 @@ app.use("/api/pedidos", pedidosRoutes);
 app.use("/api/usuarios", usuarioRoutes);
 app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/community", communityRoutes);
-app.use("/api/chatbot", chatbotRoutes); // ✅ Agregar el chatbot
+app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/estado", estadoRoutes);
+app.use("/api", productosVistaRoutes);
 
 // Ruta de prueba
 app.get("/", (req, res) => {
