@@ -48,6 +48,13 @@ export default function Login() {
         toast.error("⚠️ Error en la autenticación.");
         return;
       }
+         // 📌 Verificar si el usuario ha sido dado de baja
+    if (data.user.user_metadata?.deleted_at) {
+      toast.error(
+        "Tu cuenta ha sido dada de baja. Contacta con soporte para más información."
+      );
+      return;
+    }
   
       login({
         token: data.session.access_token,

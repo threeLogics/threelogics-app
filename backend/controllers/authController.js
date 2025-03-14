@@ -46,11 +46,21 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: error.message });
     }
 
-    console.log("📢 Respuesta de Supabase:", data);
+    if (!data.session || !data.user) {
+      return res.status(400).json({ error: "Error en la autenticación." });
+    }
+
+    // 📌 Verificar si el usuario ha sido dado de baja
+    if (data.user.user_metadata?.deleted_at) {
+      return res.status(403).json({
+        error:
+          "Tu cuenta ha sido dada de baja. Contacta con soporte para más información.",
+      });
+    }
 
     res.json({
-      token: data.session.access_token, // 🔹 Verifica que este campo existe
-      usuario: data.user, // 🔹 Asegúrate de que `data.user` existe
+      token: data.session.access_token,
+      usuario: data.user,
     });
   } catch (error) {
     console.error("❌ Error en el servidor:", error);
