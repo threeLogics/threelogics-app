@@ -74,15 +74,15 @@ export default function Login() {
   // ✅ Función para recuperar la contraseña con Supabase Auth
   const handleRecoverPassword = async () => {
     if (!recoveryEmail.trim()) {
-      toast.error("Por favor, ingresa tu correo electrónico.");
+      toast.error("⚠️ Por favor, ingresa tu correo.");
       return;
     }
-
+  
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
-        redirectTo: `${import.meta.env.VITE_FRONTEND_URL}/reset-password`,
+        redirectTo: `http://localhost:5173/reset-password`,
       });
-
+  
       if (error) {
         toast.error(error.message);
       } else {
@@ -93,6 +93,7 @@ export default function Login() {
       toast.error("❌ Error al recuperar la contraseña.");
     }
   };
+  
 
   return (
     <div className="h-screen w-screen flex justify-center items-center bg-black">

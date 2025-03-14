@@ -26,6 +26,7 @@ import ChatBot from "./components/ChatBot";
 import TermsConditions from "./components/TermsConditions";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import EstadoSistema from "./components/EstadoSistema";
+import ResetPassword from "./components/ResetPassword";
 
 const PrivateRoute = () => {
   const { usuario } = useContext(AuthContext);
@@ -43,6 +44,7 @@ function App() {
         {/* 🔹 Rutas públicas */}
         <Route path="/" element={<Home />} />
         <Route path="/faq" element={<FAQ />} />{" "}
+        <Route path="/reset-password" element={<ResetPassword />} />
         {/* Página de Preguntas Frecuentes */}
         <Route path="/comunidad" element={<Community />} />
         <Route path="/terms" element={<TermsConditions />} />
