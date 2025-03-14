@@ -36,11 +36,22 @@ export default function Productos() {
           api.get("/categorias"),
         ]);
 
-        if (productosRes.status === "fulfilled")
+        console.log("Productos respuesta:", productosRes);
+        console.log("Categorías respuesta:", categoriasRes);
+
+        if (productosRes.status === "fulfilled") {
           setProductos(productosRes.value.data);
-        if (categoriasRes.status === "fulfilled")
+        } else {
+          console.error("Error en productos:", productosRes.reason);
+        }
+
+        if (categoriasRes.status === "fulfilled") {
           setCategorias(categoriasRes.value.data);
-      } catch {
+        } else {
+          console.error("Error en categorías:", categoriasRes.reason);
+        }
+      } catch (error) {
+        console.error("Error en fetchDatos:", error);
         toast.error("❌ Error al obtener los datos.");
       }
     };
@@ -393,7 +404,7 @@ export default function Productos() {
                     </td>
                     {usuario?.rol === "admin" && (
                       <td className="border px-4 py-2">
-                        {producto.Usuario?.nombre || "Desconocido"}
+                        {producto.user_id || "Desconocido"}
                       </td>
                     )}
                     <td className="border px-4 py-2 flex gap-2 justify-center">
