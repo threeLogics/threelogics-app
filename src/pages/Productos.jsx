@@ -206,7 +206,7 @@ export default function Productos() {
           {/* 📤 Botón de Carga Masiva */}
           <button
             onClick={() => setModalCargaMasiva(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-md shadow-md transition cursor-pointer ml-150 gap-2"
+            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-md shadow-md transition cursor-pointer ml-120 gap-2"
           >
             📤 Carga Masiva
           </button>
