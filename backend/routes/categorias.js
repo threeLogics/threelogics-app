@@ -77,14 +77,19 @@ router.post(
     }
   }
 );
-
-// ✅ Obtener todas las categorías sin duplicados
+// ✅ Obtener categorías según el rol del usuario, sin modificar la eliminación de duplicados
 router.get("/", verificarToken, async (req, res) => {
   try {
-    // 🔹 Todos los usuarios verán la misma lista de categorías
-    const { data, error } = await supabase
-      .from("categorias")
-      .select("id, nombre");
+    const userId = req.usuario.id;
+    const userRole = req.usuario.rol; // 📌 Verificar el rol del usuario
+
+    let query = supabase.from("categorias").select("id, nombre, user_id");
+
+    if (userRole !== "admin") {
+      query = query.eq("user_id", userId); // 🔹 Si NO es admin, solo ve sus categorías
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
 
@@ -99,7 +104,7 @@ router.get("/", verificarToken, async (req, res) => {
     res.json(categoriasUnicas);
   } catch (error) {
     console.error("❌ Error al obtener categorías:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: "Error al obtener las categorías" });
   }
 });
 
