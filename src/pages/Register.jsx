@@ -44,11 +44,7 @@
     // 🔹 Manejar el envío del formulario
     const handleRegister = async (e) => {
       e.preventDefault();
-      if (
-        !validateNombre(nombre) ||
-        !validateEmail(email) ||
-        !validatePassword(password)
-      ) {
+      if (!validateNombre(nombre) || !validateEmail(email) || !validatePassword(password)) {
         toast.error("⚠️ Corrige los errores antes de registrarte.");
         return;
       }
@@ -57,16 +53,24 @@
     
       try {
         const response = await api.post("/auth/register", { nombre, email, password, rol });
-        console.log("📩 Respuesta del backend:", response);
+    
         toast.success("Registro exitoso. Revisa tu correo para verificar la cuenta.");
         navigate("/login");
       } catch (error) {
         console.error("❌ Error en el registro:", error.response?.data);
-        toast.error(error.response?.data?.error || "Error en el registro");
+    
+        if (error.response?.status === 403) {
+          toast.error("Tu cuenta fue dada de baja. Contacta con soporte.");
+        } else if (error.response?.status === 400) {
+          toast.error("Este correo ya está registrado. Intenta iniciar sesión.");
+        } else {
+          toast.error("Error en el registro. Inténtalo más tarde.");
+        }
       } finally {
         setIsSubmitting(false);
       }
     };
+      
     
 
     return (

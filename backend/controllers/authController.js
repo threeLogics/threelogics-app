@@ -8,6 +8,36 @@ export const register = async (req, res) => {
     let { nombre, email, password, rol } = req.body;
     if (!rol || (rol !== "admin" && rol !== "usuario")) rol = "usuario";
 
+    // 📌 1️⃣ Verificar si el usuario ya existe en Supabase
+    const { data: existingUser, error: userError } =
+      await supabase.auth.admin.listUsers();
+
+    if (userError) {
+      console.error("❌ Error al verificar usuario existente:", userError);
+      return res.status(500).json({ error: "Error al verificar el usuario." });
+    }
+
+    // 📌 2️⃣ Buscar si ya existe el email en la lista de usuarios
+    const usuarioEncontrado = existingUser.users.find(
+      (user) => user.email === email
+    );
+
+    if (usuarioEncontrado) {
+      // 📌 3️⃣ Si el usuario tiene `deleted_at`, impedir registro y pedir contacto con soporte
+      if (usuarioEncontrado.user_metadata?.deleted_at) {
+        return res.status(403).json({
+          error:
+            "Tu cuenta fue dada de baja. Contacta con soporte para más información.",
+        });
+      }
+
+      // 📌 4️⃣ Si el usuario ya existe, evitar duplicados
+      return res.status(400).json({
+        error: "Este correo ya está registrado. Intenta iniciar sesión.",
+      });
+    }
+
+    // 📌 5️⃣ Si el usuario no existe, proceder con el registro
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
