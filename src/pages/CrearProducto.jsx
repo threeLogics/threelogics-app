@@ -51,7 +51,6 @@ function CrearProducto() {
   
   
 
-  // 📌 Manejar envío del formulario
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -63,7 +62,6 @@ function CrearProducto() {
     let categoriaIdFinal = producto.categoria_id;
   
     try {
-      // 🆕 Si el usuario está creando una nueva categoría
       if (creandoCategoria && nuevaCategoria.trim()) {
         const existeCategoria = categorias.find(
           (c) => c.nombre.toLowerCase() === nuevaCategoria.toLowerCase()
@@ -73,7 +71,6 @@ function CrearProducto() {
           categoriaIdFinal = existeCategoria.id;
           toast.info(`ℹ️ La categoría "${nuevaCategoria}" ya existe y será usada.`);
         } else {
-          // 🔹 Crear la nueva categoría en Supabase
           const responseCategoria = await api.post("/categorias", { nombre: nuevaCategoria });
   
           if (!responseCategoria.data || !responseCategoria.data.categoria) {
@@ -82,15 +79,12 @@ function CrearProducto() {
   
           categoriaIdFinal = responseCategoria.data.categoria.id;
           toast.success(`✅ Categoría "${nuevaCategoria}" creada con éxito!`);
-  
-          // Actualizar estado
           setCategorias((prev) => [...prev, responseCategoria.data.categoria]);
           setNuevaCategoria("");
           setCreandoCategoria(false);
         }
       }
   
-      // ❌ Si `categoriaIdFinal` aún es null o vacío, error
       if (!categoriaIdFinal) {
         toast.error("❌ No se pudo obtener la categoría.");
         return;
@@ -101,25 +95,37 @@ function CrearProducto() {
         descripcion: producto.descripcion,
         precio: Number(producto.precio),
         cantidad: Number(producto.cantidad),
-        categoria_id: categoriaIdFinal, // ✅ UUID en string
+        categoria_id: categoriaIdFinal,
         user_id: usuario?.id || null,
       });
   
-      // 🚀 Crear el producto con la categoría correcta
       const responseProducto = await api.post("/productos", {
         nombre: producto.nombre,
         descripcion: producto.descripcion,
         precio: Number(producto.precio),
         cantidad: Number(producto.cantidad),
-        categoria_id: categoriaIdFinal, // ✅ Enviamos como string
-        user_id: usuario?.id || null, // Asegurar que coincida con la BD
+        categoria_id: categoriaIdFinal,
+        user_id: usuario?.id || null,
       });
-  
-      if (!responseProducto.data || !responseProducto.data.nombre) {
+      
+      console.log("✅ Respuesta completa del servidor:", responseProducto);
+      console.log("✅ Datos del servidor:", responseProducto.data);
+      
+      // ✅ Aseguramos que `responseProducto.data` es un objeto antes de acceder a `producto`
+      if (!responseProducto.data || typeof responseProducto.data !== "object") {
+        console.error("❌ Respuesta inesperada del servidor:", responseProducto);
+        throw new Error("Error en la respuesta del servidor.");
+      }
+      
+      if (!responseProducto.data.producto) {
+        console.error("🚨 Falta la clave 'producto' en la respuesta:", responseProducto.data);
         throw new Error("No se pudo crear el producto.");
       }
+      
   
-      toast.success(`✅ Producto "${responseProducto.data.nombre}" añadido con éxito!`);
+      toast.success(`✅ Producto "${responseProducto.data.producto.nombre}" añadido con éxito!`);
+  
+      // 🔄 Redirigir para forzar actualización en Productos.jsx
       navigate("/productos");
   
     } catch (error) {
@@ -127,6 +133,8 @@ function CrearProducto() {
       toast.error(error.response?.data?.error || "Error al añadir producto.");
     }
   };
+  
+  
   
   
 

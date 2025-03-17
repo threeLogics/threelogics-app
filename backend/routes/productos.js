@@ -5,6 +5,7 @@ import multer from "multer";
 import csvParser from "csv-parser";
 import fs from "fs";
 import { Parser } from "json2csv";
+import { generarUbicacion } from "../utils/generarUbicacion.js";
 
 const router = express.Router();
 
@@ -163,7 +164,7 @@ router.post("/", verificarToken, async (req, res) => {
       precio,
       cantidad,
       categoria_id,
-      categoriaNombre, // ✅ Se usa cuando el usuario quiere crear una nueva categoría
+      categoriaNombre,
     } = req.body;
 
     if (!nombre || !precio || cantidad === undefined) {
@@ -172,7 +173,7 @@ router.post("/", verificarToken, async (req, res) => {
         .json({ error: "Todos los campos son obligatorios." });
     }
 
-    // 🚀 Si no se envía `categoria_id`, se busca o crea con el nombre
+    // 🔍 Buscar o crear la categoría
     if (!categoria_id && categoriaNombre) {
       const { data: categoriaExistente } = await supabase
         .from("categorias")
@@ -183,12 +184,13 @@ router.post("/", verificarToken, async (req, res) => {
       if (categoriaExistente) {
         categoria_id = categoriaExistente.id;
       } else {
-        const { data: nuevaCategoria } = await supabase
+        const { data: nuevaCategoria, error: errorCategoria } = await supabase
           .from("categorias")
-          .insert([{ nombre: categoriaNombre, user_id: req.usuario.id }]) // ✅ Corregido `usuarioId` → `usuario_id`
+          .insert([{ nombre: categoriaNombre, user_id: req.usuario.id }])
           .select()
           .single();
 
+        if (errorCategoria) throw errorCategoria;
         categoria_id = nuevaCategoria.id;
       }
     }
@@ -199,25 +201,92 @@ router.post("/", verificarToken, async (req, res) => {
         .json({ error: "No se pudo determinar una categoría válida." });
     }
 
-    // ✅ Crear el producto con la categoría asegurada
-    const { data: producto, error } = await supabase
+    // 🔄 Verificar si el producto con el mismo `nombre` y `descripcion` ya existe
+    const { data: productoExistente } = await supabase
       .from("productos")
-      .insert([
-        {
-          nombre,
-          descripcion,
-          precio,
-          cantidad,
-          categoria_id, // ✅ Corregido `categoriaId` → `categoria_id`
-          user_id: req.usuario.id, // ✅ Corregido `usuarioId` → `usuario_id`
-        },
-      ])
-      .select()
+      .select("id, descripcion")
+      .eq("nombre", nombre)
       .single();
 
-    if (error) throw error;
+    let productoId;
 
-    res.status(201).json(producto);
+    if (productoExistente) {
+      if (productoExistente.descripcion === descripcion) {
+        // ✅ Si la descripción es la misma, actualizar el producto
+        const { error: errorUpdate } = await supabase
+          .from("productos")
+          .update({
+            precio,
+            cantidad,
+            categoria_id,
+          })
+          .eq("id", productoExistente.id);
+
+        if (errorUpdate) throw errorUpdate;
+
+        productoId = productoExistente.id;
+      } else {
+        // ➕ Si la descripción es diferente, crear un nuevo producto
+        const { data: nuevoProducto, error: errorInsert } = await supabase
+          .from("productos")
+          .insert([
+            {
+              nombre,
+              descripcion,
+              precio,
+              cantidad,
+              categoria_id,
+              user_id: req.usuario.id,
+            },
+          ])
+          .select()
+          .single();
+
+        if (errorInsert) throw errorInsert;
+
+        productoId = nuevoProducto.id;
+      }
+    } else {
+      // ➕ Si no existe, crear un nuevo producto
+      const { data: nuevoProducto, error: errorInsert } = await supabase
+        .from("productos")
+        .insert([
+          {
+            nombre,
+            descripcion,
+            precio,
+            cantidad,
+            categoria_id,
+            user_id: req.usuario.id,
+          },
+        ])
+        .select()
+        .single();
+
+      if (errorInsert) throw errorInsert;
+
+      productoId = nuevoProducto.id;
+    }
+
+    // 🔥 Generar ubicación basada en la configuración del usuario
+    const ubicacion = await generarUbicacion(productoId, req.usuario.id);
+    console.log("✅ Ubicación asignada:", ubicacion);
+
+    // 🔍 Recuperamos el producto completo después de crearlo/actualizarlo
+    const { data: productoCompleto, error: errorProducto } = await supabase
+      .from("productos")
+      .select("*")
+      .eq("id", productoId)
+      .single();
+
+    if (errorProducto || !productoCompleto) {
+      return res
+        .status(500)
+        .json({ error: "No se pudo recuperar el producto creado." });
+    }
+
+    // ✅ Devolvemos el producto completo con su ubicación
+    res.status(201).json({ producto: productoCompleto, ubicacion });
   } catch (error) {
     console.error("❌ Error al crear producto:", error);
     res.status(500).json({ error: error.message });

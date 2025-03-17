@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
@@ -14,6 +14,7 @@ import Home from "./pages/Home";
 import PasarelaPago from "./pages/PasarelaPago";
 import Pedidos from "./pages/Pedidos";
 import CrearPedido from "./pages/CrearPedido";
+import Ubicaciones from "./pages/Ubicaciones";
 import Page404 from "./components/Page404";
 import LoadingScreen from "./components/LoadingScreen";
 import Perfil from "./components/Perfil";
@@ -27,9 +28,42 @@ import TermsConditions from "./components/TermsConditions";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import EstadoSistema from "./components/EstadoSistema";
 import ResetPassword from "./components/ResetPassword";
+import supabase from "./supabaseClient";
+import ConfiguracionInicial from "./pages/ConfiguracionInicial";
 
 const PrivateRoute = () => {
   const { usuario } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
+  const [configuracionCompleta, setConfiguracionCompleta] = useState(false);
+
+  useEffect(() => {
+    const verificarConfiguracion = async () => {
+      if (!usuario) return;
+
+      const { data, error } = await supabase
+        .from("usuario_ubicaciones")
+        .select("*")
+        .eq("user_id", usuario.id)
+        .single();
+
+      if (error) {
+        console.error("Error al verificar configuración:", error);
+      }
+
+      setConfiguracionCompleta(!!data);
+      setLoading(false);
+    };
+
+    verificarConfiguracion();
+  }, [usuario]);
+
+  if (loading) return <LoadingScreen />;
+
+  // Si el usuario no ha configurado su ubicación, redirigirlo a la Configuración Inicial
+  if (!configuracionCompleta) {
+    return <Navigate to="/configuracion-inicial" />;
+  }
+
   return usuario ? <Outlet /> : <Navigate to="/login" />;
 };
 
@@ -73,7 +107,9 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/pedidos" element={<Pedidos />} />
           <Route path="/crear-pedido" element={<CrearPedido />} />
+          <Route path="/ubicaciones" element={<Ubicaciones />} />
         </Route>
+        <Route path="/configuracion-inicial" element={<ConfiguracionInicial />} />
         {/* 🔹 Ruta 404 */}
         <Route path="*" element={<Page404 />} />
       </Routes>
