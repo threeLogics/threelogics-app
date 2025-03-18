@@ -29,7 +29,7 @@ const Ubicaciones = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-black to-teal-700 text-white p-6">
+    <div className="flex flex-col items-center pt-30 min-h-screen bg-black text-white p-6">
       {/* Animación del título */}
       <motion.h1
         className="text-4xl font-extrabold tracking-widest mb-6"

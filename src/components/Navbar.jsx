@@ -271,6 +271,9 @@ export default function Navbar() {
               <Link to="/pedidos" className="hover:text-teal-400 transition">
                 Pedidos
               </Link>
+              <Link to="/ubicaciones" className="hover:text-teal-400 transition">
+              ubicaciones
+            </Link>
               <Link to="/dashboard" className="hover:text-teal-400 transition">
                 Dashboard
               </Link>
