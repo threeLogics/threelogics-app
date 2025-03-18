@@ -1,65 +1,71 @@
 import { useEffect, useState } from "react";
 import supabase from "../supabaseClient";
 import { motion } from "framer-motion";
+import { useSearchParams } from "react-router-dom";
 
 const Ubicaciones = () => {
-  console.log("Renderizando Ubicaciones"); // Verifica si el componente está cargando
   const [ubicaciones, setUbicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const pedidoId = searchParams.get("pedidoId"); // obtiene pedidoId desde URL
+  const [modalOpen, setModalOpen] = useState(false);
+  const [ubicacionesModal, setUbicacionesModal] = useState([]);
 
   useEffect(() => {
     const fetchUbicaciones = async () => {
       try {
-        // 🔹 Obtener el usuario autenticado
-        const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
 
         if (userError || !user) {
           console.error("Error al obtener el usuario:", userError);
           return;
         }
 
-        // 🔹 Obtener el rol del usuario desde user_metadata
-        const role = user.user_metadata?.rol || "cliente"; // Si no tiene rol, asumir "cliente"
+        const role = user.user_metadata?.rol || "cliente";
         setUserRole(role);
 
-        // 🔹 Obtener ubicaciones según el rol
         let query = supabase
           .from("ubicaciones")
-          .select(
-            `
-            id, 
-            almacen, 
-            estanteria, 
-            posicion, 
-            altura, 
+          .select(`
+            id, almacen, estanteria, posicion, altura, 
             productos!ubicaciones_producto_id_fkey(
-              id, 
-              nombre, 
-              descripcion, 
-              user_id
+              id, nombre, descripcion, user_id
             )
-          `
-          );
+          `);
 
         if (role !== "admin") {
           query = query.eq("productos.user_id", user.id);
         }
 
         const { data, error } = await query;
-
         if (error) throw error;
 
-        // 🔹 Filtrar para no mostrar productos sin asignar
         const ubicacionesFiltradas = data.filter(
           (ubicacion) => ubicacion.productos && ubicacion.productos.nombre
         );
 
-        console.log("Datos obtenidos:", ubicacionesFiltradas);
         setUbicaciones(ubicacionesFiltradas || []);
+
+        if (pedidoId) {
+          // Aquí obtienes la ubicación específica relacionada con pedidoId
+          const { data: pedidoData, error: pedidoError } = await supabase
+            .from("detallepedidos")
+            .select(`producto_id`)
+            .eq("pedido_id", pedidoId);
+
+          if (pedidoError) throw pedidoError;
+
+          const productosPedido = pedidoData.map((detalle) => detalle.producto_id);
+
+          const ubicacionesDelPedido = ubicacionesFiltradas.filter((ubicacion) =>
+            productosPedido.includes(ubicacion.productos.id)
+          );
+
+          setUbicacionesModal(ubicacionesDelPedido);
+          setModalOpen(true);
+        }
+
       } catch (error) {
         console.error("Error al obtener ubicaciones:", error);
       } finally {
@@ -68,7 +74,7 @@ const Ubicaciones = () => {
     };
 
     fetchUbicaciones();
-  }, []);
+  }, [pedidoId]);
 
   const fadeIn = {
     hidden: { opacity: 0, y: 0 },
@@ -77,17 +83,11 @@ const Ubicaciones = () => {
 
   return (
     <div className="flex flex-col items-start pt-20 min-h-screen bg-black text-white p-6">
-      {/* Contenedor del título alineado a la izquierda y con mismo ancho que la cuadrícula */}
       <div className="w-full max-w-6xl mx-auto">
-        <motion.h1
-          variants={fadeIn}
-          initial="hidden"
-          animate="visible"
-          className="text-left mb-8 text-3xl font-bold text-teal-400"
-        >
+        <motion.h1 variants={fadeIn} initial="hidden" animate="visible" className="text-left mb-8 text-3xl font-bold text-teal-400">
           📍 Ubicaciones y Proceso Logístico
         </motion.h1>
-  
+
         <div className="bg-gray-800 rounded-lg p-6 mb-8 shadow-lg border border-teal-400">
           <h2 className="text-2xl font-bold text-teal-300 mb-4">🚚 Proceso de Entrada y Salida</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -108,64 +108,58 @@ const Ubicaciones = () => {
             </div>
           </div>
         </div>
-  
-        {loading ? (
-          <motion.p
-            className="text-xl text-teal-300 text-center w-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            Cargando ubicaciones...
-          </motion.p>
-        ) : ubicaciones.length === 0 ? (
-          <motion.p
-            className="text-xl text-teal-300 text-center w-full"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            No hay ubicaciones disponibles.
-          </motion.p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl mx-auto">
-            {ubicaciones.map((ubicacion) => (
-              <motion.div
-                key={ubicacion.id}
-                className="bg-gray-900 p-6 rounded-lg shadow-lg border border-teal-400"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                whileHover={{ scale: 1.05 }}
-              >
-                <h2 className="text-xl font-semibold text-teal-400">
-                  Producto: {ubicacion.productos.nombre}
-                </h2>
-                <p className="text-gray-300">
-                  {ubicacion.productos.descripcion || "Descripción no disponible"}
-                </p>
+
+        {loading ? <p className="text-center">Cargando ubicaciones...</p> : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {ubicaciones.map((u) => (
+              <motion.div key={u.id} className="bg-gray-900 p-6 rounded-lg shadow-lg border border-teal-400">
+                <h2 className="text-teal-400">Producto: {u.productos.nombre}</h2>
+                <p>{u.productos.descripcion || "Sin descripción"}</p>
                 <div className="mt-4 text-gray-400">
-                  <p>
-                    <strong>Almacén:</strong> {ubicacion.almacen}
-                  </p>
-                  <p>
-                    <strong>Estantería:</strong> {ubicacion.estanteria}
-                  </p>
-                  <p>
-                    <strong>Posición:</strong> {ubicacion.posicion}
-                  </p>
-                  <p>
-                    <strong>Altura:</strong> {ubicacion.altura}
-                  </p>
+                  <p>Almacén: {u.almacen}</p>
+                  <p>Estantería: {u.estanteria}</p>
+                  <p>Posición: {u.posicion}</p>
+                  <p>Altura: {u.altura}</p>
                 </div>
               </motion.div>
             ))}
           </div>
         )}
+
+        {modalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+            <div className="bg-gray-800 rounded-lg shadow-xl p-8 max-w-4xl mx-auto relative">
+              <button
+                onClick={() => {
+                  setModalOpen(false);
+                  setSearchParams({});
+                }}
+                className="absolute top-2 right-2 text-red-500 text-xl cursor-pointer"
+              >
+                ✖️
+              </button>
+              <h2 className="text-2xl text-teal-400 mb-4">📌 Ubicaciones del Pedido</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {ubicacionesModal.map((u) => (
+                  <div key={u.id} className="bg-gray-900 p-4 rounded shadow border border-teal-300">
+                    <h3 className="text-teal-300">Producto: {u.productos.nombre}</h3>
+                    <p>{u.productos.descripcion || "Sin descripción"}</p>
+                    <div className="mt-2 text-gray-400">
+                      <p>Almacén: {u.almacen}</p>
+                      <p>Estantería: {u.estanteria}</p>
+                      <p>Posición: {u.posicion}</p>
+                      <p>Altura: {u.altura}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-    );
-}
+  );
+};
   
 
 export default Ubicaciones;
