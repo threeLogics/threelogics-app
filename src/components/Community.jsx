@@ -21,6 +21,11 @@ const Community = () => {
 
 
   useEffect(() => {
+      // Al cargar el componente, desplazar al inicio de la página
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     fetchQuestions();
   }, []);
 
