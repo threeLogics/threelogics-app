@@ -5,7 +5,7 @@ import { api } from "../services/api";
 export default function UltimosClientes() {
   const [nuevosClientes, setNuevosClientes] = useState([]);
   const [clientesEliminados, setClientesEliminados] = useState([]);
-  const [loading, setLoading] = useState(true); // ✅ Estado de carga
+  const [loading, setLoading] = useState(true);
 
   // 📌 Función para cargar los últimos clientes
   const fetchClientes = async () => {
@@ -25,11 +25,9 @@ export default function UltimosClientes() {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     fetchClientes();
-
     const interval = setInterval(fetchClientes, 10000);
     return () => clearInterval(interval);
   }, []);
@@ -42,11 +40,11 @@ export default function UltimosClientes() {
   };
 
   if (loading) {
-    return <p className="text-white">Cargando clientes...</p>;
+    return <p className="text-white text-center">Cargando clientes...</p>;
   }
 
   return (
-    <div className="grid grid-cols-2 gap-6 p-6 bg-black text-white rounded-lg shadow-lg">
+    <div className="max-w-3xl mx-auto grid grid-cols-2 gap-6 p-6 bg-black text-white rounded-lg shadow-lg">
       {/* 📢 Nuevos Clientes */}
       <div>
         <h2 className="text-xl font-bold mb-3 text-teal-400">📢 Nuevos Clientes</h2>
