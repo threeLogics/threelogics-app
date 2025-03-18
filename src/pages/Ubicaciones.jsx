@@ -6,7 +6,7 @@ const Ubicaciones = () => {
   console.log("Renderizando Ubicaciones"); // Verifica si el componente está cargando
   const [ubicaciones, setUbicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(null); // Almacena el ID del usuario autenticado
+  const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
     const fetchUbicaciones = async () => {
@@ -22,10 +22,12 @@ const Ubicaciones = () => {
           return;
         }
 
-        setUserId(user.id);
+        // 🔹 Obtener el rol del usuario desde user_metadata
+        const role = user.user_metadata?.rol || "cliente"; // Si no tiene rol, asumir "cliente"
+        setUserRole(role);
 
-        // 🔹 Obtener ubicaciones de productos creados por el usuario autenticado
-        const { data, error } = await supabase
+        // 🔹 Obtener ubicaciones según el rol
+        let query = supabase
           .from("ubicaciones")
           .select(
             `
@@ -41,8 +43,13 @@ const Ubicaciones = () => {
               user_id
             )
           `
-          )
-          .eq("productos.user_id", user.id); // Filtrar por productos creados por el usuario
+          );
+
+        if (role !== "admin") {
+          query = query.eq("productos.user_id", user.id);
+        }
+
+        const { data, error } = await query;
 
         if (error) throw error;
 
