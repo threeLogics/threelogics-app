@@ -133,8 +133,8 @@ const Community = () => {
   
 
   return (
-    <div className="bg-black min-h-screen flex flex-col items-center p-6 mt-14">
-      <div className="max-w-3xl w-full mx-auto p-5 bg-white rounded-lg shadow-lg">
+    <div className="bg-black min-h-screen flex flex-col items-center p-6 ">
+      <div className="max-w-3xl w-full mx-auto p-5 bg-white rounded-lg shadow-lg mt-14">
         <h1 className="text-3xl font-bold text-center text-teal-400 mb-6 mt-6">Comunidad</h1>
 
         <div className="mb-6 flex items-center border-b pb-4">
