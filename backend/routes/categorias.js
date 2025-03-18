@@ -27,49 +27,37 @@ router.post(
       console.log("✅ Datos recibidos en POST /categorias:", req.body);
 
       const { nombre } = req.body;
+      const userId = req.usuario.id; // 🔹 Obtener el ID del usuario autenticado
 
       console.log("🔍 Verificando si la categoría ya existe...");
       const { data: categoriaExistente, error: errorExistente } = await supabase
         .from("categorias")
         .select("id")
-        .ilike("nombre", nombre) // 🔍 Ignora mayúsculas/minúsculas
+        .eq("nombre", nombre)
+        .eq("user_id", userId) // 🔹 Evita duplicados por usuario
         .single();
 
-      if (errorExistente && errorExistente.code !== "PGRST116") {
-        console.error(
-          "❌ Error al verificar categoría existente:",
-          errorExistente
-        );
-        return res
-          .status(500)
-          .json({ error: "Error al verificar la categoría." });
+      if (categoriaExistente) {
+        return res.status(400).json({ error: "⚠️ La categoría ya existe." });
       }
 
-      let categoriaId;
+      console.log("🆕 Insertando nueva categoría...");
+      const { data: nuevaCategoria, error: errorInsert } = await supabase
+        .from("categorias")
+        .insert([{ nombre, user_id: userId }]) // 🔹 Guardar el `user_id`
+        .select("id, nombre, user_id")
+        .single();
 
-      if (categoriaExistente) {
-        categoriaId = categoriaExistente.id; // ✅ Usa la categoría existente en lugar de crear otra
-      } else {
-        console.log("🆕 Insertando nueva categoría...");
-        const { data: nuevaCategoria, error: errorInsert } = await supabase
-          .from("categorias")
-          .insert([{ nombre }]) // 🔄 Ahora las categorías son globales
-          .select("id")
-          .single();
-
-        if (errorInsert) {
-          console.error("❌ Error al crear categoría:", errorInsert);
-          return res
-            .status(500)
-            .json({ error: "⚠️ Error al crear la categoría." });
-        }
-
-        categoriaId = nuevaCategoria.id;
+      if (errorInsert) {
+        console.error("❌ Error al crear categoría:", errorInsert);
+        return res
+          .status(500)
+          .json({ error: "⚠️ Error al crear la categoría." });
       }
 
       res.status(201).json({
         mensaje: `✅ Categoría "${nombre}" creada con éxito.`,
-        categoria: { id: categoriaId, nombre },
+        categoria: nuevaCategoria,
       });
     } catch (error) {
       console.error("❌ Error interno al crear la categoría:", error);
@@ -77,36 +65,30 @@ router.post(
     }
   }
 );
+
 // ✅ Obtener categorías según el rol del usuario, sin modificar la eliminación de duplicados
 router.get("/", verificarToken, async (req, res) => {
   try {
     const userId = req.usuario.id;
-    const userRole = req.usuario.rol; // 📌 Verificar el rol del usuario
+    const userRole = req.usuario.rol; // 📌 Obtener el rol del usuario
 
     let query = supabase.from("categorias").select("id, nombre, user_id");
 
     if (userRole !== "admin") {
-      query = query.eq("user_id", userId); // 🔹 Si NO es admin, solo ve sus categorías
+      query = query.eq("user_id", userId); // 🔹 Si NO es admin, solo ve sus propias categorías
     }
 
     const { data, error } = await query;
 
     if (error) throw error;
 
-    // 🔍 Eliminar duplicados basados en el nombre de la categoría (por si hay errores previos en la BD)
-    const categoriasUnicas = Object.values(
-      data.reduce((acc, categoria) => {
-        acc[categoria.nombre.toLowerCase()] = categoria;
-        return acc;
-      }, {})
-    );
-
-    res.json(categoriasUnicas);
+    res.json(data);
   } catch (error) {
     console.error("❌ Error al obtener categorías:", error);
     res.status(500).json({ error: "Error al obtener las categorías" });
   }
 });
+
 
 // ✅ Ruta para actualizar una categoría
 router.put("/:id", verificarToken, async (req, res) => {

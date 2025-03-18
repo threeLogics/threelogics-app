@@ -22,9 +22,9 @@ function Categorias() {
         const response = await api.get("/categorias", {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        setCategorias(response.data);
-
+  
+        setCategorias(response.data); // ✅ Se asignarán solo las categorías que permite el backend
+  
         if (!notificacionMostrada.current) {
           toast.success("Categorías cargadas correctamente");
           notificacionMostrada.current = true;
@@ -37,9 +37,10 @@ function Categorias() {
         }
       }
     };
-
+  
     fetchCategorias();
   }, []);
+  
 
   // ✅ Función para manejar la edición de la categoría
   const handleEditar = (categoria) => {
