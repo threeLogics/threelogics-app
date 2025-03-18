@@ -108,10 +108,18 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    // 🔍 Obtener el pedido y sus productos
+    // 🔍 Obtener pedido con sus detalles y productos asociados
     const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
-      .select("*, detallepedidos(*, productos(id, nombre, cantidad))")
+      .select(
+        `
+        id, estado, user_id,
+        detallepedidos (
+          id, cantidad, producto_id,
+          productos (id, nombre, cantidad)
+        )
+      `
+      )
       .eq("id", id)
       .single();
 
@@ -135,50 +143,77 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
     if (estado === "completado") {
       for (const detalle of pedido.detallepedidos) {
         const productoId = detalle.producto_id;
+        const cantidadEntrada = detalle.cantidad;
 
-        // 🔹 Actualizar la cantidad en el stock
+        // 🔹 Obtener cantidad actual del producto
+        const { data: productoActual, error: productoError } = await supabase
+          .from("productos")
+          .select("cantidad")
+          .eq("id", productoId)
+          .single();
+
+        if (!productoActual || productoActual.error) {
+          console.error(
+            `❌ Producto ID ${productoId} no encontrado o error:`,
+            productoActual?.error
+          );
+          continue;
+        }
+
+        // 🔹 Actualizar cantidad de producto
+        const nuevoStock = productoActual.cantidad + cantidadEntrada;
+
         await supabase
           .from("productos")
-          .update({
-            cantidad: detalle.productos.cantidad + detalle.cantidad,
-          })
+          .update({ cantidad: nuevoStock })
           .eq("id", productoId);
 
-        // 🔹 Registrar el movimiento en la base de datos
-        await supabase.from("movimientos").insert([
-          {
-            producto_id: productoId,
-            tipo: "entrada",
-            cantidad: detalle.cantidad,
-            usuario_id: req.usuario.id,
-            fecha: new Date(),
-          },
-        ]);
+        // 🔹 Registrar movimiento
+        const { error: errorMovimiento } = await supabase
+          .from("movimientos")
+          .insert([
+            {
+              producto_id: productoId,
+              tipo: "entrada",
+              cantidad: cantidadEntrada,
+              usuario_id: pedido.user_id,
+              fecha: new Date(),
+            },
+          ]);
+
+        if (errorMovimiento) {
+          console.error("❌ Error al registrar movimiento:", errorMovimiento);
+        }
 
         // 🔹 Verificar si el producto ya tiene una ubicación
-        const { data: ubicacionExistente } = await supabase
-          .from("ubicaciones")
-          .select("id")
-          .eq("producto_id", productoId)
-          .maybeSingle();
+        const { data: ubicacionExistente, error: errorUbicacion } =
+          await supabase
+            .from("ubicaciones")
+            .select("id")
+            .eq("producto_id", productoId)
+            .single();
+
+        if (errorUbicacion && errorUbicacion.code !== "PGRST116") {
+          console.error("❌ Error al verificar ubicación:", errorUbicacion);
+          continue;
+        }
 
         if (!ubicacionExistente) {
-          // Generar ubicación para el producto
           const nuevaUbicacion = await generarUbicacion(
             productoId,
-            req.usuario.id
+            pedido.user_id
           );
 
           if (!nuevaUbicacion) {
             console.error(
-              `❌ Error al generar ubicación para el producto ID: ${productoId}`
+              `❌ Error al generar ubicación para producto ID: ${productoId}`
             );
           }
         }
       }
     }
 
-    // 🔹 Actualizar el estado del pedido en la base de datos
+    // 🔹 Actualizar estado del pedido
     await supabase.from("pedidos").update({ estado }).eq("id", id);
 
     res.json({ mensaje: `Pedido actualizado a ${estado}`, pedido });
