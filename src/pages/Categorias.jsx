@@ -132,8 +132,8 @@ function Categorias() {
         >
           <h1 className="text-3xl font-bold text-teal-400">
             {usuario?.rol === "admin"
-              ? "Todas las Categorías"
-              : "Mis Categorías"}
+              ? "🏷️ Todas las Categorías"
+              : "🏷️ Mis Categorías"}
           </h1>
           <div className="flex gap-4">
             <button

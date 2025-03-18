@@ -132,7 +132,7 @@ export default function Pedidos() {
       transition={{ duration: 1, delay: 0.2 }}
       className="text-3xl font-bold text-teal-400 mb-6 text-left"
     >
-      📦 Mis Pedidos
+       📑  Mis Pedidos
     </motion.h1>
 
     {/* 📌 Botón para ir a la página de crear pedido */}

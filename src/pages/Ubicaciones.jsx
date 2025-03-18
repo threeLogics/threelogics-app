@@ -32,22 +32,23 @@ const Ubicaciones = () => {
     visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
   };
 
-
   return (
-    <div className="flex flex-col items-center pt-25 min-h-screen bg-black text-white p-6">
-      {/* Contenedor del título alineado a la izquierda */}
-      <div className="w-full">
+    <div className="flex flex-col items-start pt-20 min-h-screen bg-black text-white p-6">
+      {/* Contenedor del título alineado a la izquierda y con mismo ancho que la cuadrícula */}
+      <div className="w-full max-w-6xl mx-auto">
         <motion.h1
-        variants={fadeIn} initial="hidden" animate="visible"
-          className="text-left mb-8  ml-43 text-3xl font-bold text-teal-400"
+          variants={fadeIn}
+          initial="hidden"
+          animate="visible"
+          className="text-left mb-8 text-3xl font-bold text-teal-400"
         >
-          Ubicaciones de Productos
+          📍 Ubicaciones de Productos
         </motion.h1>
       </div>
   
       {loading ? (
         <motion.p
-          className="text-xl text-teal-300"
+          className="text-xl text-teal-300 text-center w-full"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -56,7 +57,7 @@ const Ubicaciones = () => {
         </motion.p>
       ) : ubicaciones.length === 0 ? (
         <motion.p
-          className="text-xl text-teal-300"
+          className="text-xl text-teal-300 text-center w-full"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -64,7 +65,7 @@ const Ubicaciones = () => {
           No hay ubicaciones disponibles.
         </motion.p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl mx-auto">
           {ubicaciones.map((ubicacion) => (
             <motion.div
               key={ubicacion.id}
