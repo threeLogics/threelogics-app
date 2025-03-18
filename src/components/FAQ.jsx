@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 const faqData = [
@@ -131,6 +131,14 @@ const faqData = [
 
 const FAQ = () => {
   const [openQuestions, setOpenQuestions] = useState(new Set());
+
+  useEffect(() => {
+    // Al cargar el componente, desplazar al inicio de la página
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []); // Se ejecuta solo una vez al montar el componente
 
   const toggleFAQ = (index) => {
     const newOpenQuestions = new Set(openQuestions);
