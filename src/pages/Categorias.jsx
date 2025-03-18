@@ -85,36 +85,72 @@ function Categorias() {
   };
 
   // ✅ Función para eliminar las categorías seleccionadas
+  const confirmarEliminacion = (seleccionadas, eliminarCategorias) => {
+    toast(
+      ({ closeToast }) => (
+        <div className="text-teal">
+          <p className="mb-2 text-teal">
+            ⚠️ ¿Seguro que quieres eliminar {seleccionadas.length} categorías?
+          </p>
+          <div className="flex justify-center gap-4">
+            {/* Botón de Confirmar Eliminación */}
+            <button
+              className="bg-red-500 px-4 py-2 text-black rounded hover:bg-red-700 transition"
+              onClick={() => {
+                eliminarCategorias();
+                closeToast(); // Cierra el toast después de confirmar
+              }}
+            >
+              🗑 Sí, eliminar
+            </button>
+  
+            {/* Botón de Cancelar */}
+            <button
+              className="bg-gray-500 px-4 py-2 rounded text-black hover:bg-gray-700 transition"
+              onClick={closeToast}
+            >
+              ❌ Cancelar
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        position: "top-center",
+        autoClose: false, // ❌ No se cerrará automáticamente
+        closeOnClick: false, // ❌ No se cerrará al hacer clic fuera
+        draggable: false,
+        closeButton: false, // ❌ Ocultar botón de cerrar
+      }
+    );
+  };
+  
+  // ✅ Función principal para eliminar categorías
   const eliminarSeleccionadas = async () => {
     if (seleccionadas.length === 0) {
       toast.error("⚠️ No has seleccionado ninguna categoría.");
       return;
     }
-
-    if (
-      !window.confirm(
-        `¿Seguro que quieres eliminar ${seleccionadas.length} categorías?`
-      )
-    )
-      return;
-
-    try {
-      // ✅ Hacer una única petición DELETE enviando los IDs en el body
-      await api.delete("/categorias", {
-        data: { categoriaIds: seleccionadas }, // 👈 Enviar IDs en `data`
-      });
-
-      // ✅ Actualizar el estado eliminando las categorías borradas
-      setCategorias((prev) =>
-        prev.filter((cat) => !seleccionadas.includes(cat.id))
-      );
-      setSeleccionadas([]);
-      setModoEliminar(false);
-      toast.success(`✅ ${seleccionadas.length} categorías eliminadas.`);
-    } catch (error) {
-      console.error("❌ Error al eliminar categorías:", error);
-      toast.error("❌ No se pudieron eliminar las categorías.");
-    }
+  
+    // 🛑 Mostrar la confirmación antes de eliminar
+    confirmarEliminacion(seleccionadas, async () => {
+      try {
+        // ✅ Hacer una única petición DELETE enviando los IDs en el body
+        await api.delete("/categorias", {
+          data: { categoriaIds: seleccionadas }, // 👈 Enviar IDs en `data`
+        });
+  
+        // ✅ Actualizar el estado eliminando las categorías borradas
+        setCategorias((prev) =>
+          prev.filter((cat) => !seleccionadas.includes(cat.id))
+        );
+        setSeleccionadas([]);
+        setModoEliminar(false);
+        toast.success(`✅ ${seleccionadas.length} categorías eliminadas.`);
+      } catch (error) {
+        console.error("❌ Error al eliminar categorías:", error);
+        toast.error("❌ No se pudieron eliminar las categorías.");
+      }
+    });
   };
   const fadeIn = {
     hidden: { opacity: 0, y: 0 },
@@ -195,18 +231,16 @@ function Categorias() {
 
         {/* 🗑 Botón de eliminación masiva */}
         {modoEliminar && (
-          <div className="mt-6 flex justify-center">
-            <button
-              onClick={eliminarSeleccionadas}
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-md"
-            >
-              🗑 Eliminar{" "}
-              {seleccionadas.length > 0
-                ? `${seleccionadas.length} categorías`
-                : ""}
-            </button>
-          </div>
-        )}
+      <div className="mt-6 flex justify-center">
+        <button
+          onClick={eliminarSeleccionadas}
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg shadow-md"
+        >
+          🗑 Eliminar{" "}
+          {seleccionadas.length > 0 ? `${seleccionadas.length} categorías` : ""}
+        </button>
+      </div>
+    )}
 
         {editarCategoria && (
           <div className="mt-6">
