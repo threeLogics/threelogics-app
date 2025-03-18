@@ -77,38 +77,74 @@ export default function Productos() {
       prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
     );
   };
+  const confirmarEliminacionProductos = (productosSeleccionados, eliminarProductos) => {
+    toast(
+      ({ closeToast }) => (
+        <div className="text-teal">
+          <p className="mb-2">
+            ⚠️ ¿Seguro que quieres eliminar {productosSeleccionados.length} productos?
+          </p>
+          <div className="flex justify-center gap-4">
+            {/* Botón de Confirmar Eliminación */}
+            <button
+              className="bg-red-500 px-4 py-2 text-black rounded hover:bg-red-700 transition"
+              onClick={() => {
+                eliminarProductos();
+                closeToast(); // Cierra el toast después de confirmar
+              }}
+            >
+              🗑 Sí, eliminar
+            </button>
+  
+            {/* Botón de Cancelar */}
+            <button
+              className="bg-gray-500 px-4 py-2 rounded text-black hover:bg-gray-700 transition"
+              onClick={closeToast}
+            >
+              ❌ Cancelar
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        position: "top-center",
+        autoClose: false, // ❌ No se cerrará automáticamente
+        closeOnClick: false, // ❌ No se cerrará al hacer clic fuera
+        draggable: false,
+        closeButton: false, // ❌ Ocultar botón de cerrar
+      }
+    );
+  };
+  
 
   const eliminarProductosSeleccionados = async () => {
     if (productosSeleccionados.length === 0) {
       toast.error("❌ Selecciona al menos un producto para eliminar.");
       return;
     }
-
-    if (
-      !window.confirm("¿Estás seguro de eliminar los productos seleccionados?")
-    )
-      return;
-
-    try {
-      const eliminaciones = await Promise.allSettled(
-        productosSeleccionados.map((id) => api.delete(`/productos/${id}`))
-      );
-
-      const eliminadosExitosamente = eliminaciones
-        .filter((res) => res.status === "fulfilled")
-        .map((_, index) => productosSeleccionados[index]);
-
-      setProductos((prev) =>
-        prev.filter((p) => !eliminadosExitosamente.includes(p.id))
-      );
-      setProductosSeleccionados([]);
-      toast.success(
-        `✅ ${eliminadosExitosamente.length} productos eliminados.`
-      );
-    } catch {
-      toast.error("❌ Error al eliminar los productos.");
-    }
+  
+    // 🛑 Mostrar la confirmación antes de eliminar
+    confirmarEliminacionProductos(productosSeleccionados, async () => {
+      try {
+        const eliminaciones = await Promise.allSettled(
+          productosSeleccionados.map((id) => api.delete(`/productos/${id}`))
+        );
+  
+        const eliminadosExitosamente = eliminaciones
+          .filter((res) => res.status === "fulfilled")
+          .map((_, index) => productosSeleccionados[index]);
+  
+        setProductos((prev) =>
+          prev.filter((p) => !eliminadosExitosamente.includes(p.id))
+        );
+        setProductosSeleccionados([]);
+        toast.success(`✅ ${eliminadosExitosamente.length} productos eliminados.`);
+      } catch {
+        toast.error("❌ Error al eliminar los productos.");
+      }
+    });
   };
+  
 
   const indiceInicial = (pagina - 1) * productosPorPagina;
   const productosPaginados = productosFiltrados.slice(
