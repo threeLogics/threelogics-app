@@ -27,19 +27,24 @@ const Ubicaciones = () => {
 
     fetchUbicaciones();
   }, []);
+  const fadeIn = {
+    hidden: { opacity: 0, y: 0 },
+    visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
+  };
+
 
   return (
-    <div className="flex flex-col items-center pt-30 min-h-screen bg-black text-white p-6">
-      {/* Animación del título */}
-      <motion.h1
-        className="text-4xl font-extrabold tracking-widest mb-6"
-        initial={{ y: -50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 100, damping: 10 }}
-      >
-        Ubicaciones de Productos
-      </motion.h1>
-
+    <div className="flex flex-col items-center pt-25 min-h-screen bg-black text-white p-6">
+      {/* Contenedor del título alineado a la izquierda */}
+      <div className="w-full">
+        <motion.h1
+        variants={fadeIn} initial="hidden" animate="visible"
+          className="text-left mb-8  ml-43 text-3xl font-bold text-teal-400"
+        >
+          Ubicaciones de Productos
+        </motion.h1>
+      </div>
+  
       {loading ? (
         <motion.p
           className="text-xl text-teal-300"
@@ -95,6 +100,7 @@ const Ubicaciones = () => {
       )}
     </div>
   );
+  
 };
 
 export default Ubicaciones;
