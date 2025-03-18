@@ -136,7 +136,7 @@ export default function Navbar() {
               Pedidos
             </Link>
             <Link to="/ubicaciones" className="hover:text-teal-400 transition">
-              ubicaciones
+              Ubicaciones
             </Link>
             <Link to="/dashboard" className="hover:text-teal-400 transition">
               Dashboard
@@ -272,7 +272,7 @@ export default function Navbar() {
                 Pedidos
               </Link>
               <Link to="/ubicaciones" className="hover:text-teal-400 transition">
-              ubicaciones
+              Ubicaciones
             </Link>
               <Link to="/dashboard" className="hover:text-teal-400 transition">
                 Dashboard
