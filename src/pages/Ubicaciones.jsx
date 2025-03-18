@@ -6,18 +6,53 @@ const Ubicaciones = () => {
   console.log("Renderizando Ubicaciones"); // Verifica si el componente está cargando
   const [ubicaciones, setUbicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null); // Almacena el ID del usuario autenticado
 
   useEffect(() => {
     const fetchUbicaciones = async () => {
       try {
+        // 🔹 Obtener el usuario autenticado
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          console.error("Error al obtener el usuario:", userError);
+          return;
+        }
+
+        setUserId(user.id);
+
+        // 🔹 Obtener ubicaciones de productos creados por el usuario autenticado
         const { data, error } = await supabase
           .from("ubicaciones")
-          .select("*, productos!ubicaciones_producto_id_fkey(nombre, descripcion)");
+          .select(
+            `
+            id, 
+            almacen, 
+            estanteria, 
+            posicion, 
+            altura, 
+            productos!ubicaciones_producto_id_fkey(
+              id, 
+              nombre, 
+              descripcion, 
+              user_id
+            )
+          `
+          )
+          .eq("productos.user_id", user.id); // Filtrar por productos creados por el usuario
 
         if (error) throw error;
 
-        console.log("Datos obtenidos:", data);
-        setUbicaciones(data || []);
+        // 🔹 Filtrar para no mostrar productos sin asignar
+        const ubicacionesFiltradas = data.filter(
+          (ubicacion) => ubicacion.productos && ubicacion.productos.nombre
+        );
+
+        console.log("Datos obtenidos:", ubicacionesFiltradas);
+        setUbicaciones(ubicacionesFiltradas || []);
       } catch (error) {
         console.error("Error al obtener ubicaciones:", error);
       } finally {
@@ -27,6 +62,7 @@ const Ubicaciones = () => {
 
     fetchUbicaciones();
   }, []);
+
   const fadeIn = {
     hidden: { opacity: 0, y: 0 },
     visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
@@ -45,7 +81,7 @@ const Ubicaciones = () => {
           📍 Ubicaciones de Productos
         </motion.h1>
       </div>
-  
+
       {loading ? (
         <motion.p
           className="text-xl text-teal-300 text-center w-full"
@@ -76,10 +112,10 @@ const Ubicaciones = () => {
               whileHover={{ scale: 1.05 }}
             >
               <h2 className="text-xl font-semibold text-teal-400">
-                Producto: {ubicacion.productos ? ubicacion.productos.nombre : "Sin asignar"}
+                Producto: {ubicacion.productos.nombre}
               </h2>
               <p className="text-gray-300">
-                {ubicacion.productos ? ubicacion.productos.descripcion : "Descripción no disponible"}
+                {ubicacion.productos.descripcion || "Descripción no disponible"}
               </p>
               <div className="mt-4 text-gray-400">
                 <p>
@@ -101,7 +137,6 @@ const Ubicaciones = () => {
       )}
     </div>
   );
-  
 };
 
 export default Ubicaciones;

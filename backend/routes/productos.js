@@ -104,6 +104,8 @@ router.post(
               .eq("nombre", nombre)
               .single();
 
+            let productoId;
+
             if (productoExistente) {
               // 🔄 Si el producto ya existe, lo actualizamos
               const { error: errorUpdate } = await supabase
@@ -118,9 +120,11 @@ router.post(
                 });
                 continue;
               }
+
+              productoId = productoExistente.id;
             } else {
               // ➕ Si no existe, lo insertamos como nuevo
-              const { error: errorInsert } = await supabase
+              const { data: nuevoProducto, error: errorInsert } = await supabase
                 .from("productos")
                 .insert([
                   {
@@ -131,11 +135,36 @@ router.post(
                     categoria_id,
                     user_id: req.usuario.id,
                   },
-                ]);
+                ])
+                .select("id")
+                .single();
 
               if (errorInsert) {
                 errores.push({ producto: nombre, error: "Error al insertar" });
                 continue;
+              }
+
+              productoId = nuevoProducto.id;
+            }
+
+            // 🔹 Verificar si el producto ya tiene una ubicación
+            const { data: ubicacionExistente } = await supabase
+              .from("ubicaciones")
+              .select("id")
+              .eq("producto_id", productoId)
+              .maybeSingle();
+
+            if (!ubicacionExistente) {
+              // 🔥 Generar ubicación basada en la configuración del usuario
+              const nuevaUbicacion = await generarUbicacion(
+                productoId,
+                req.usuario.id
+              );
+
+              if (!nuevaUbicacion) {
+                console.error(
+                  `❌ Error al generar ubicación para el producto ID: ${productoId}`
+                );
               }
             }
 
@@ -154,7 +183,6 @@ router.post(
     }
   }
 );
-
 // ✅ Crear un nuevo producto
 router.post("/", verificarToken, async (req, res) => {
   try {

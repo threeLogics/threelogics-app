@@ -1,7 +1,7 @@
 import express from "express";
 import supabase from "../supabaseClient.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
-
+import { generarUbicacion } from "../utils/generarUbicacion.js";
 const router = express.Router();
 
 // 📌 Crear un pedido
@@ -108,16 +108,18 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { data: pedido } = await supabase
+    // 🔍 Obtener el pedido y sus productos
+    const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
       .select("*, detallepedidos(*, productos(id, nombre, cantidad))")
       .eq("id", id)
       .single();
 
-    if (!pedido) {
+    if (pedidoError || !pedido) {
       return res.status(404).json({ error: "Pedido no encontrado" });
     }
 
+    // 🔹 Validar el nuevo estado
     const estadosPermitidos = ["pendiente", "pagar", "enviado", "completado"];
     if (!estadosPermitidos.includes(estado)) {
       return res.status(400).json({ error: "Estado no permitido" });
@@ -129,28 +131,56 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
         .json({ error: "El pedido debe pagarse antes de ser enviado" });
     }
 
+    // ✅ Si el pedido se marca como "completado", actualizar stock y generar ubicación
     if (estado === "completado") {
       for (const detalle of pedido.detallepedidos) {
+        const productoId = detalle.producto_id;
+
+        // 🔹 Actualizar la cantidad en el stock
         await supabase
           .from("productos")
           .update({
             cantidad: detalle.productos.cantidad + detalle.cantidad,
           })
-          .eq("id", detalle.producto_id);
+          .eq("id", productoId);
 
+        // 🔹 Registrar el movimiento en la base de datos
         await supabase.from("movimientos").insert([
           {
-            producto_id: detalle.producto_id,
+            producto_id: productoId,
             tipo: "entrada",
             cantidad: detalle.cantidad,
-            usuario_id: req.usuario.id, // 🔹 `user_id` corregido
+            usuario_id: req.usuario.id,
             fecha: new Date(),
           },
         ]);
-      } // 🔹 Este `for` ahora se cierra correctamente
+
+        // 🔹 Verificar si el producto ya tiene una ubicación
+        const { data: ubicacionExistente } = await supabase
+          .from("ubicaciones")
+          .select("id")
+          .eq("producto_id", productoId)
+          .maybeSingle();
+
+        if (!ubicacionExistente) {
+          // Generar ubicación para el producto
+          const nuevaUbicacion = await generarUbicacion(
+            productoId,
+            req.usuario.id
+          );
+
+          if (!nuevaUbicacion) {
+            console.error(
+              `❌ Error al generar ubicación para el producto ID: ${productoId}`
+            );
+          }
+        }
+      }
     }
 
+    // 🔹 Actualizar el estado del pedido en la base de datos
     await supabase.from("pedidos").update({ estado }).eq("id", id);
+
     res.json({ mensaje: `Pedido actualizado a ${estado}`, pedido });
   } catch (error) {
     console.error("❌ Error al actualizar estado del pedido:", error);
@@ -265,6 +295,6 @@ setInterval(async () => {
   } catch (error) {
     console.error("❌ Error actualizando pedidos completados:", error);
   }
-}, 60000);
+}, 200);
 
 export default router;
