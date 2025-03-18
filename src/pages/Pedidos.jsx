@@ -283,6 +283,17 @@ export default function Pedidos() {
                     🗑 Eliminar Pedido
                   </motion.button>
                 )}
+                  {/* ✅ Botón "Seguir Pedido" cuando el pedido está COMPLETADO */}
+      {pedido.estado === "completado" && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          onClick={() => navigate(`/ubicaciones?pedidoId=${pedido.id}`)}
+          className="mt-4 bg-blue-500 text-black font-semibold px-4 py-2 rounded-lg transition-all cursor-pointer
+                    hover:shadow-[0px_0px_20px_rgba(59,130,246,0.8)] hover:bg-blue-600"
+        >
+          📍 Seguir Pedido
+        </motion.button>
+      )}
               </motion.div>
             ))}
           </div>
