@@ -155,7 +155,7 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
               cantidad: cantidadMovimiento,
               fecha: new Date(),
               user_id: pedido.user_id,
-              estado_origen: estado, // Si tienes este campo en la tabla `movimientos`
+              pedido_id: pedido.id, // ✅ esto es lo que te faltaba
             },
           ]);
 

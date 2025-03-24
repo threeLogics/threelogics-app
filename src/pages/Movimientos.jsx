@@ -18,7 +18,7 @@ function Movimientos() {
           cantidad,
           fecha,
           producto_id,
-          productos (nombre)
+          productos (nombre, categoria_id)
         `);
 
       if (error) {
