@@ -8,7 +8,6 @@ dotenv.config();
 // Importar rutas
 import categoriasRoutes from "./routes/categorias.js";
 import productosRoutes from "./routes/productos.js";
-import movimientosRoutes from "./routes/movimientos.js";
 import authRoutes from "./routes/auth.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import pedidosRoutes from "./routes/pedidos.js";
@@ -36,7 +35,6 @@ app.use(express.json());
 // Rutas
 app.use("/api/categorias", categoriasRoutes);
 app.use("/api/productos", productosRoutes);
-app.use("/api/movimientos", movimientosRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/pedidos", pedidosRoutes);

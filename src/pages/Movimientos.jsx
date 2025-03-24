@@ -1,138 +1,86 @@
-import { useEffect, useState } from "react";
-import { api } from "../services/api";
-import { toast } from "react-toastify";
-import { motion, AnimatePresence } from "framer-motion"; // 🎬 Librería de animaciones
-
+import { useEffect, useState, useCallback, useMemo } from "react";
+import supabase from "../supabaseClient.js";
+import { motion } from "framer-motion";
 
 function Movimientos() {
   const [movimientos, setMovimientos] = useState([]);
-  const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [filtroCategoria, setFiltroCategoria] = useState(""); 
+  const [filtroCategoria, setFiltroCategoria] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("7");
-  const [nuevoMovimiento, setNuevoMovimiento] = useState({
-    productoId: "",
-    tipo: "entrada",
-    cantidad: "",
-  });
+  const [filtroTipo, setFiltroTipo] = useState("");
 
-
-  const fetchMovimientos = async () => {
+  // ✅ Obtener movimientos desde Supabase
+  const fetchMovimientos = useCallback(async () => {
     try {
-      const response = await api.get("/movimientos", {
-        params: { categoriaId: filtroCategoria || undefined, dias: filtroFecha || undefined },
-      });
-      console.log("📌 Movimientos recibidos:", response.data); // 🛠 Depuración
-      setMovimientos(response.data);
+      const { data, error } = await supabase.from("movimientos").select(`
+          id,
+          tipo,
+          cantidad,
+          fecha,
+          producto_id,
+          productos (nombre)
+        `);
+
+      if (error) {
+        console.error("❌ Error al obtener movimientos desde Supabase:", error);
+      } else {
+        console.log("📌 Movimientos recibidos desde Supabase:", data);
+        setMovimientos(data);
+      }
     } catch (error) {
-      console.error("❌ Error al obtener movimientos:", error.response?.data || error);
+      console.error("❌ Error al obtener movimientos:", error);
     }
-  };
-  
+  }, []);
 
-
-  const fetchProductos = async () => {
+  // ✅ Obtener categorías desde Supabase
+  const fetchCategorias = useCallback(async () => {
     try {
-      const response = await api.get("/productos");
-      setProductos(response.data);
+      const { data, error } = await supabase.from("categorias").select("*");
+      if (error) {
+        console.error("❌ Error al obtener categorías desde Supabase:", error);
+      } else {
+        setCategorias(data);
+      }
     } catch (error) {
-      console.error("Error al obtener productos:", error);
+      console.error("❌ Error al obtener categorías:", error);
     }
-  };
-
-
-  const fetchCategorias = async () => {
-    try {
-      const response = await api.get("/categorias");
-      setCategorias(response.data);
-    } catch (error) {
-      console.error("Error al obtener categorías:", error);
-    }
-  };
-
+  }, []);
 
   useEffect(() => {
     fetchMovimientos();
-    fetchProductos();
     fetchCategorias();
-  }, []);
+  }, [fetchMovimientos, fetchCategorias]);
 
-
-  const handleChange = (e) => {
-    let { name, value } = e.target;
-    if (name === "cantidad") {
-      value = parseInt(value, 10) || "";
-    }
-    setNuevoMovimiento({ ...nuevoMovimiento, [name]: value });
-  };
-
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post("/movimientos", nuevoMovimiento);
-      setNuevoMovimiento({ productoId: "", tipo: "entrada", cantidad: "" });
-
-
-      if (nuevoMovimiento.tipo === "entrada") {
-        toast.success(`✅ Entrada de ${nuevoMovimiento.cantidad} unidades realizada correctamente`);
-      } else {
-        toast.success(`✅ Salida de ${nuevoMovimiento.cantidad} unidades realizada correctamente`);
-      }
-
-
-      await fetchMovimientos();
-      await fetchProductos();
-    } catch (error) {
-      toast.error(error.response?.data?.error || "❌ Error al registrar el movimiento");
-    }
-  };
-  console.log("📌 filtroCategoria:", filtroCategoria);
-  console.log("📌 Movimientos antes del filtro:", movimientos);
-  
-
-  const movimientosFiltrados = movimientos.filter((mov) => {
-    const fechaMovimiento = new Date(mov.fecha);
+  // ✅ Filtrar movimientos según los filtros seleccionados
+  const movimientosFiltrados = useMemo(() => {
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - parseInt(filtroFecha, 10));
-  
-    console.log("📌 Verificando categoría en cada movimiento:", mov.productos?.categorias?.id);
-  
-    return (
-      (!filtroCategoria || mov.productos?.categorias?.id === filtroCategoria) &&
-      fechaMovimiento >= fechaLimite
-    );
-  });
-  
-  
 
-
-  const descargarMovimientos = () => {
-    window.location.href = `${api.defaults.baseURL}/movimientos/descargar`;
-  };
-  const fadeIn = {
-    hidden: { opacity: 0, y: 0 },
-    visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
-  };
-
+    return movimientos.filter((mov) => {
+      const fechaMovimiento = new Date(mov.fecha);
+      return (
+        (!filtroCategoria || mov.productos?.categoria_id === filtroCategoria) &&
+        (!filtroTipo || mov.tipo === filtroTipo) && // 🔹 Filtrar por tipo de movimiento
+        fechaMovimiento >= fechaLimite
+      );
+    });
+  }, [movimientos, filtroCategoria, filtroFecha, filtroTipo]);
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-12">
       <div className="p-6 max-w-7xl w-full">
-      <motion.div variants={fadeIn} initial="hidden" animate="visible" className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-teal-400">📜 Historial de Movimientos</h1>
-          <button
-            onClick={descargarMovimientos}
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition cursor-pointer"
-          >
-            📥 Descargar CSV
-          </button>
+        {/* Título */}
+        <motion.div
+          initial={{ opacity: 0, y: 0 }}
+          animate={{ opacity: 1, y: 10, transition: { duration: 0.5 } }}
+          className="flex justify-between items-center mb-6"
+        >
+          <h1 className="text-3xl font-bold text-teal-400">
+            📜 Historial de Movimientos
+          </h1>
         </motion.div>
 
-
-
-
-        {/* Filtros */}
+        {/* 📌 Filtros */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <select
             value={filtroCategoria}
@@ -146,6 +94,7 @@ function Movimientos() {
               </option>
             ))}
           </select>
+
           <select
             value={filtroFecha}
             onChange={(e) => setFiltroFecha(e.target.value)}
@@ -156,10 +105,20 @@ function Movimientos() {
             <option value="90">📅 Últimos 3 meses</option>
             <option value="">📅 Todos</option>
           </select>
+
+          {/* 🔹 Nuevo filtro por tipo de movimiento */}
+          <select
+            value={filtroTipo}
+            onChange={(e) => setFiltroTipo(e.target.value)}
+            className="border border-gray-700 bg-gray-900 text-white p-3 w-full rounded-md"
+          >
+            <option value="">🔄 Todos los Movimientos</option>
+            <option value="entrada">📥 Entrada</option>
+            <option value="salida">🚀 Salida</option>
+          </select>
         </div>
 
-
-        {/* Tabla de Movimientos */}
+        {/* 📌 Tabla de Movimientos */}
         <div className="overflow-x-auto rounded-lg shadow-md">
           <table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
             <thead className="bg-gray-900">
@@ -176,17 +135,30 @@ function Movimientos() {
                 movimientosFiltrados.map((mov) => (
                   <tr key={mov.id} className="hover:bg-gray-700 transition">
                     <td className="border px-4 py-2">{mov.id}</td>
-                    <td className="border px-4 py-2">{mov.productos ? mov.productos.nombre : "N/A"}</td>
-                    <td className={`border px-4 py-2 ${mov.tipo === "entrada" ? "text-green-400" : "text-red-400"}`}>
-                      {mov.tipo}
+                    <td className="border px-4 py-2">
+                      {mov.productos ? mov.productos.nombre : "N/A"}
+                    </td>
+                    <td
+                      className={`border px-4 py-2 ${
+                        mov.tipo === "entrada"
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {mov.tipo === "entrada" ? "📥 Entrada" : "🚀 Salida"}
                     </td>
                     <td className="border px-4 py-2">{mov.cantidad}</td>
-                    <td className="border px-4 py-2">{new Date(mov.fecha).toLocaleString()}</td>
+                    <td className="border px-4 py-2">
+                      {new Date(mov.fecha).toLocaleString()}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="border px-4 py-2 text-center text-gray-400">
+                  <td
+                    colSpan="5"
+                    className="border px-4 py-2 text-center text-gray-400"
+                  >
                     No hay movimientos registrados
                   </td>
                 </tr>
@@ -198,6 +170,5 @@ function Movimientos() {
     </div>
   );
 }
-
 
 export default Movimientos;
