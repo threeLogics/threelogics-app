@@ -85,6 +85,7 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
   const { id } = req.params;
 
   try {
+    // 📦 Obtener el pedido con sus detalles
     const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
       .select(
@@ -97,19 +98,28 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
       return res.status(404).json({ error: "Pedido no encontrado" });
     }
 
-    const estadosPermitidos = ["pendiente", "procesado", "cancelado"];
-
+    // ✅ Estados válidos
+    const estadosPermitidos = [
+      "pendiente",
+      "procesado",
+      "cancelado",
+      "pagado",
+      "recibido",
+    ];
     if (!estadosPermitidos.includes(estado)) {
       return res.status(400).json({ error: "Estado no permitido" });
     }
 
-    if (estado === "procesado") {
+    // 🔄 Estados que procesan el stock
+    const estadosProcesanStock = ["procesado", "pagado", "recibido"];
+
+    if (estadosProcesanStock.includes(estado)) {
       for (const detalle of pedido.detallepedidos) {
         const productoId = detalle.producto_id;
         const cantidadMovimiento = detalle.cantidad;
-        const factor = pedido.tipo === "entrada" ? 1 : -1; // Entrada suma, salida resta
+        const factor = pedido.tipo === "entrada" ? 1 : -1;
 
-        // ✅ Obtener el stock actual del producto antes de actualizarlo
+        // 🔍 Buscar producto actual
         const { data: productoActual, error: errorProducto } = await supabase
           .from("productos")
           .select("cantidad")
@@ -124,7 +134,7 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
         const nuevoStock =
           productoActual.cantidad + cantidadMovimiento * factor;
 
-        // ✅ Actualizar el stock del producto
+        // 📦 Actualizar stock
         const { error: errorUpdate } = await supabase
           .from("productos")
           .update({ cantidad: nuevoStock })
@@ -135,16 +145,17 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
           continue;
         }
 
-        // ✅ Registrar el movimiento en la tabla `movimientos`
+        // 📝 Registrar movimiento
         const { error: errorMovimiento } = await supabase
           .from("movimientos")
           .insert([
             {
               producto_id: productoId,
-              tipo: pedido.tipo, // 
+              tipo: pedido.tipo,
               cantidad: cantidadMovimiento,
               fecha: new Date(),
               user_id: pedido.user_id,
+              estado_origen: estado, // Si tienes este campo en la tabla `movimientos`
             },
           ]);
 
@@ -154,6 +165,7 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
       }
     }
 
+    // 🟢 Actualizar el estado del pedido
     await supabase.from("pedidos").update({ estado }).eq("id", id);
 
     res.json({ mensaje: `Pedido actualizado a ${estado}` });

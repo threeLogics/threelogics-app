@@ -159,10 +159,16 @@ export default function Pedidos() {
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {pedidosFiltrados.map((pedido) => (
+          {pedidosFiltrados.map((pedido) => {
+            const esFinalizado = pedido.estado === "pagado" || pedido.estado === "recibido";
+            const esCancelado = pedido.estado === "cancelado";
+        
+            return (
               <motion.div
                 key={pedido.id}
-                className="p-5 border border-gray-700 bg-gray-900 rounded-lg shadow-lg"
+                className={`p-5 border border-gray-700 bg-gray-900 rounded-lg shadow-lg transition-all duration-300 ${
+                  esCancelado ? "opacity-50 pointer-events-none" : ""
+                }`}
               >
                 <h2 className="text-xl font-semibold text-teal-400">
                   📦 Pedido #{pedido.id}
@@ -171,22 +177,20 @@ export default function Pedidos() {
                   📅 {new Date(pedido.fecha).toLocaleDateString()}
                 </p>
                 <p className="text-gray-400">
-                  📦 Tipo:{" "}
-                  {pedido.tipo === "entrada" ? "📥 Entrada" : "🚀 Salida"}
+                  📦 Tipo: {pedido.tipo === "entrada" ? "📥 Entrada" : "🚀 Salida"}
                 </p>
                 <p className="font-bold text-lg text-green-400">
                   💰 Total: ${pedido.total.toFixed(2)}
                 </p>
-
+        
                 {/* Estado del pedido */}
                 <div className="mt-3">
                   <label className="font-semibold text-white">Estado: </label>
                   <select
-                    className="ml-2 p-2 border border-gray-700 bg-gray-800 text-white rounded-lg cursor-pointer focus:ring-2 focus:ring-teal-400"
+                    className="ml-2 p-2 border border-gray-700 bg-gray-800 text-white rounded-lg cursor-pointer focus:ring-2 focus:ring-teal-400 disabled:opacity-50"
                     value={pedido.estado}
-                    onChange={(e) =>
-                      actualizarEstado(pedido.id, e.target.value)
-                    }
+                    onChange={(e) => actualizarEstado(pedido.id, e.target.value)}
+                    disabled={esFinalizado || esCancelado}
                   >
                     {pedido.tipo === "entrada" ? (
                       <>
@@ -204,8 +208,10 @@ export default function Pedidos() {
                   </select>
                 </div>
               </motion.div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
+        
         )}
       </div>
     </div>
