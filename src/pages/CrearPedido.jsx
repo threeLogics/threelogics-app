@@ -195,7 +195,7 @@ function CrearPedido() {
         {/* 🔹 Botón para realizar pedido */}
         <motion.button
           onClick={realizarPedido}
-          className="mt-6 bg-blue-500 text-black font-semibold px-6 py-3 rounded-lg hover:bg-blue-600"
+          className="mt-6 bg-blue-500 text-black font-semibold px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer"
         >
           🛒 Realizar Pedido
         </motion.button>

@@ -182,6 +182,18 @@ export default function Pedidos() {
                 <p className="font-bold text-lg text-green-400">
                   💰 Total: ${pedido.total.toFixed(2)}
                 </p>
+
+                {/* Lista de productos */}
+<div className="mt-4">
+  <h3 className="text-white font-semibold mb-1">🧾 Productos:</h3>
+  <ul className="list-disc list-inside text-gray-300 text-sm">
+    {pedido.detallepedidos.map((detalle) => (
+      <li key={detalle.id}>
+        {detalle.productos?.nombre} × {detalle.cantidad}
+      </li>
+    ))}
+  </ul>
+</div>
         
                 {/* Estado del pedido */}
                 <div className="mt-3">
