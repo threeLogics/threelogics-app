@@ -19,7 +19,10 @@ const ChatBot = () => {
     "¿Cómo me pongo en contacto?",
     "¿Qué es ThreeLogics?",
     "¿Es seguro almacenar mis datos en ThreeLogics?",
-    "¿Puedo exportar mis datos?"
+    "¿Puedo exportar mis datos?",
+    "¿Qué diferencia hay entre un pedido de entrada y uno de salida?",
+    "¿Cómo puedo ver los movimientos de inventario?"
+
   ];
 
   const sendMessage = async (msg = input) => {
