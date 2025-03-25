@@ -167,6 +167,26 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       .gte("fecha", fechaInicioMesAnterior.toISOString())
       .lte("fecha", fechaFinMesAnterior.toISOString());
 
+    // 📦 Obtener volumen de pedidos por día (últimos 30 días)
+    const { data: pedidosPorDia, error: errorPedidosPorDia } = await supabase
+      .from("pedidos")
+      .select("fecha")
+      .eq("user_id", usuario.id)
+      .gte("fecha", fechaLimite.toISOString());
+
+    if (errorPedidosPorDia) throw errorPedidosPorDia;
+
+    // Agrupar por día (YYYY-MM-DD)
+    const conteoPorDia = {};
+    pedidosPorDia.forEach(({ fecha }) => {
+      const dia = new Date(fecha).toISOString().split("T")[0];
+      conteoPorDia[dia] = (conteoPorDia[dia] || 0) + 1;
+    });
+
+    const volumenPedidosPorDia = Object.entries(conteoPorDia).map(
+      ([fecha, total]) => ({ fecha, total })
+    );
+
     return res.json({
       totalProductos,
       totalStock,
@@ -178,6 +198,7 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       productosStock,
       distribucionCategorias,
       movimientosEntradaMesAnterior,
+      volumenPedidosPorDia,
     });
   } catch (error) {
     console.error("❌ Error obteniendo estadísticas:", error);
@@ -185,36 +206,92 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
   }
 });
 
-/// 📌 Generar reporte en PDF de movimientos
-/// 📌 Generar reporte en PDF de movimientos
+// 📈 Obtener datos de demanda para predicción
+router.get("/demanda-productos", verificarToken, async (req, res) => {
+  try {
+    const usuario = req.usuario;
+
+    // 1. Traemos los detalles de los pedidos (producto + cantidad + pedido_id)
+    const { data: detalles, error } = await supabase
+      .from("detallepedidos")
+      .select("cantidad, producto_id, pedido_id");
+
+    if (error) throw error;
+
+    // 2. Traemos los pedidos para filtrar por usuario y saber fechas
+    const { data: pedidos, error: errorPedidos } = await supabase
+      .from("pedidos")
+      .select("id, fecha, user_id");
+
+    if (errorPedidos) throw errorPedidos;
+
+    // 3. Filtramos los detalles que pertenecen al usuario actual
+    const detallesUsuario = detalles.filter((detalle) => {
+      const pedido = pedidos.find((p) => p.id === detalle.pedido_id);
+      return pedido && pedido.user_id === usuario.id;
+    });
+
+    // 4. Obtenemos los IDs de los productos involucrados
+    const productoIds = [
+      ...new Set(detallesUsuario.map((d) => d.producto_id).filter(Boolean)),
+    ];
+
+    // 5. Traemos los nombres de los productos
+    const { data: productos, error: errorProductos } = await supabase
+      .from("productos")
+      .select("id, nombre")
+      .in("id", productoIds);
+
+    if (errorProductos) throw errorProductos;
+
+    // 6. Formateamos: { nombre, cantidad }
+    const pedidosPorProducto = detallesUsuario
+      .map((d) => {
+        const producto = productos.find((p) => p.id === d.producto_id);
+        return producto
+          ? {
+              nombre: producto.nombre,
+              cantidad: d.cantidad,
+            }
+          : null; // ignorar si no se encontró
+      })
+      .filter(Boolean); // elimina los null
+
+    return res.json({ pedidosPorProducto });
+  } catch (error) {
+    console.error("❌ Error generando predicción:", error);
+    return res.status(500).json({ error: "Error generando predicción" });
+  }
+});
+
 router.get("/reporte-pdf", verificarToken, async (req, res) => {
   try {
     console.log("📥 Generando reporte en PDF...");
 
     const { usuario } = req;
-    let whereCondition = {}; // Aseguramos que existe la condición
+    const esAdmin = usuario.rol === "admin";
 
-    if (usuario.rol !== "admin") {
-      whereCondition = { usuario_id: usuario.id };
-    }
+    // 1. Filtro por usuario si no es admin
+    const whereCondition = esAdmin ? {} : { user_id: usuario.id };
 
-    // Obtener movimientos con información del producto y del usuario
-    const { data: movimientos, error } = await supabase
+    // 2. Obtener nombre (si tienes campo personalizado)
+    const nombreUsuario = usuario.nombre || usuario.email || "Usuario";
+
+    // 3. Obtener movimientos
+    const { data: movimientos, error: errorMov } = await supabase
       .from("movimientos")
-      .select(
-        "id, tipo, cantidad, fecha, producto:productos(nombre), usuario:auth.users(nombre)"
-      ) // ⬅ Agregamos el nombre del usuario
+      .select("id, tipo, cantidad, fecha, producto:productos(nombre)")
       .match(whereCondition)
       .order("fecha", { ascending: false });
 
-    if (error || !movimientos || movimientos.length === 0) {
+    if (errorMov || !movimientos || movimientos.length === 0) {
       console.error("❌ No hay movimientos para generar el PDF");
       return res
         .status(404)
         .json({ error: "No hay movimientos para generar el PDF" });
     }
 
-    // 📌 Crear el documento PDF
+    // 4. Crear documento PDF
     const doc = new PDFDocument({ margin: 40 });
     res.setHeader(
       "Content-Disposition",
@@ -223,56 +300,53 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    // 📌 Encabezado con Título
+    // ✅ Título principal
     doc
-      .fontSize(20)
-      .text("📊 Reporte de Movimientos", { align: "center", underline: true })
+      .font("Helvetica-Bold")
+      .fontSize(18)
+      .text(" Reporte de Movimientos", { align: "center" })
       .moveDown();
 
-    // 🏷️ Datos del Usuario
+    // ✅ Datos del usuario
     doc
+      .font("Helvetica")
       .fontSize(12)
-      .text(`Usuario: ${movimientos[0]?.usuario?.nombre || "Desconocido"}`, {
-        align: "left",
-      }) // ⬅ Ahora se obtiene el nombre del usuario real
-      .text(`Fecha: ${new Date().toLocaleDateString()}`, { align: "left" })
+      .text(`Usuario: ${nombreUsuario}`)
+      .text(`Fecha: ${new Date().toLocaleDateString()}`)
       .moveDown();
 
-    // 📦 Encabezado de Tabla
-    doc
-      .fontSize(10)
-      .text("Detalles de Movimientos:", { underline: true })
-      .moveDown();
-
-    const tableTop = doc.y;
-    const columnSpacing = 100;
-    const rowHeight = 20;
+    // ✅ Encabezados de tabla
     const startX = 40;
+    const spacing = 100;
+    let y = doc.y;
 
-    // 📌 Dibujar encabezados
-    doc.text("ID", startX, tableTop);
-    doc.text("Producto", startX + columnSpacing, tableTop);
-    doc.text("Tipo", startX + columnSpacing * 2, tableTop);
-    doc.text("Cantidad", startX + columnSpacing * 3, tableTop);
-    doc.text("Fecha", startX + columnSpacing * 4, tableTop);
-    doc.moveDown();
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text("ID", startX, y)
+      .text("Producto", startX + spacing, y)
+      .text("Tipo", startX + spacing * 2, y)
+      .text("Cantidad", startX + spacing * 3, y)
+      .text("Fecha", startX + spacing * 4, y);
 
-    let currentY = tableTop + rowHeight;
+    y += 20;
+
+    // ✅ Filas de datos
+    doc.font("Helvetica").fontSize(10);
     movimientos.forEach((mov) => {
-      doc.text(mov.id.toString(), startX, currentY);
-      doc.text(mov.producto?.nombre || "N/A", startX + columnSpacing, currentY);
-      doc.text(
-        mov.tipo === "entrada" ? "Entrada" : "Salida",
-        startX + columnSpacing * 2,
-        currentY
-      );
-      doc.text(mov.cantidad.toString(), startX + columnSpacing * 3, currentY);
-      doc.text(
-        new Date(mov.fecha).toLocaleString(),
-        startX + columnSpacing * 4,
-        currentY
-      );
-      currentY += rowHeight;
+      const shortId = mov.id.slice(0, 8); // ← Acortar UUID
+      const producto = mov.producto?.nombre || "N/A";
+      const tipo = mov.tipo === "entrada" ? "Entrada" : "Salida";
+      const fecha = new Date(mov.fecha).toLocaleString();
+
+      doc
+        .text(shortId, startX, y)
+        .text(producto, startX + spacing, y)
+        .text(tipo, startX + spacing * 2, y)
+        .text(mov.cantidad.toString(), startX + spacing * 3, y)
+        .text(fecha, startX + spacing * 4, y);
+
+      y += 20;
     });
 
     doc.end();

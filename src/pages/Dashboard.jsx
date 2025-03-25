@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-
+import PrediccionDemandaRadar from "../components/PrediccionDemandaRadar";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -14,7 +14,7 @@ import { AreaChart,Area,CartesianGrid , BarChart, Bar, XAxis, YAxis, Tooltip, Re
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  Radar
+  Radar, LineChart , Line
   } from "recharts";
 
 export default function Dashboard() {
@@ -69,6 +69,28 @@ export default function Dashboard() {
   
     obtenerEventos();
   }, []);
+
+  const [pedidosPorProducto, setPedidosPorProducto] = useState([]);
+  const [datosPrediccion, setDatosPrediccion] = useState([]);
+
+useEffect(() => {
+  const fetchPrediccion = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await api.get("/dashboard/demanda-productos", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPedidosPorProducto(res.data.pedidosPorProducto);
+      console.log("📦 Datos de predicción:", res.data.pedidosPorProducto);
+
+    } catch (err) {
+      console.error("❌ Error cargando predicción:", err);
+    }
+  };
+
+  fetchPrediccion();
+}, []);
+
   const movimientosEntrada = Number(estadisticas?.movimientosEntrada) || 0;
   const movimientosSalida = Number(estadisticas?.movimientosSalida) || 0;
   
@@ -130,6 +152,11 @@ export default function Dashboard() {
 
   const variacionMensual = ((movimientosEntrada - movimientosEntradaMesAnterior) / Math.max(1, movimientosEntradaMesAnterior) * 100).toFixed(1);
 
+
+  const volumenPedidos = useMemo(() => {
+    return estadisticas?.volumenPedidosPorDia || [];
+  }, [estadisticas]);
+  
   const descargarPDF = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -258,6 +285,7 @@ export default function Dashboard() {
     </ResponsiveContainer>
   </CardContent>
 </Card>
+<PrediccionDemandaRadar pedidosPorProducto={pedidosPorProducto} />
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
   {/* 🔄 Entradas vs Salidas */}
@@ -369,6 +397,37 @@ export default function Dashboard() {
     </CardContent>
   </Card>
 </div>
+
+<Card className="bg-white dark:bg-gray-900 text-black dark:text-white shadow-lg rounded-lg">
+  <CardContent className="p-6">
+    <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">📈 Volumen de Pedidos (últimos 30 días)</h2>
+
+    <ResponsiveContainer width="100%" height={250}>
+      <LineChart data={volumenPedidos}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#ccc" />
+        <XAxis dataKey="fecha" stroke="#8884d8" tick={{ fontSize: 10 }} />
+        <YAxis stroke="#8884d8" />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#1f2937",
+            borderRadius: "8px",
+            color: "#fff",
+            fontSize: "0.875rem",
+          }}
+          formatter={(value) => [`${value} pedidos`, "Total"]}
+        />
+        <Line
+          type="monotone"
+          dataKey="total"
+          stroke="#00C49F"
+          strokeWidth={2}
+          dot={{ r: 4 }}
+          activeDot={{ r: 6 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </CardContent>
+</Card>
 
 <Card>
   <CardContent className="p-6">
