@@ -167,6 +167,26 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       .gte("fecha", fechaInicioMesAnterior.toISOString())
       .lte("fecha", fechaFinMesAnterior.toISOString());
 
+    // 📦 Obtener volumen de pedidos por día (últimos 30 días)
+    const { data: pedidosPorDia, error: errorPedidosPorDia } = await supabase
+      .from("pedidos")
+      .select("fecha")
+      .eq("user_id", usuario.id)
+      .gte("fecha", fechaLimite.toISOString());
+
+    if (errorPedidosPorDia) throw errorPedidosPorDia;
+
+    // Agrupar por día (YYYY-MM-DD)
+    const conteoPorDia = {};
+    pedidosPorDia.forEach(({ fecha }) => {
+      const dia = new Date(fecha).toISOString().split("T")[0];
+      conteoPorDia[dia] = (conteoPorDia[dia] || 0) + 1;
+    });
+
+    const volumenPedidosPorDia = Object.entries(conteoPorDia).map(
+      ([fecha, total]) => ({ fecha, total })
+    );
+
     return res.json({
       totalProductos,
       totalStock,
@@ -178,6 +198,7 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       productosStock,
       distribucionCategorias,
       movimientosEntradaMesAnterior,
+      volumenPedidosPorDia,
     });
   } catch (error) {
     console.error("❌ Error obteniendo estadísticas:", error);
