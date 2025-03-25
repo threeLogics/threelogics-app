@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-
+import PrediccionDemandaRadar from "../components/PrediccionDemandaRadar";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
@@ -69,6 +69,28 @@ export default function Dashboard() {
   
     obtenerEventos();
   }, []);
+
+  const [pedidosPorProducto, setPedidosPorProducto] = useState([]);
+  const [datosPrediccion, setDatosPrediccion] = useState([]);
+
+useEffect(() => {
+  const fetchPrediccion = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await api.get("/dashboard/demanda-productos", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setPedidosPorProducto(res.data.pedidosPorProducto);
+      console.log("📦 Datos de predicción:", res.data.pedidosPorProducto);
+
+    } catch (err) {
+      console.error("❌ Error cargando predicción:", err);
+    }
+  };
+
+  fetchPrediccion();
+}, []);
+
   const movimientosEntrada = Number(estadisticas?.movimientosEntrada) || 0;
   const movimientosSalida = Number(estadisticas?.movimientosSalida) || 0;
   
@@ -263,6 +285,7 @@ export default function Dashboard() {
     </ResponsiveContainer>
   </CardContent>
 </Card>
+<PrediccionDemandaRadar pedidosPorProducto={pedidosPorProducto} />
 
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
   {/* 🔄 Entradas vs Salidas */}

@@ -206,7 +206,64 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
   }
 });
 
-/// 📌 Generar reporte en PDF de movimientos
+// 📈 Obtener datos de demanda para predicción
+router.get("/demanda-productos", verificarToken, async (req, res) => {
+  try {
+    const usuario = req.usuario;
+
+    // 1. Traemos los detalles de los pedidos (producto + cantidad + pedido_id)
+    const { data: detalles, error } = await supabase
+      .from("detallepedidos")
+      .select("cantidad, producto_id, pedido_id");
+
+    if (error) throw error;
+
+    // 2. Traemos los pedidos para filtrar por usuario y saber fechas
+    const { data: pedidos, error: errorPedidos } = await supabase
+      .from("pedidos")
+      .select("id, fecha, user_id");
+
+    if (errorPedidos) throw errorPedidos;
+
+    // 3. Filtramos los detalles que pertenecen al usuario actual
+    const detallesUsuario = detalles.filter((detalle) => {
+      const pedido = pedidos.find((p) => p.id === detalle.pedido_id);
+      return pedido && pedido.user_id === usuario.id;
+    });
+
+    // 4. Obtenemos los IDs de los productos involucrados
+    const productoIds = [
+      ...new Set(detallesUsuario.map((d) => d.producto_id).filter(Boolean)),
+    ];
+
+    // 5. Traemos los nombres de los productos
+    const { data: productos, error: errorProductos } = await supabase
+      .from("productos")
+      .select("id, nombre")
+      .in("id", productoIds);
+
+    if (errorProductos) throw errorProductos;
+
+    // 6. Formateamos: { nombre, cantidad }
+    const pedidosPorProducto = detallesUsuario
+      .map((d) => {
+        const producto = productos.find((p) => p.id === d.producto_id);
+        return producto
+          ? {
+              nombre: producto.nombre,
+              cantidad: d.cantidad,
+            }
+          : null; // ignorar si no se encontró
+      })
+      .filter(Boolean); // elimina los null
+
+    return res.json({ pedidosPorProducto });
+  } catch (error) {
+    console.error("❌ Error generando predicción:", error);
+    return res.status(500).json({ error: "Error generando predicción" });
+  }
+});
+
 /// 📌 Generar reporte en PDF de movimientos
 router.get("/reporte-pdf", verificarToken, async (req, res) => {
   try {
