@@ -60,7 +60,7 @@ export default function UltimosClientes() {
                 className="p-3 bg-gray-800 rounded-lg mb-2"
               >
                 <p className="font-semibold">{cliente.nombre}</p>
-                <p className="text-sm text-gray-400">{cliente.email}</p>
+          
                 <p className="text-xs text-gray-500">
                   📅 {cliente.created_at ? new Date(cliente.created_at).toLocaleDateString() : "Fecha no disponible"}
                 </p>
@@ -96,7 +96,7 @@ export default function UltimosClientes() {
                 className="p-3 bg-gray-800 rounded-lg mb-2"
               >
                 <p className="font-semibold">{cliente.nombre}</p>
-                <p className="text-sm text-gray-400">{cliente.email}</p>
+            
                 <p className="text-xs text-gray-500">
                   ❌ {cliente.deleted_at ? new Date(cliente.deleted_at).toLocaleDateString() : "Fecha no disponible"}
                 </p>
