@@ -9,7 +9,7 @@ function CrearPedido() {
   const [productos, setProductos] = useState([]);
   const [pedido, setPedido] = useState([]);
   const [cantidades, setCantidades] = useState({});
-  const [tipoPedido, setTipoPedido] = useState("salida");
+  const [tipoPedido, setTipoPedido] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -111,14 +111,33 @@ function CrearPedido() {
 
         {/* 🔹 Selector de Tipo de Pedido */}
         <label className="block text-white mb-2">Tipo de Pedido:</label>
-        <select
-          value={tipoPedido}
-          onChange={(e) => setTipoPedido(e.target.value)}
-          className="border border-gray-700 bg-gray-900 text-white p-2 rounded-lg w-full mb-4"
-        >
-          <option value="salida">🚚 Pedido de Salida</option>
-          <option value="entrada">📦 Pedido de Entrada</option>
-        </select>
+
+<select
+  value={tipoPedido}
+  onChange={(e) => setTipoPedido(e.target.value)}
+  className={`border text-white p-2 rounded-lg w-full mb-4 cursor-pointer
+    ${tipoPedido === "salida" ? "bg-red-600 border-red-400" : ""}
+    ${tipoPedido === "entrada" ? "bg-green-600 border-green-400" : ""}
+    ${tipoPedido === "" ? "bg-gray-900 border-yellow-400 text-yellow-400" : ""}
+  `}
+>
+<option value=""  className="hidden">
+    🛒 Selecciona el tipo de pedido
+  </option>
+  <option
+    value="salida"
+    className="bg-gray-900 text-white"
+  >
+    🚚 Pedido de Salida
+  </option>
+  <option
+    value="entrada"
+    className="bg-gray-900 text-white"
+  >
+    📦 Pedido de Entrada
+  </option>
+</select>
+
 
         {/* 🔹 Lista de Productos Disponibles */}
         <h2 className="text-xl font-semibold mb-4">🛒 Seleccionar Productos</h2>
@@ -194,11 +213,17 @@ function CrearPedido() {
 
         {/* 🔹 Botón para realizar pedido */}
         <motion.button
-          onClick={realizarPedido}
-          className="mt-6 bg-blue-500 text-black font-semibold px-6 py-3 rounded-lg hover:bg-blue-600 cursor-pointer"
-        >
-          🛒 Realizar Pedido
-        </motion.button>
+  onClick={realizarPedido}
+  disabled={tipoPedido === ""}
+  className={`mt-6 font-semibold px-6 py-3 rounded-lg transition-colors duration-300
+    ${tipoPedido === "" 
+      ? "bg-gray-500 text-gray-300 cursor-not-allowed" 
+      : "bg-blue-500 text-black hover:bg-blue-600 cursor-pointer"
+    }`}
+>
+  🛒 Realizar Pedido
+</motion.button>
+
       </motion.div>
     </div>
   );

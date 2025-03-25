@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Menu, X } from "lucide-react"; // Iconos para menú móvil
+import { NavLink } from "react-router-dom"; // para dar estilos cuando los links este activos
+
 
 export default function Navbar() {
   const { usuario, logout } = useContext(AuthContext);
@@ -123,24 +125,84 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link to="/productos" className="hover:text-teal-400 transition">
-              Productos
-            </Link>
-            <Link to="/movimientos" className="hover:text-teal-400 transition">
-              Movimientos
-            </Link>
-            <Link to="/categorias" className="hover:text-teal-400 transition">
-              Categorías
-            </Link>
-            <Link to="/pedidos" className="hover:text-teal-400 transition">
-              Pedidos
-            </Link>
-            <Link to="/ubicaciones" className="hover:text-teal-400 transition">
-              Ubicaciones
-            </Link>
-            <Link to="/dashboard" className="hover:text-teal-400 transition">
-              Dashboard
-            </Link>
+            <NavLink
+  to="/productos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Productos
+</NavLink>
+
+<NavLink
+  to="/movimientos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Movimientos
+</NavLink>
+
+<NavLink
+  to="/categorias"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Categorías
+</NavLink>
+
+<NavLink
+  to="/pedidos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Pedidos
+</NavLink>
+
+<NavLink
+  to="/ubicaciones"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Ubicaciones
+</NavLink>
+
+<NavLink
+  to="/dashboard"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Dashboard
+</NavLink>
+
           </>
         )}
       </div>
@@ -256,27 +318,83 @@ export default function Navbar() {
             </>
           ) : (
             <>
-              <Link to="/productos" className="hover:text-teal-400 transition">
-                Productos
-              </Link>
-              <Link
-                to="/movimientos"
-                className="hover:text-teal-400 transition"
-              >
-                Movimientos
-              </Link>
-              <Link to="/categorias" className="hover:text-teal-400 transition">
-                Categorías
-              </Link>
-              <Link to="/pedidos" className="hover:text-teal-400 transition">
-                Pedidos
-              </Link>
-              <Link to="/ubicaciones" className="hover:text-teal-400 transition">
-              Ubicaciones
-            </Link>
-              <Link to="/dashboard" className="hover:text-teal-400 transition">
-                Dashboard
-              </Link>
+               <NavLink
+  to="/productos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Productos
+</NavLink>
+
+<NavLink
+  to="/movimientos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Movimientos
+</NavLink>
+
+<NavLink
+  to="/categorias"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Categorías
+</NavLink>
+
+<NavLink
+  to="/pedidos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Pedidos
+</NavLink>
+
+<NavLink
+  to="/ubicaciones"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Ubicaciones
+</NavLink>
+
+<NavLink
+  to="/dashboard"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Dashboard
+</NavLink>
             </>
           )}
 
