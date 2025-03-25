@@ -159,69 +159,79 @@ export default function Pedidos() {
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {pedidosFiltrados.map((pedido) => {
-            const esFinalizado = pedido.estado === "pagado" || pedido.estado === "recibido";
-            const esCancelado = pedido.estado === "cancelado";
-        
-            return (
-              <motion.div
-                key={pedido.id}
-                className={`p-5 border border-gray-700 bg-gray-900 rounded-lg shadow-lg transition-all duration-300 ${
-                  esCancelado ? "opacity-50 pointer-events-none" : ""
-                }`}
-              >
-                <h2 className="text-xl font-semibold text-teal-400">
-                  📦 Pedido #{pedido.id}
-                </h2>
-                <p className="text-gray-400">
-                  📅 {new Date(pedido.fecha).toLocaleDateString()}
-                </p>
-                <p className="text-gray-400">
-                  📦 Tipo: {pedido.tipo === "entrada" ? "📥 Entrada" : "🚀 Salida"}
-                </p>
-                <p className="font-bold text-lg text-green-400">
-                  💰 Total: ${pedido.total.toFixed(2)}
-                </p>
+      {pedidosFiltrados.map((pedido) => {
+ const esFinalizado = pedido.estado === "pagado" || pedido.estado === "recibido";
+ const esCancelado = pedido.estado === "cancelado";
+ const esPendiente = pedido.estado === "pendiente";
+ const esPagado = pedido.estado === "pagado";
+ const esRecibido = pedido.estado === "recibido";
+ 
+ return (
+   <motion.div
+     key={pedido.id}
+     className={`p-5 bg-gray-900 rounded-lg shadow-lg transition-all duration-300 border
+       ${esCancelado ? "opacity-50 pointer-events-none border-gray-700" : ""}
+       ${esPendiente ? "border-yellow-400 shadow-[0_0_10px_2px_#facc15] animate-[pulse_3.5s_ease-in-out_infinite]" : ""}
+       ${esPagado ? "border-blue-500 shadow-[0_0_10px_2px_#4ade80]" : ""}
+       ${esRecibido ? "border-green-500 shadow-[0_0_8px_2px_#60a5fa]" : ""}
+       ${!esPendiente && !esPagado && !esRecibido && !esCancelado ? "border-gray-700" : ""}
+     `}
+   >
+ 
 
-                {/* Lista de productos */}
-<div className="mt-4">
-  <h3 className="text-white font-semibold mb-1">🧾 Productos:</h3>
-  <ul className="list-disc list-inside text-gray-300 text-sm">
-    {pedido.detallepedidos.map((detalle) => (
-      <li key={detalle.id}>
-        {detalle.productos?.nombre} × {detalle.cantidad}
-      </li>
-    ))}
-  </ul>
-</div>
-        
-                {/* Estado del pedido */}
-                <div className="mt-3">
-                  <label className="font-semibold text-white">Estado: </label>
-                  <select
-                    className="ml-2 p-2 border border-gray-700 bg-gray-800 text-white rounded-lg cursor-pointer focus:ring-2 focus:ring-teal-400 disabled:opacity-50"
-                    value={pedido.estado}
-                    onChange={(e) => actualizarEstado(pedido.id, e.target.value)}
-                    disabled={esFinalizado || esCancelado}
-                  >
-                    {pedido.tipo === "entrada" ? (
-                      <>
-                        <option value="pendiente">🟡 Pendiente</option>
-                        <option value="recibido">📦 Recibido</option>
-                        <option value="cancelado">❌ Cancelado</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="pendiente">🟡 Pendiente</option>
-                        <option value="pagado">💳 Pagado</option>
-                        <option value="cancelado">❌ Cancelado</option>
-                      </>
-                    )}
-                  </select>
-                </div>
-              </motion.div>
-            );
-          })}
+      <h2 className="text-xl font-semibold text-teal-400">
+        📦 Pedido #{pedido.id}
+      </h2>
+      <p className="text-gray-400">
+        📅 {new Date(pedido.fecha).toLocaleDateString()}
+      </p>
+      <p className="text-gray-400">
+        📦 Tipo: {pedido.tipo === "entrada" ? "📥 Entrada" : "🚀 Salida"}
+      </p>
+      <p className="font-bold text-lg text-green-400">
+        💰 Total: ${pedido.total.toFixed(2)}
+      </p>
+
+      {/* Lista de productos */}
+      <div className="mt-4">
+        <h3 className="text-white font-semibold mb-1">🧾 Productos:</h3>
+        <ul className="list-disc list-inside text-gray-300 text-sm">
+          {pedido.detallepedidos.map((detalle) => (
+            <li key={detalle.id}>
+              {detalle.productos?.nombre} × {detalle.cantidad}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {/* Estado del pedido */}
+      <div className="mt-3">
+        <label className="font-semibold text-white">Estado: </label>
+        <select
+          className="ml-2 p-2 border border-gray-700 bg-gray-800 text-white rounded-lg cursor-pointer focus:ring-2 focus:ring-teal-400 disabled:opacity-50"
+          value={pedido.estado}
+          onChange={(e) => actualizarEstado(pedido.id, e.target.value)}
+          disabled={esFinalizado || esCancelado}
+        >
+          {pedido.tipo === "entrada" ? (
+            <>
+              <option value="pendiente">🟡 Pendiente</option>
+              <option value="recibido">📦 Recibido</option>
+              <option value="cancelado">❌ Cancelado</option>
+            </>
+          ) : (
+            <>
+              <option value="pendiente">🟡 Pendiente</option>
+              <option value="pagado">💳 Pagado</option>
+              <option value="cancelado">❌ Cancelado</option>
+            </>
+          )}
+        </select>
+      </div>
+    </motion.div>
+  );
+})}
+
         </div>
         
         )}
