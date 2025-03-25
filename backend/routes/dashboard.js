@@ -85,6 +85,69 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
 
     const productosMasMovidos =
       productosOrdenados.length > 0 ? productosOrdenados.slice(0, 5) : [];
+    // Obtener nombres de los productos más movidos
+    const topIds = productosMasMovidos.map((p) => p.producto_id);
+    const { data: productosData, error: errorProductos } = await supabase
+      .from("productos")
+      .select("id, nombre")
+      .in("id", topIds);
+
+    if (errorProductos) {
+      console.error(
+        "❌ Error al obtener nombres de productos:",
+        errorProductos
+      );
+    }
+    const productosMasMovidosConNombre = productosMasMovidos.map((prod) => {
+      const producto = productosData?.find((p) => p.id === prod.producto_id);
+      return {
+        nombre: producto?.nombre || "Desconocido",
+        total: prod.total,
+      };
+    });
+    // Obtener stock total por producto
+    const { data: productosStock, error: errorProductosStock } = await supabase
+      .from("productos")
+      .select("nombre, cantidad")
+      .eq("user_id", usuario.id);
+
+    if (errorProductosStock) {
+      console.error(
+        "❌ Error al obtener stock por producto:",
+        errorProductosStock
+      );
+    }
+    // 🔹 Obtener distribución por categoría
+    const { data: productosPorCategoria, error: errorCategorias } =
+      await supabase
+        .from("productos")
+        .select("categoria_id, cantidad")
+        .eq("user_id", usuario.id);
+
+    if (errorCategorias) throw errorCategorias;
+
+    // Contar stock por categoría
+    const categoriaCount = {};
+    productosPorCategoria.forEach((prod) => {
+      if (prod.categoria_id) {
+        categoriaCount[prod.categoria_id] =
+          (categoriaCount[prod.categoria_id] || 0) + (prod.cantidad || 0);
+      }
+    });
+
+    // Obtener nombres reales
+    const { data: categoriasData } = await supabase
+      .from("categorias")
+      .select("id, nombre");
+
+    const distribucionCategorias = Object.entries(categoriaCount).map(
+      ([id, total]) => {
+        const nombre =
+          categoriasData.find((c) => c.id === id)?.nombre || "Desconocido";
+        return { nombre, total };
+      }
+    );
+
     const categoriaMasPopular =
       productosOrdenados.length > 0 ? productosOrdenados[0].producto_id : "N/A";
 
@@ -94,8 +157,10 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       totalMovimientos,
       movimientosEntrada,
       movimientosSalida,
-      productosMasMovidos,
+      productosMasMovidos: productosMasMovidosConNombre,
       categoriaMasPopular,
+      productosStock,
+      distribucionCategorias,
     });
   } catch (error) {
     console.error("❌ Error obteniendo estadísticas:", error);
