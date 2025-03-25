@@ -121,6 +121,15 @@ export default function Dashboard() {
   
   const distribucionCategorias = estadisticas?.distribucionCategorias || [];
 
+  const ultimaFechaMovimiento = eventos.length > 0
+  ? eventos.reduce((max, ev) => ev.date > max ? ev.date : max, eventos[0].date)
+  : null;
+  const productoMasMovido = productosMasMovidos.length > 0 ? productosMasMovidos[0] : null;
+  const productosBajoStock = estadisticas?.productosStock?.filter(prod => prod.cantidad <= 5) || [];
+  const movimientosEntradaMesAnterior = Number(estadisticas?.movimientosEntradaMesAnterior) || 0;
+
+  const variacionMensual = ((movimientosEntrada - movimientosEntradaMesAnterior) / Math.max(1, movimientosEntradaMesAnterior) * 100).toFixed(1);
+
   const descargarPDF = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -391,10 +400,11 @@ export default function Dashboard() {
 
 <Card className="bg-gradient-to-r from-teal-600 to-cyan-500 text-white shadow-xl rounded-lg">
   <CardContent className="p-6 space-y-3">
-    <h2 className="text-2xl font-bold mb-2 flex items-center gap-2">
+    <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
       📈 Resumen del Mes
     </h2>
 
+    {/* Movimientos */}
     <div className="flex justify-between text-sm border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">📥 Entradas</span>
       <span className="font-semibold">{movimientosEntrada}</span>
@@ -405,9 +415,48 @@ export default function Dashboard() {
       <span className="font-semibold">{movimientosSalida}</span>
     </div>
 
-    <div className="flex justify-between text-sm">
+    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">📦 Total Movimientos</span>
       <span className="font-bold text-lg">{estadisticas?.totalMovimientos}</span>
+    </div>
+
+    {/* Promedio diario */}
+    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+      <span className="flex items-center gap-2">🔁 Promedio diario</span>
+      <span className="font-semibold">{(estadisticas?.totalMovimientos / 30).toFixed(1)}</span>
+    </div>
+
+    {/* Último movimiento */}
+    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+      <span className="flex items-center gap-2">⏳ Último movimiento</span>
+      <span className="font-semibold">{ultimaFechaMovimiento ? new Date(ultimaFechaMovimiento).toLocaleString() : "-"}</span>
+    </div>
+
+    {/* Ratio entrada/salida */}
+    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+      <span className="flex items-center gap-2">🧮 Ratio entrada/salida</span>
+      <span className="font-semibold">{(movimientosEntrada / Math.max(1, movimientosSalida)).toFixed(2)} : 1</span>
+    </div>
+
+    {/* Producto más movido */}
+    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+      <span className="flex items-center gap-2">🛒 Más movido</span>
+      <span className="font-semibold">{productoMasMovido?.nombre || "-"}</span>
+    </div>
+
+
+
+    {/* Bajo stock */}
+    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+      <span className="flex items-center gap-2">🚨 Bajo stock</span>
+      <span className="font-semibold">{productosBajoStock?.length || 0} productos</span>
+    </div>
+
+    {/* Comparativa con el mes anterior (simulada) */}
+    <div className="flex justify-between text-sm">
+      <span className="flex items-center gap-2">📉 Variación mensual</span>
+      <span className="font-semibold">{variacionMensual > 0 ? `+${variacionMensual}% más entradas` : `${variacionMensual}% menos entradas`}</span>
+
     </div>
   </CardContent>
 </Card>

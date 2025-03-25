@@ -151,6 +151,22 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     const categoriaMasPopular =
       productosOrdenados.length > 0 ? productosOrdenados[0].producto_id : "N/A";
 
+    // 🔁 Entradas del mes anterior
+    const fechaInicioMesAnterior = new Date();
+    fechaInicioMesAnterior.setMonth(fechaInicioMesAnterior.getMonth() - 1);
+    fechaInicioMesAnterior.setDate(1);
+
+    const fechaFinMesAnterior = new Date();
+    fechaFinMesAnterior.setDate(0); // Último día del mes anterior
+
+    const { count: movimientosEntradaMesAnterior } = await supabase
+      .from("movimientos")
+      .select("*", { count: "exact" })
+      .eq("tipo", "entrada")
+      .eq("user_id", usuario.id)
+      .gte("fecha", fechaInicioMesAnterior.toISOString())
+      .lte("fecha", fechaFinMesAnterior.toISOString());
+
     return res.json({
       totalProductos,
       totalStock,
@@ -161,6 +177,7 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       categoriaMasPopular,
       productosStock,
       distribucionCategorias,
+      movimientosEntradaMesAnterior,
     });
   } catch (error) {
     console.error("❌ Error obteniendo estadísticas:", error);
