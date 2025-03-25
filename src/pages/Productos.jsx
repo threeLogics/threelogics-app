@@ -59,6 +59,12 @@ export default function Productos() {
     fetchDatos();
   }, []);
 
+  // ✅ Nuevo useEffect para resetear la página cuando se cambian filtros
+  useEffect(() => {
+    setPagina(1);
+  }, [filtroCategoria, precioMin, precioMax, busqueda]);
+
+
   // 🔍 Aplicar filtros con `useMemo` para optimización
   const productosFiltrados = useMemo(() => {
     return productos.filter((p) => {
@@ -440,7 +446,7 @@ export default function Productos() {
                     </td>
                     {usuario?.rol === "admin" && (
                       <td className="border px-4 py-2">
-                        {producto.user_id || "Desconocido"}
+                        {producto.creador_nombre  || "Desconocido"}
                       </td>
                     )}
                     <td className="border px-4 py-2 flex gap-2 justify-center">

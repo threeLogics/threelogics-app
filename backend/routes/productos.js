@@ -324,26 +324,46 @@ router.post("/", verificarToken, async (req, res) => {
 // ✅ Obtener productos (admin ve todos, cliente solo los suyos)
 router.get("/", verificarToken, async (req, res) => {
   try {
+    // 1. Obtener productos (según el rol)
     let query = supabase
       .from("productos")
       .select(
-        "id, nombre, descripcion, precio, cantidad, categoria_id, categorias(nombre)"
+        "id, nombre, descripcion, precio, cantidad, categoria_id, user_id, categorias(nombre)"
       );
 
-    if (req.usuario.rol === "admin") {
-      query = supabase
-        .from("productos")
-        .select(
-          "id, nombre, descripcion, precio, cantidad, categoria_id, user_id, categorias(nombre)"
-        );
-    } else {
+    if (req.usuario.rol !== "admin") {
       query = query.eq("user_id", req.usuario.id);
     }
 
-    const { data, error } = await query;
+    const { data: productos, error } = await query;
     if (error) throw error;
 
-    res.json(data);
+    // 2. Si eres admin, buscar los nombres de los creadores
+    if (req.usuario.rol === "admin") {
+      const idsUnicos = [...new Set(productos.map((p) => p.user_id))];
+
+      const { data: allUsers, error: errorUsers } =
+        await supabase.auth.admin.listUsers();
+
+      if (errorUsers) throw errorUsers;
+
+      // Mapeamos los IDs a nombres desde user_metadata
+      const mapaUsuarios = {};
+      allUsers.users.forEach((u) => {
+        mapaUsuarios[u.id] = u.user_metadata?.nombre || "Sin nombre";
+      });
+
+      // Enriquecer los productos con nombre del creador
+      const productosConNombre = productos.map((p) => ({
+        ...p,
+        creador_nombre: mapaUsuarios[p.user_id] || "Desconocido",
+      }));
+
+      return res.json(productosConNombre);
+    }
+
+    // 3. Si no eres admin, devuelves productos tal cual
+    res.json(productos);
   } catch (error) {
     console.error("❌ Error al obtener productos:", error);
     res.status(500).json({ error: error.message });
