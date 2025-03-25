@@ -11,6 +11,7 @@ const Ubicaciones = () => {
   const pedidoId = searchParams.get("pedidoId"); // obtiene pedidoId desde URL
   const [modalOpen, setModalOpen] = useState(false);
   const [ubicacionesModal, setUbicacionesModal] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchUbicaciones = async () => {
@@ -80,7 +81,11 @@ const Ubicaciones = () => {
     hidden: { opacity: 0, y: 0 },
     visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
   };
-
+  const ubicacionesFiltradas = ubicaciones.filter((u) =>
+    `${u.productos?.nombre || ""} ${u.almacen} ${u.estanteria} ${u.posicion}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
   return (
     <div className="flex flex-col items-start pt-20 min-h-screen bg-black text-white p-6">
       <div className="w-full max-w-6xl mx-auto">
@@ -108,10 +113,18 @@ const Ubicaciones = () => {
             </div>
           </div>
         </div>
-
-        {loading ? <p className="text-center">Cargando ubicaciones...</p> : (
+        <input
+          type="text"
+          placeholder="🔍 Buscar por producto ..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-6 p-2 w-full max-w-md rounded bg-gray-700 text-white placeholder-gray-400"
+        />
+        {loading ? (
+          <p className="text-center">Cargando ubicaciones...</p>
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ubicaciones.map((u) => (
+            {ubicacionesFiltradas.map((u) => (
               <motion.div key={u.id} className="bg-gray-900 p-6 rounded-lg shadow-lg border border-teal-400">
                 <h2 className="text-teal-400">Producto: {u.productos.nombre}</h2>
                 <p>{u.productos.descripcion || "Sin descripción"}</p>
