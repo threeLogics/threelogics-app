@@ -13,6 +13,8 @@ const Ubicaciones = () => {
   const [ubicacionesModal, setUbicacionesModal] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+
+
   useEffect(() => {
     const fetchUbicaciones = async () => {
       try {
@@ -31,7 +33,7 @@ const Ubicaciones = () => {
           .select(`
             id, almacen, estanteria, posicion, altura, 
             productos!ubicaciones_producto_id_fkey(
-              id, nombre, descripcion, user_id
+             id, nombre, descripcion, user_id, cantidad, stock_minimo
             )
           `);
 
@@ -47,6 +49,8 @@ const Ubicaciones = () => {
         );
 
         setUbicaciones(ubicacionesFiltradas || []);
+
+        
 
         if (pedidoId) {
           // Aquí obtienes la ubicación específica relacionada con pedidoId
@@ -73,6 +77,7 @@ const Ubicaciones = () => {
         setLoading(false);
       }
     };
+    
 
     fetchUbicaciones();
   }, [pedidoId]);
@@ -86,6 +91,8 @@ const Ubicaciones = () => {
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
   );
+
+  
   return (
     <div className="flex flex-col items-start pt-20 min-h-screen bg-black text-white p-6">
       <div className="w-full max-w-6xl mx-auto">
@@ -113,6 +120,10 @@ const Ubicaciones = () => {
             </div>
           </div>
         </div>
+        
+
+
+
         <input
           type="text"
           placeholder="🔍 Buscar por producto ..."
@@ -120,23 +131,44 @@ const Ubicaciones = () => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="mb-6 p-2 w-full max-w-md rounded bg-gray-700 text-white placeholder-gray-400"
         />
+        
         {loading ? (
           <p className="text-center">Cargando ubicaciones...</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {ubicacionesFiltradas.map((u) => (
-              <motion.div key={u.id} className="bg-gray-900 p-6 rounded-lg shadow-lg border border-teal-400">
-                <h2 className="text-teal-400">Producto: {u.productos.nombre}</h2>
-                <p>{u.productos.descripcion || "Sin descripción"}</p>
-                <div className="mt-4 text-gray-400">
-                  <p>Almacén: {u.almacen}</p>
-                  <p>Estantería: {u.estanteria}</p>
-                  <p>Posición: {u.posicion}</p>
-                  <p>Altura: {u.altura}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+            
+  {ubicacionesFiltradas.map((u) => {
+    // ✅ Lógica del stock
+    const cantidad = u.productos.cantidad;
+    const minimo = u.productos.stock_minimo;
+    const stockBajo = cantidad < minimo;
+
+    return (
+      <motion.div
+        key={u.id}
+        className={`bg-gray-900 p-6 rounded-lg shadow-lg border ${
+          stockBajo ? "border-red-500" : "border-teal-400"
+        }`}
+      >
+        <h2 className="text-teal-400">Producto: {u.productos.nombre}</h2>
+        <p>{u.productos.descripcion || "Sin descripción"}</p>
+
+        {/* ⚠️ Indicador de stock bajo */}
+        {stockBajo && (
+          <p className="text-red-400 font-semibold mt-2">⚠️ Stock bajo</p>
+        )}
+
+        <div className="mt-4 text-gray-400">
+          <p>Almacén: {u.almacen}</p>
+          <p>Estantería: {u.estanteria}</p>
+          <p>Posición: {u.posicion}</p>
+          <p>Altura: {u.altura}</p>
+        </div>
+      </motion.div>
+    );
+  })}
+</div>
+
         )}
 
         {modalOpen && (
