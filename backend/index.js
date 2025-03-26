@@ -17,6 +17,7 @@ import communityRoutes from "./routes/communityRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import estadoRoutes from "./routes/estado.js";
 import productosVistaRoutes from "./routes/productos.js";
+import movimientos from "./routes/movimientos.js";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/newsletter", newsletterRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/estado", estadoRoutes);
+app.use("/api/movimientos", movimientos);
 app.use("/api", productosVistaRoutes);
 
 // Ruta de prueba

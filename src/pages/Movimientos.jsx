@@ -1,6 +1,8 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo , useContext} from "react";
+import { AuthContext } from "../context/AuthContext";
 import supabase from "../supabaseClient.js";
 import { motion } from "framer-motion";
+import { api } from "../services/api";
 
 function Movimientos() {
   const [movimientos, setMovimientos] = useState([]);
@@ -8,25 +10,14 @@ function Movimientos() {
   const [filtroCategoria, setFiltroCategoria] = useState("");
   const [filtroFecha, setFiltroFecha] = useState("7");
   const [filtroTipo, setFiltroTipo] = useState("");
+  const { usuario } = useContext(AuthContext);
+
 
   // ✅ Obtener movimientos desde Supabase
   const fetchMovimientos = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from("movimientos").select(`
-          id,
-          tipo,
-          cantidad,
-          fecha,
-          producto_id,
-          productos (nombre, categoria_id)
-        `);
-
-      if (error) {
-        console.error("❌ Error al obtener movimientos desde Supabase:", error);
-      } else {
-        console.log("📌 Movimientos recibidos desde Supabase:", data);
-        setMovimientos(data);
-      }
+      const res = await api.get("/movimientos"); // 👈 Llama a tu endpoint backend
+      setMovimientos(res.data);
     } catch (error) {
       console.error("❌ Error al obtener movimientos:", error);
     }
@@ -34,8 +25,19 @@ function Movimientos() {
 
   // ✅ Obtener categorías desde Supabase
   const fetchCategorias = useCallback(async () => {
+    // Espera a que AuthContext cargue el usuario
+    if (!usuario) return;
+  
     try {
-      const { data, error } = await supabase.from("categorias").select("*");
+      let query = supabase.from("categorias").select("*");
+  
+      // Solo filtra por usuario si no es admin
+      if (usuario.rol !== "admin") {
+        query = query.eq("user_id", usuario.id);
+      }
+  
+      const { data, error } = await query;
+  
       if (error) {
         console.error("❌ Error al obtener categorías desde Supabase:", error);
       } else {
@@ -44,12 +46,15 @@ function Movimientos() {
     } catch (error) {
       console.error("❌ Error al obtener categorías:", error);
     }
-  }, []);
-
+  }, [usuario]);
+  
   useEffect(() => {
-    fetchMovimientos();
-    fetchCategorias();
-  }, [fetchMovimientos, fetchCategorias]);
+    if (usuario) {
+      fetchMovimientos();
+      fetchCategorias();
+    }
+  }, [fetchMovimientos, fetchCategorias, usuario]);
+  
 
   // ✅ Filtrar movimientos según los filtros seleccionados
   const movimientosFiltrados = useMemo(() => {
@@ -118,7 +123,7 @@ function Movimientos() {
           </select>
         </div>
 
-        {/* 📌 Tabla de Movimientos */}
+          {/* Tabla */}
         <div className="overflow-x-auto rounded-lg shadow-md">
           <table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
             <thead className="bg-gray-900">
@@ -128,6 +133,9 @@ function Movimientos() {
                 <th className="border px-4 py-2">Tipo</th>
                 <th className="border px-4 py-2">Cantidad</th>
                 <th className="border px-4 py-2">Fecha</th>
+                {usuario?.rol === "admin" && (
+                  <th className="border px-4 py-2">Realizado por</th>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -151,12 +159,17 @@ function Movimientos() {
                     <td className="border px-4 py-2">
                       {new Date(mov.fecha).toLocaleString()}
                     </td>
+                    {usuario?.rol === "admin" && (
+                      <td className="border px-4 py-2">
+                        {mov.nombreUsuario || "Desconocido"}
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan="5"
+                    colSpan={usuario?.rol === "admin" ? 6 : 5}
                     className="border px-4 py-2 text-center text-gray-400"
                   >
                     No hay movimientos registrados
