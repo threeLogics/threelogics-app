@@ -17,15 +17,23 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     }
 
     // 📦 Cantidad total de productos en stock (según usuario)
-    const { count: totalProductos } = await supabase
+    const productosQuery = supabase
       .from("productos")
-      .select("*", { count: "exact" }) // 🔹 Corregido: Se usa `*` en vez de `"id"`
-      .eq("user_id", usuario.id); // 🔹 Se usa `eq` en lugar de `match`
+      .select("*", { count: "exact" });
 
-    const { data: stockData, error: errorStock } = await supabase
-      .from("productos")
-      .select("cantidad")
-      .eq("user_id", usuario.id);
+    if (usuario.rol !== "admin") {
+      productosQuery.eq("user_id", usuario.id);
+    }
+
+    const { count: totalProductos } = await productosQuery;
+
+    const stockQuery = supabase.from("productos").select("cantidad");
+
+    if (usuario.rol !== "admin") {
+      stockQuery.eq("user_id", usuario.id);
+    }
+
+    const { data: stockData, error: errorStock } = await stockQuery;
 
     if (errorStock || !stockData) {
       console.error("❌ Error obteniendo stock:", errorStock);
@@ -41,31 +49,51 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - 30);
 
-    const { count: totalMovimientos } = await supabase
+    const totalMovimientosQuery = supabase
       .from("movimientos")
-      .select("*", { count: "exact" }) // 🔹 `*` en vez de `"id"`
-      .eq("user_id", usuario.id)
+      .select("*", { count: "exact" })
       .gte("fecha", fechaLimite.toISOString());
 
-    const { count: movimientosEntrada } = await supabase
+    if (usuario.rol !== "admin") {
+      totalMovimientosQuery.eq("user_id", usuario.id);
+    }
+
+    const { count: totalMovimientos } = await totalMovimientosQuery;
+    const movimientosEntradaQuery = supabase
       .from("movimientos")
-      .select("*", { count: "exact" }) // 🔹 Se usa `*` en vez de `"id"`
+      .select("*", { count: "exact" })
       .eq("tipo", "entrada")
-      .eq("user_id", usuario.id) // ✅ Filtramos por usuario directamente
       .gte("fecha", fechaLimite.toISOString());
 
-    const { count: movimientosSalida } = await supabase
+    if (usuario.rol !== "admin") {
+      movimientosEntradaQuery.eq("user_id", usuario.id);
+    }
+
+    const { count: movimientosEntrada } = await movimientosEntradaQuery;
+
+    const movimientosSalidaQuery = supabase
       .from("movimientos")
       .select("*", { count: "exact" })
       .eq("tipo", "salida")
-      .eq("user_id", usuario.id) // ✅ Filtramos por usuario directamente
       .gte("fecha", fechaLimite.toISOString());
 
+    if (usuario.rol !== "admin") {
+      movimientosSalidaQuery.eq("user_id", usuario.id);
+    }
+
+    const { count: movimientosSalida } = await movimientosSalidaQuery;
+
     // 🔹 Obtener todos los movimientos para agrupar manualmente
-    const { data: movimientosData, error: errorMovimientos } = await supabase
+    const movimientosDataQuery = supabase
       .from("movimientos")
-      .select("producto_id")
-      .eq("user_id", usuario.id); // ✅ Filtramos solo por usuario sin `match()`
+      .select("producto_id");
+
+    if (usuario.rol !== "admin") {
+      movimientosDataQuery.eq("user_id", usuario.id);
+    }
+
+    const { data: movimientosData, error: errorMovimientos } =
+      await movimientosDataQuery;
 
     if (errorMovimientos) throw errorMovimientos;
 
@@ -106,10 +134,16 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       };
     });
     // Obtener stock total por producto
-    const { data: productosStock, error: errorProductosStock } = await supabase
+    const productosStockQuery = supabase
       .from("productos")
-      .select("nombre, cantidad")
-      .eq("user_id", usuario.id);
+      .select("nombre, cantidad");
+
+    if (usuario.rol !== "admin") {
+      productosStockQuery.eq("user_id", usuario.id);
+    }
+
+    const { data: productosStock, error: errorProductosStock } =
+      await productosStockQuery;
 
     if (errorProductosStock) {
       console.error(
@@ -117,12 +151,18 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
         errorProductosStock
       );
     }
+
     // 🔹 Obtener distribución por categoría
+    const productosPorCategoriaQuery = supabase
+      .from("productos")
+      .select("categoria_id, cantidad");
+
+    if (usuario.rol !== "admin") {
+      productosPorCategoriaQuery.eq("user_id", usuario.id);
+    }
+
     const { data: productosPorCategoria, error: errorCategorias } =
-      await supabase
-        .from("productos")
-        .select("categoria_id, cantidad")
-        .eq("user_id", usuario.id);
+      await productosPorCategoriaQuery;
 
     if (errorCategorias) throw errorCategorias;
 
@@ -159,20 +199,32 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     const fechaFinMesAnterior = new Date();
     fechaFinMesAnterior.setDate(0); // Último día del mes anterior
 
-    const { count: movimientosEntradaMesAnterior } = await supabase
+    const movimientosEntradaMesAnteriorQuery = supabase
       .from("movimientos")
       .select("*", { count: "exact" })
       .eq("tipo", "entrada")
-      .eq("user_id", usuario.id)
       .gte("fecha", fechaInicioMesAnterior.toISOString())
       .lte("fecha", fechaFinMesAnterior.toISOString());
 
+    if (usuario.rol !== "admin") {
+      movimientosEntradaMesAnteriorQuery.eq("user_id", usuario.id);
+    }
+
+    const { count: movimientosEntradaMesAnterior } =
+      await movimientosEntradaMesAnteriorQuery;
+
     // 📦 Obtener volumen de pedidos por día (últimos 30 días)
-    const { data: pedidosPorDia, error: errorPedidosPorDia } = await supabase
+    const pedidosPorDiaQuery = supabase
       .from("pedidos")
       .select("fecha")
-      .eq("user_id", usuario.id)
       .gte("fecha", fechaLimite.toISOString());
+
+    if (usuario.rol !== "admin") {
+      pedidosPorDiaQuery.eq("user_id", usuario.id);
+    }
+
+    const { data: pedidosPorDia, error: errorPedidosPorDia } =
+      await pedidosPorDiaQuery;
 
     if (errorPedidosPorDia) throw errorPedidosPorDia;
 
@@ -226,10 +278,13 @@ router.get("/demanda-productos", verificarToken, async (req, res) => {
     if (errorPedidos) throw errorPedidos;
 
     // 3. Filtramos los detalles que pertenecen al usuario actual
-    const detallesUsuario = detalles.filter((detalle) => {
-      const pedido = pedidos.find((p) => p.id === detalle.pedido_id);
-      return pedido && pedido.user_id === usuario.id;
-    });
+    const detallesUsuario =
+      usuario.rol === "admin"
+        ? detalles
+        : detalles.filter((detalle) => {
+            const pedido = pedidos.find((p) => p.id === detalle.pedido_id);
+            return pedido && pedido.user_id === usuario.id;
+          });
 
     // 4. Obtenemos los IDs de los productos involucrados
     const productoIds = [

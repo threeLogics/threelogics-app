@@ -44,14 +44,22 @@ export default function Dashboard() {
   useEffect(() => {
     const obtenerEventos = async () => {
       try {
-        const { data, error } = await supabase
+        let query = supabase
           .from("movimientos")
           .select(`
             id,
             tipo,
             fecha,
-            productos (nombre)
+            productos (nombre),
+            user_id
           `);
+  
+        // Solo filtra si no es admin
+        if (usuario?.rol !== "admin") {
+          query = query.eq("user_id", usuario.id);
+        }
+  
+        const { data, error } = await query;
   
         if (error) throw error;
   
@@ -67,8 +75,9 @@ export default function Dashboard() {
       }
     };
   
-    obtenerEventos();
-  }, []);
+    if (usuario) obtenerEventos();
+  }, [usuario]);
+  
 
   const [pedidosPorProducto, setPedidosPorProducto] = useState([]);
   const [datosPrediccion, setDatosPrediccion] = useState([]);
