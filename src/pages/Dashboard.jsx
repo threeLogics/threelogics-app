@@ -9,6 +9,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import supabase from "../supabaseClient";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 import { AreaChart,Area,CartesianGrid , BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell , RadarChart,
   PolarGrid,
@@ -23,6 +24,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [eventos, setEventos] = useState([]);
+  const [eventoActivo, setEventoActivo] = useState(null);
+
 
   useEffect(() => {
     if (!usuario) return;
@@ -165,6 +168,15 @@ useEffect(() => {
   const volumenPedidos = useMemo(() => {
     return estadisticas?.volumenPedidosPorDia || [];
   }, [estadisticas]);
+
+  const manejarClickFecha = (info) => {
+    const eventosDia = eventos.filter(ev => ev.date === info.dateStr);
+    setEventoActivo({
+      fecha: info.dateStr,
+      eventos: eventosDia,
+    });
+  };
+  
   
   const descargarPDF = async () => {
     try {
@@ -533,6 +545,7 @@ useEffect(() => {
 
     
 {/* 📅 Mini Calendario de Actividad */}
+{/* 📅 Mini Calendario de Actividad */}
 <Card className="bg-white dark:bg-gray-900 text-black dark:text-white mt-6 shadow-xl rounded-lg">
   <CardContent className="p-6">
     <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">📅 Calendario de Actividad</h2>
@@ -542,23 +555,49 @@ useEffect(() => {
         initialView="dayGridMonth"
         height="auto"
         weekends={true}
-        dateClick={(info) => alert(`📅 Has hecho clic en: ${info.dateStr}`)}
-        events={eventos} // ← Asegúrate que esto venga del useEffect
+        dateClick={manejarClickFecha}
+        events={eventos}
         headerToolbar={{
           left: "prev,next today",
           center: "title",
           right: "dayGridMonth,dayGridWeek",
         }}
-        dayMaxEventRows={2}
+        dayMaxEventRows={true}
         eventDisplay="block"
         eventClassNames={() =>
-          "bg-blue-500 text-white px-2 py-1 rounded shadow-md text-xs font-medium"
+          "bg-blue-500 text-white px-2 py-1 rounded shadow-md text-xs font-medium overflow-y-auto max-h-24"
         }
         className="text-sm bg-white dark:bg-gray-900"
       />
+
+      {eventoActivo && eventoActivo.eventos.length > 0 && (
+        <Popover open={Boolean(eventoActivo)} onOpenChange={() => setEventoActivo(null)}>
+          <PopoverTrigger asChild>
+            <div className="hidden"></div>
+          </PopoverTrigger>
+          <PopoverContent className="bg-gray-800 text-white p-4 rounded shadow-lg relative">
+  <button
+    onClick={() => setEventoActivo(null)}
+    className="absolute top-2 right-2 text-gray-400 hover:text-white cursor-pointer"
+  >
+    ❌
+  </button>
+  <h3 className="font-semibold mb-2">Eventos del día: {eventoActivo.fecha}</h3>
+  <ul className="max-h-60 overflow-auto">
+    {eventoActivo.eventos.map((ev, idx) => (
+      <li key={idx} className="py-1 border-b border-gray-600 last:border-none">
+        {ev.title}
+      </li>
+    ))}
+  </ul>
+</PopoverContent>
+
+        </Popover>
+      )}
     </div>
   </CardContent>
 </Card>
+
 
 
     </div>
