@@ -3,7 +3,7 @@ import { api } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
-
+import TarjetaResumen from "../components/TarjetaResumen";
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,6 +118,7 @@ export default function Pedidos() {
         <h1 className="text-3xl font-bold text-teal-400 mb-6 text-left">
           📑 Mis Pedidos
         </h1>
+        <TarjetaResumen />
 
         {/* 📌 Botón para ir a la página de crear pedido */}
         <button
@@ -137,7 +138,7 @@ export default function Pedidos() {
             <option value="">📁 Todos los Estados</option>
             <option value="pendiente">🟡 Pendiente</option>
             <option value="recibido">📦 Recibido</option>
-            <option value="pagado">💳 Pagado</option>
+            <option value="pagado">💳 Pagado </option>
             <option value="cancelado">❌ Cancelado</option>
           </select>
 
@@ -222,7 +223,7 @@ export default function Pedidos() {
           ) : (
             <>
               <option value="pendiente">🟡 Pendiente</option>
-              <option value="pagado">💳 Pagado</option>
+              <option value="pagado">💳 Pagado (vendido)</option>
               <option value="cancelado">❌ Cancelado</option>
             </>
           )}

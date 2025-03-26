@@ -33,8 +33,18 @@ function CrearPedido() {
 
   const agregarProducto = (producto) => {
     const cantidadSeleccionada = cantidades[producto.id] || 1;
+    const stockDisponible = producto.cantidad;
+  
+    // 🚫 Validar stock solo si es salida
+    if (tipoPedido === "salida" && cantidadSeleccionada > stockDisponible) {
+      toast.error(
+        `❌ Stock insuficiente para "${producto.nombre}". Solo hay ${stockDisponible} unidades disponibles.`
+      );
+      return;
+    }
+  
     const existe = pedido.find((p) => p.productoId === producto.id);
-
+  
     if (existe) {
       setPedido(
         pedido.map((p) =>
@@ -49,11 +59,12 @@ function CrearPedido() {
         { productoId: producto.id, cantidad: cantidadSeleccionada },
       ]);
     }
-
+  
     toast.success(
       `🛒 ${producto.nombre} añadido con ${cantidadSeleccionada} unidades`
     );
   };
+  
 
   const quitarProducto = (productoId) => {
     setPedido(pedido.filter((p) => p.productoId !== productoId));
@@ -190,7 +201,7 @@ function CrearPedido() {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     onClick={() => quitarProducto(p.productoId)}
-                    className="text-red-500 hover:text-red-400 transition"
+                    className="text-red-500 hover:text-red-400 transition cursor-pointer"
                   >
                     ❌
                   </motion.button>
@@ -204,7 +215,7 @@ function CrearPedido() {
             {/* 🔹 Botón para limpiar carrito */}
             <motion.button
               onClick={limpiarCarrito}
-              className="mt-3 bg-red-500 text-black font-semibold px-4 py-2 rounded-lg hover:bg-red-600"
+              className="mt-3 bg-red-500 text-black font-semibold px-4 py-2 rounded-lg hover:bg-red-600 cursor-pointer"
             >
               🗑 Vaciar Carrito
             </motion.button>

@@ -169,6 +169,14 @@ export default function Productos() {
 
   const handleModificarProducto = async (e) => {
     e.preventDefault();
+  
+    const { precio, cantidad } = productoEditado;
+  
+    if (precio < 0 || cantidad < 0) {
+      toast.error("❌ El precio y la cantidad no pueden ser negativos.");
+      return;
+    }
+  
     try {
       await api.put(`/productos/${productoEditado.id}`, productoEditado);
       setProductos((prev) =>
@@ -182,6 +190,7 @@ export default function Productos() {
       toast.error("❌ Error al modificar el producto.");
     }
   };
+  
 
   // 🆕 Funciones para la carga masiva de productos
   const handleArchivoSeleccionado = (e) => {
@@ -513,6 +522,7 @@ export default function Productos() {
                 placeholder="Cantidad"
                 value={productoEditado.cantidad}
                 onChange={handleChangeEdicion}
+                 min="0"
                 className="border p-2 w-full rounded-md"
                 required
               />
@@ -522,6 +532,7 @@ export default function Productos() {
                 placeholder="Precio"
                 value={productoEditado.precio}
                 onChange={handleChangeEdicion}
+                 min="0"
                 className="border p-2 w-full rounded-md"
                 required
               />
