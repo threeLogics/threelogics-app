@@ -170,12 +170,28 @@ useEffect(() => {
   }, [estadisticas]);
 
   const manejarClickFecha = (info) => {
-    const eventosDia = eventos.filter(ev => ev.date === info.dateStr);
+    abrirPopoverConEventosDelDia(info.dateStr);
+  };
+  
+  const manejarClickEvento = (info) => {
+    const fecha = info.event.startStr.split("T")[0];
+    abrirPopoverConEventosDelDia(fecha);
+  };
+  
+  const manejarClickMasEventos = (arg) => {
+    abrirPopoverConEventosDelDia(arg.dateStr);
+    return "none"; // 👈 evita que se abra el modal interno
+  };
+  
+  const abrirPopoverConEventosDelDia = (fechaStr) => {
+    const eventosDelDia = eventos.filter((ev) => ev.date === fechaStr);
     setEventoActivo({
-      fecha: info.dateStr,
-      eventos: eventosDia,
+      fecha: fechaStr,
+      eventos: eventosDelDia,
     });
   };
+  
+  
   
   
   const descargarPDF = async () => {
@@ -284,15 +300,17 @@ useEffect(() => {
 
         <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
         <Tooltip
-          contentStyle={{
-            backgroundColor: "#1f2937",
-            border: "none",
-            borderRadius: "10px",
-            color: "#fff",
-            fontSize: "0.875rem",
-          }}
-          formatter={(value, name) => [`${value} movimientos`, "Total"]}
-        />
+  contentStyle={{
+    backgroundColor: "#1f2937",
+    border: "none",
+    borderRadius: "10px",
+    color: "#fff",
+    fontSize: "0.875rem",
+  }}
+  formatter={(value, name) => [`${value} movimientos`, "Total"]}
+
+/>
+
 
         <Area
           type="monotone"
@@ -404,15 +422,16 @@ useEffect(() => {
           </Pie>
 
           <Tooltip
-            contentStyle={{
-              backgroundColor: "gray",
-              borderRadius: "8px",
-              border: "none",
-              color: "#fff",
-              fontSize: "0.875rem",
-            }}
-            formatter={(value, name) => [`${value} unidades`, name]}
-          />
+  contentStyle={{
+    backgroundColor: "gray",
+    borderRadius: "8px",
+    border: "none",
+    color: "#fff",
+    fontSize: "0.875rem",
+  }}
+  formatter={(value, name) => [`${value} unidades`, name]}
+/>
+
         </PieChart>
       </ResponsiveContainer>
     </CardContent>
@@ -538,6 +557,16 @@ useEffect(() => {
       <span className="font-semibold">{variacionMensual > 0 ? `+${variacionMensual}% más entradas` : `${variacionMensual}% menos entradas`}</span>
 
     </div>
+
+    {/* Cliente más activo */}
+    {usuario?.rol === "admin" && (
+  <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <span className="flex items-center gap-2">👤 Cliente más activo</span>
+    <span className="font-semibold">{estadisticas?.clienteMasActivo || "Desconocido"}</span>
+  </div>
+)}
+
+
   </CardContent>
 </Card>
 
@@ -550,25 +579,30 @@ useEffect(() => {
   <CardContent className="p-6">
     <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">📅 Calendario de Actividad</h2>
     <div className="rounded-lg overflow-hidden">
-      <FullCalendar
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        height="auto"
-        weekends={true}
-        dateClick={manejarClickFecha}
-        events={eventos}
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,dayGridWeek",
-        }}
-        dayMaxEventRows={true}
-        eventDisplay="block"
-        eventClassNames={() =>
-          "bg-blue-500 text-white px-2 py-1 rounded shadow-md text-xs font-medium overflow-y-auto max-h-24"
-        }
-        className="text-sm bg-white dark:bg-gray-900"
-      />
+    <FullCalendar
+  plugins={[dayGridPlugin, interactionPlugin]}
+  initialView="dayGridMonth"
+  height="auto"
+  weekends={true}
+  dateClick={manejarClickFecha}
+  eventClick={manejarClickEvento}
+  moreLinkClick={manejarClickMasEventos}
+  events={eventos}  
+  moreLinkContent={(arg) => {
+    return { html: `<span class="text-blue-400 hover:underline">${arg.num} más, haz click en la celda</span>` };
+  }}
+  headerToolbar={{
+    left: "prev,next today",
+    center: "title",
+    right: "dayGridMonth,dayGridWeek",
+  }}
+  dayMaxEventRows={2}
+  eventDisplay="block"
+  eventClassNames={() =>
+    "bg-blue-500 text-white px-2 py-1 rounded shadow-md text-xs font-medium overflow-y-auto max-h-24"
+  }
+  className="text-sm bg-white dark:bg-gray-900"
+/>
 
       {eventoActivo && eventoActivo.eventos.length > 0 && (
         <Popover open={Boolean(eventoActivo)} onOpenChange={() => setEventoActivo(null)}>
