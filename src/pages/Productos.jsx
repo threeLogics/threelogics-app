@@ -21,6 +21,7 @@ export default function Productos() {
   const [productoEditado, setProductoEditado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalCargaMasiva, setModalCargaMasiva] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // 🆕 Estado para la carga masiva de productos
   const [archivo, setArchivo] = useState(null);
@@ -53,6 +54,8 @@ export default function Productos() {
       } catch (error) {
         console.error("Error en fetchDatos:", error);
         toast.error("❌ Error al obtener los datos.");
+      }finally {
+        setLoading(false); // 👈 Esto garantiza que el loading se desactive siempre
       }
     };
 
@@ -238,7 +241,19 @@ export default function Productos() {
     hidden: { opacity: 0, y: 0 },
     visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
   };
-
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-xl"
+        >
+          🔄 Cargando productos...
+        </motion.div>
+      </div>
+    );
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-12">
       <div className="p-6 max-w-7xl w-full">

@@ -239,6 +239,94 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     const volumenPedidosPorDia = Object.entries(conteoPorDia).map(
       ([fecha, total]) => ({ fecha, total })
     );
+    // 1. Obtener todos los movimientos (solo user_id)
+    const { data: movimientosUsuarios, error: errorMovUsuarios } =
+      await supabase.from("movimientos").select("user_id");
+
+    if (errorMovUsuarios) {
+      console.error("❌ Error al obtener movimientos:", errorMovUsuarios);
+      return res.status(500).json({ error: "Error al obtener movimientos" });
+    }
+
+    // 2. Obtener todos los usuarios (como en el endpoint de movimientos)
+    const { data: usuarios, error: errorUsuarios } =
+      await supabase.auth.admin.listUsers();
+
+    if (errorUsuarios) {
+      console.error("❌ Error al obtener usuarios:", errorUsuarios);
+      return res.status(500).json({ error: "Error al obtener usuarios" });
+    }
+
+    const usuariosMap = {};
+    usuarios.users.forEach((u) => {
+      usuariosMap[u.id] = u.user_metadata?.nombre || "Desconocido";
+    });
+
+    // 3. Calcular el cliente más activo
+    const usuarioConteo = {};
+    movimientosUsuarios.forEach(({ user_id }) => {
+      usuarioConteo[user_id] = (usuarioConteo[user_id] || 0) + 1;
+    });
+
+    const clienteMasActivoId = Object.entries(usuarioConteo).sort(
+      (a, b) => b[1] - a[1]
+    )[0]?.[0];
+
+    const clienteMasActivo = usuariosMap[clienteMasActivoId] || "Desconocido";
+
+    // 4. Incluir nombres de clientes en los productos más movidos
+    const productosMasMovidosConCliente = await Promise.all(
+      productosMasMovidosConNombre.map(async (prod) => {
+        if (!prod?.producto_id) {
+          return { ...prod, cliente: "Desconocido" };
+        }
+
+        const { data: movimiento, error } = await supabase
+          .from("movimientos")
+          .select("user_id")
+          .eq("producto_id", prod.producto_id)
+          .order("fecha", { ascending: false }) // último movimiento primero
+          .limit(1)
+          .single();
+
+        const userId = movimiento?.user_id;
+        const nombreCliente = usuariosMap[userId] || "Desconocido";
+
+        return {
+          ...prod,
+          cliente: nombreCliente,
+        };
+      })
+    );
+
+    // 5. Incluir nombres de clientes en la distribución del stock por categoría
+    const distribucionCategoriasConCliente = await Promise.all(
+      distribucionCategorias.map(async (cat) => {
+        const categoriaId = categoriasData.find(
+          (c) => c.nombre === cat.nombre
+        )?.id;
+
+        if (!categoriaId) {
+          return { ...cat, cliente: "Desconocido" };
+        }
+
+        const { data: producto, error } = await supabase
+          .from("productos")
+          .select("user_id")
+          .eq("categoria_id", categoriaId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+
+        const userId = producto?.user_id;
+        const nombreCliente = usuariosMap[userId] || "Desconocido";
+
+        return {
+          ...cat,
+          cliente: nombreCliente,
+        };
+      })
+    );
 
     return res.json({
       totalProductos,
@@ -246,12 +334,13 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       totalMovimientos,
       movimientosEntrada,
       movimientosSalida,
-      productosMasMovidos: productosMasMovidosConNombre,
+      productosMasMovidos: productosMasMovidosConCliente, // modificado
       categoriaMasPopular,
       productosStock,
-      distribucionCategorias,
+      distribucionCategorias: distribucionCategoriasConCliente, // modificado
       movimientosEntradaMesAnterior,
       volumenPedidosPorDia,
+      clienteMasActivo, // nuevo campo
     });
   } catch (error) {
     console.error("❌ Error obteniendo estadísticas:", error);

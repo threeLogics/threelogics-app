@@ -11,6 +11,7 @@ function Movimientos() {
   const [filtroFecha, setFiltroFecha] = useState("7");
   const [filtroTipo, setFiltroTipo] = useState("");
   const { usuario } = useContext(AuthContext);
+  const [loading, setLoading] = useState(true);
 
 
   // ✅ Obtener movimientos desde Supabase
@@ -20,6 +21,8 @@ function Movimientos() {
       setMovimientos(res.data);
     } catch (error) {
       console.error("❌ Error al obtener movimientos:", error);
+    }finally {
+      setLoading(false); // 👈 Esto garantiza que el loading se desactive siempre
     }
   }, []);
 
@@ -70,6 +73,21 @@ function Movimientos() {
       );
     });
   }, [movimientos, filtroCategoria, filtroFecha, filtroTipo]);
+
+
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-xl"
+        >
+          🔄 Cargando movimientos...
+        </motion.div>
+      </div>
+    ); 
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-12">

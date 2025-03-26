@@ -9,6 +9,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import supabase from "../supabaseClient";
+import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
 
 import { AreaChart,Area,CartesianGrid , BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell , RadarChart,
   PolarGrid,
@@ -23,6 +24,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [eventos, setEventos] = useState([]);
+  const [eventoActivo, setEventoActivo] = useState(null);
+
 
   useEffect(() => {
     if (!usuario) return;
@@ -165,6 +168,31 @@ useEffect(() => {
   const volumenPedidos = useMemo(() => {
     return estadisticas?.volumenPedidosPorDia || [];
   }, [estadisticas]);
+
+  const manejarClickFecha = (info) => {
+    abrirPopoverConEventosDelDia(info.dateStr);
+  };
+  
+  const manejarClickEvento = (info) => {
+    const fecha = info.event.startStr.split("T")[0];
+    abrirPopoverConEventosDelDia(fecha);
+  };
+  
+  const manejarClickMasEventos = (arg) => {
+    abrirPopoverConEventosDelDia(arg.dateStr);
+    return "none"; // 👈 evita que se abra el modal interno
+  };
+  
+  const abrirPopoverConEventosDelDia = (fechaStr) => {
+    const eventosDelDia = eventos.filter((ev) => ev.date === fechaStr);
+    setEventoActivo({
+      fecha: fechaStr,
+      eventos: eventosDelDia,
+    });
+  };
+  
+  
+  
   
   const descargarPDF = async () => {
     try {
@@ -299,15 +327,17 @@ useEffect(() => {
 
         <YAxis stroke="#9ca3af" tick={{ fontSize: 12 }} />
         <Tooltip
-          contentStyle={{
-            backgroundColor: "#1f2937",
-            border: "none",
-            borderRadius: "10px",
-            color: "#fff",
-            fontSize: "0.875rem",
-          }}
-          formatter={(value, name) => [`${value} movimientos`, "Total"]}
-        />
+  contentStyle={{
+    backgroundColor: "#1f2937",
+    border: "none",
+    borderRadius: "10px",
+    color: "#fff",
+    fontSize: "0.875rem",
+  }}
+  formatter={(value, name) => [`${value} movimientos`, "Total"]}
+
+/>
+
 
         <Area
           type="monotone"
@@ -419,15 +449,16 @@ useEffect(() => {
           </Pie>
 
           <Tooltip
-            contentStyle={{
-              backgroundColor: "gray",
-              borderRadius: "8px",
-              border: "none",
-              color: "#fff",
-              fontSize: "0.875rem",
-            }}
-            formatter={(value, name) => [`${value} unidades`, name]}
-          />
+  contentStyle={{
+    backgroundColor: "gray",
+    borderRadius: "8px",
+    border: "none",
+    color: "#fff",
+    fontSize: "0.875rem",
+  }}
+  formatter={(value, name) => [`${value} unidades`, name]}
+/>
+
         </PieChart>
       </ResponsiveContainer>
     </CardContent>
@@ -553,6 +584,16 @@ useEffect(() => {
       <span className="font-semibold">{variacionMensual > 0 ? `+${variacionMensual}% más entradas` : `${variacionMensual}% menos entradas`}</span>
 
     </div>
+
+    {/* Cliente más activo */}
+    {usuario?.rol === "admin" && (
+  <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <span className="flex items-center gap-2">👤 Cliente más activo</span>
+    <span className="font-semibold">{estadisticas?.clienteMasActivo || "Desconocido"}</span>
+  </div>
+)}
+
+
   </CardContent>
 </Card>
 
@@ -560,32 +601,64 @@ useEffect(() => {
 
     
 {/* 📅 Mini Calendario de Actividad */}
+{/* 📅 Mini Calendario de Actividad */}
 <Card className="bg-white dark:bg-gray-900 text-black dark:text-white mt-6 shadow-xl rounded-lg">
   <CardContent className="p-6">
     <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">📅 Calendario de Actividad</h2>
     <div className="rounded-lg overflow-hidden">
-      <FullCalendar
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        height="auto"
-        weekends={true}
-        dateClick={(info) => alert(`📅 Has hecho clic en: ${info.dateStr}`)}
-        events={eventos} // ← Asegúrate que esto venga del useEffect
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,dayGridWeek",
-        }}
-        dayMaxEventRows={2}
-        eventDisplay="block"
-        eventClassNames={() =>
-          "bg-blue-500 text-white px-2 py-1 rounded shadow-md text-xs font-medium"
-        }
-        className="text-sm bg-white dark:bg-gray-900"
-      />
+    <FullCalendar
+  plugins={[dayGridPlugin, interactionPlugin]}
+  initialView="dayGridMonth"
+  height="auto"
+  weekends={true}
+  dateClick={manejarClickFecha}
+  eventClick={manejarClickEvento}
+  moreLinkClick={manejarClickMasEventos}
+  events={eventos}  
+  moreLinkContent={(arg) => {
+    return { html: `<span class="text-blue-400 hover:underline">${arg.num} más, haz click en la celda</span>` };
+  }}
+  headerToolbar={{
+    left: "prev,next today",
+    center: "title",
+    right: "dayGridMonth,dayGridWeek",
+  }}
+  dayMaxEventRows={2}
+  eventDisplay="block"
+  eventClassNames={() =>
+    "bg-blue-500 text-white px-2 py-1 rounded shadow-md text-xs font-medium overflow-y-auto max-h-24"
+  }
+  className="text-sm bg-white dark:bg-gray-900"
+/>
+
+      {eventoActivo && eventoActivo.eventos.length > 0 && (
+        <Popover open={Boolean(eventoActivo)} onOpenChange={() => setEventoActivo(null)}>
+          <PopoverTrigger asChild>
+            <div className="hidden"></div>
+          </PopoverTrigger>
+          <PopoverContent className="bg-gray-800 text-white p-4 rounded shadow-lg relative">
+  <button
+    onClick={() => setEventoActivo(null)}
+    className="absolute top-2 right-2 text-gray-400 hover:text-white cursor-pointer"
+  >
+    ❌
+  </button>
+  <h3 className="font-semibold mb-2">Eventos del día: {eventoActivo.fecha}</h3>
+  <ul className="max-h-60 overflow-auto">
+    {eventoActivo.eventos.map((ev, idx) => (
+      <li key={idx} className="py-1 border-b border-gray-600 last:border-none">
+        {ev.title}
+      </li>
+    ))}
+  </ul>
+</PopoverContent>
+
+        </Popover>
+      )}
     </div>
   </CardContent>
 </Card>
+
 
 
     </div>
