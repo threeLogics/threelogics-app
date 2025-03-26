@@ -55,17 +55,19 @@ export default function Services() {
 
         {/* Mockup a la derecha */}
         <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8 }}
-          className="md:w-1/2"
-        >
-          <img
-            src="/images/mockup.png"
-            alt="Dashboard de optimización"
-            className="rounded-lg shadow-lg"
-          />
-        </motion.div>
+  initial={{ opacity: 0, scale: 0.95, x: 50 }}
+  whileInView={{ opacity: 1, scale: 1, x: 0 }}
+  transition={{ duration: 0.8 }}
+  className="md:w-1/2"
+>
+  <motion.img
+    src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//dashboard.png"
+    alt="Dashboard de optimización"
+    className="rounded-2xl shadow-2xl w-full max-w-4xl mx-auto transition-transform duration-500 hover:scale-125  hover:-translate-y-1"
+    whileHover={{ scale: 1.05 }}
+  />
+</motion.div>
+
       </div>
     </section>
   );
