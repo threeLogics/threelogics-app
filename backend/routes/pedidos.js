@@ -224,4 +224,46 @@ router.delete("/:id", verificarToken, async (req, res) => {
   }
 });
 
+// 📌 Resumen de Totales: pedidos, $ vendidos, productos movidos
+router.get("/resumen", verificarToken, async (req, res) => {
+  try {
+    const { rol, id: userId } = req.usuario;
+
+    const filtroBase = rol !== "admin" ? { user_id: userId } : {};
+
+    // 🔹 Total pedidos (todos)
+    const { count: totalPedidos } = await supabase
+      .from("pedidos")
+      .select("*", { count: "exact", head: true })
+      .match(filtroBase);
+
+    // 🔹 Total vendido ($) = solo pedidos de tipo "salida"
+    const { data: pedidosSalida, error: errorSalida } = await supabase
+      .from("pedidos")
+      .select("total")
+      .match({ ...filtroBase, tipo: "salida" });
+
+    if (errorSalida) throw errorSalida;
+
+    const totalVendido = pedidosSalida.reduce((sum, p) => sum + p.total, 0);
+
+    // 🔹 Total productos movidos (precio total de productos de entrada)
+    const { data: detallesEntrada, error: errorDetalles } = await supabase
+      .from("pedidos")
+      .select("id, detallepedidos(subtotal)")
+      .match({ ...filtroBase, tipo: "entrada" });
+
+    if (errorDetalles) throw errorDetalles;
+
+    const totalProductosMovidos = detallesEntrada
+      .flatMap((p) => p.detallepedidos)
+      .reduce((sum, d) => sum + d.subtotal, 0);
+
+    res.json({ totalPedidos, totalVendido, totalProductosMovidos });
+  } catch (error) {
+    console.error("❌ Error en resumen:", error);
+    res.status(500).json({ error: "Error al obtener el resumen" });
+  }
+});
+
 export default router;
