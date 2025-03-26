@@ -33,18 +33,8 @@ function CrearPedido() {
 
   const agregarProducto = (producto) => {
     const cantidadSeleccionada = cantidades[producto.id] || 1;
-    const stockDisponible = producto.cantidad;
-  
-    // 🚫 Validar stock solo si es salida
-    if (tipoPedido === "salida" && cantidadSeleccionada > stockDisponible) {
-      toast.error(
-        `❌ Stock insuficiente para "${producto.nombre}". Solo hay ${stockDisponible} unidades disponibles.`
-      );
-      return;
-    }
-  
     const existe = pedido.find((p) => p.productoId === producto.id);
-  
+
     if (existe) {
       setPedido(
         pedido.map((p) =>
@@ -59,12 +49,11 @@ function CrearPedido() {
         { productoId: producto.id, cantidad: cantidadSeleccionada },
       ]);
     }
-  
+
     toast.success(
       `🛒 ${producto.nombre} añadido con ${cantidadSeleccionada} unidades`
     );
   };
-  
 
   const quitarProducto = (productoId) => {
     setPedido(pedido.filter((p) => p.productoId !== productoId));
@@ -75,12 +64,46 @@ function CrearPedido() {
       toast.warning("⚠️ El carrito ya está vacío.");
       return;
     }
-
-    if (window.confirm("¿Estás seguro de que quieres vaciar el carrito?")) {
-      setPedido([]);
-      toast.success("🗑 Carrito vaciado correctamente.");
-    }
+  
+    confirmarVaciadoCarrito(() => setPedido([]));
   };
+  
+
+    const confirmarVaciadoCarrito = (vaciarCarrito) => {
+      toast(
+        ({ closeToast }) => (
+          <div className="text-teal">
+            <p className="mb-2 text-teal">⚠️ ¿Seguro que quieres vaciar el carrito?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                className="bg-red-500 px-4 py-2 text-black rounded hover:bg-red-700 transition"
+                onClick={() => {
+                  vaciarCarrito();
+                  closeToast();
+                  toast.success("🗑 Carrito vaciado correctamente.");
+                }}
+              >
+                🗑 Sí, vaciar
+              </button>
+              <button
+                className="bg-gray-500 px-4 py-2 text-black rounded hover:bg-gray-700 transition"
+                onClick={closeToast}
+              >
+                ❌ Cancelar
+              </button>
+            </div>
+          </div>
+        ),
+        {
+          position: "top-center",
+          autoClose: false,
+          closeOnClick: false,
+          draggable: false,
+          closeButton: false,
+        }
+      );
+    };
+    
 
   const calcularTotal = () => {
     return pedido.reduce((total, p) => {
@@ -201,7 +224,7 @@ function CrearPedido() {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     onClick={() => quitarProducto(p.productoId)}
-                    className="text-red-500 hover:text-red-400 transition cursor-pointer"
+                    className="text-red-500 hover:text-red-400 transition"
                   >
                     ❌
                   </motion.button>
@@ -214,11 +237,12 @@ function CrearPedido() {
 
             {/* 🔹 Botón para limpiar carrito */}
             <motion.button
-              onClick={limpiarCarrito}
-              className="mt-3 bg-red-500 text-black font-semibold px-4 py-2 rounded-lg hover:bg-red-600 cursor-pointer"
-            >
-              🗑 Vaciar Carrito
-            </motion.button>
+  onClick={limpiarCarrito}
+  className="px-5 py-2 rounded-md shadow-md transition cursor-pointer bg-red-500 hover:bg-red-600 text-white"
+>
+  🗑 Vaciar Carrito
+</motion.button>
+
           </motion.div>
         )}
 
