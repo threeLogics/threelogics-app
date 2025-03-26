@@ -26,7 +26,7 @@ function Categorias() {
         setCategorias(response.data); // ✅ Se asignarán solo las categorías que permite el backend
   
         if (!notificacionMostrada.current) {
-          toast.success("Categorías cargadas correctamente");
+         
           notificacionMostrada.current = true;
         }
       } catch (error) {
