@@ -41,12 +41,19 @@ router.post("/", verificarToken, async (req, res) => {
     for (const item of productos) {
       const { data: producto, error: errorProducto } = await supabase
         .from("productos")
-        .select("id, precio")
+        .select("id, precio, cantidad")
         .eq("id", item.productoId)
         .single();
 
       if (errorProducto || !producto) {
         throw new Error(`Producto ${item.productoId} no encontrado`);
+      }
+
+      // 🚫 Validar que hay stock suficiente para pedidos de salida
+      if (tipo === "salida" && item.cantidad > producto.cantidad) {
+        return res.status(400).json({
+          error: `Stock insuficiente para el producto ${item.productoId}. Stock actual: ${producto.cantidad}, solicitado: ${item.cantidad}`,
+        });
       }
 
       const subtotal = producto.precio * item.cantidad;
