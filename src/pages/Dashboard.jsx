@@ -186,6 +186,27 @@ useEffect(() => {
     }
   };
 
+  const descargarCSV = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await api.get("/dashboard/reporte-csv", {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const url = URL.createObjectURL(new Blob([res.data], { type: "text/csv" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "reporte_movimientos.csv";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("❌ Error al descargar el CSV:", err);
+      setError("❌ No se pudo descargar el reporte.");
+    }
+  };
+  
+
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -209,12 +230,18 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen p-6 pt-20 bg-black text-white space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-teal-400">📊 Dashboard</h1>
-        <Button onClick={descargarPDF} className="bg-blue-600 hover:bg-blue-700">
-          📥 Descargar PDF
-        </Button>
-      </div>
+  <div className="flex justify-between items-center">
+    <h1 className="text-3xl font-bold text-teal-400">📊 Dashboard</h1>
+    <div className="flex gap-4">
+      <Button onClick={descargarPDF} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
+        📥 Descargar PDF
+      </Button>
+      <Button onClick={descargarCSV} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
+        📥 Descargar CSV
+      </Button>
+    </div>   
+    </div>
+
 
 {/* 🔹 Métricas Rápidas */}
 <div className="grid md:grid-cols-3 gap-4">

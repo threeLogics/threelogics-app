@@ -2,8 +2,9 @@ import express from "express";
 import supabase from "../supabaseClient.js";
 import PDFDocument from "pdfkit";
 import { verificarToken } from "../middleware/authMiddleware.js"; // Middleware de autenticación
-
+import { Parser } from "json2csv";
 const router = express.Router();
+
 
 // 📌 Obtener estadísticas generales (Autenticado)
 router.get("/estadisticas", verificarToken, async (req, res) => {
@@ -411,5 +412,62 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error al generar el PDF" });
   }
 });
+
+
+
+router.get("/reporte-csv", verificarToken, async (req, res) => {
+  try {
+    console.log("📥 Generando reporte en CSV...");
+
+    const { usuario } = req;
+    const esAdmin = usuario.rol === "admin";
+
+    // Filtro por usuario si no es admin
+    const whereCondition = esAdmin ? {} : { user_id: usuario.id };
+
+    // Obtener nombre del usuario (opcional)
+    const nombreUsuario = usuario.nombre || usuario.email || "Usuario";
+
+    // Obtener movimientos
+    const { data: movimientos, error: errorMov } = await supabase
+      .from("movimientos")
+      .select("id, tipo, cantidad, fecha, producto:productos(nombre)")
+      .match(whereCondition)
+      .order("fecha", { ascending: false });
+
+    if (errorMov || !movimientos || movimientos.length === 0) {
+      console.error("❌ No hay movimientos para generar el CSV");
+      return res
+        .status(404)
+        .json({ error: "No hay movimientos para generar el CSV" });
+    }
+
+    // Transformar datos a formato plano para CSV
+    const datosPlano = movimientos.map((mov) => ({
+      ID: mov.id.slice(0, 8),
+      Producto: mov.producto?.nombre || "N/A",
+      Tipo: mov.tipo === "entrada" ? "Entrada" : "Salida",
+      Cantidad: mov.cantidad,
+      Fecha: new Date(mov.fecha).toLocaleString(),
+    }));
+
+    // Generar CSV con json2csv
+    const parser = new Parser({ delimiter: ";" }); // Puedes usar "," si prefieres
+    const csv = parser.parse(datosPlano);
+
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="reporte_movimientos.csv"'
+    );
+    res.setHeader("Content-Type", "text/csv");
+    res.status(200).send(csv);
+
+    console.log("✅ Reporte CSV generado correctamente");
+  } catch (error) {
+    console.error("❌ Error generando CSV:", error);
+    res.status(500).json({ error: "Error al generar el CSV" });
+  }
+});
+
 
 export default router;

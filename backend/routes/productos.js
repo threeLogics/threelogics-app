@@ -12,19 +12,35 @@ const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
 router.get("/descargar-plantilla", (req, res) => {
-  const fields = [
-    "nombre",
-    "descripcion",
-    "precio",
-    "cantidad",
-    "categoriaNombre",
-  ];
-  const json2csvParser = new Parser({ fields });
-  const csv = json2csvParser.parse([]);
+  try {
+    console.log("📥 Generando plantilla CSV de productos...");
 
-  res.header("Content-Type", "text/csv");
-  res.attachment("plantilla_productos.csv");
-  res.send(csv);
+    const fields = [
+      { label: "Nombre", value: "nombre" },
+      { label: "Descripción", value: "descripcion" },
+      { label: "Precio", value: "precio" },
+      { label: "Cantidad", value: "cantidad" },
+      { label: "Categoría", value: "categoriaNombre" },
+    ];
+
+    const json2csvParser = new Parser({ fields, delimiter: ";" });
+    const csv = json2csvParser.parse([]);
+
+    // 👉 Agregar BOM al inicio del CSV para evitar errores de codificación
+    const csvConBom = '\uFEFF' + csv;
+
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="plantilla_productos.csv"'
+    );
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.status(200).send(csvConBom);
+
+    console.log("✅ Plantilla CSV generada correctamente");
+  } catch (error) {
+    console.error("❌ Error generando la plantilla CSV:", error);
+    res.status(500).json({ error: "Error al generar la plantilla CSV" });
+  }
 });
 
 // ✅ Endpoint para subir productos desde CSV
