@@ -557,6 +557,120 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error al generar el CSV" });
   }
 });
+router.get("/reporte-productos", verificarToken, async (req, res) => {
+  try {
+    console.log("📥 Generando reporte de productos en PDF...");
+
+    const { usuario } = req;
+    const esAdmin = usuario.rol === "admin";
+
+    // 1. Obtener productos
+    const { data: productos, error } = await supabase.from("productos").select("*");
+    if (error || !productos || productos.length === 0) {
+      console.error("❌ No se pudieron obtener los productos:", error);
+      return res.status(404).json({ error: "No se pudieron obtener los productos." });
+    }
+
+    // 2. Filtrar si no es admin
+    const productosFiltrados = esAdmin
+      ? productos
+      : productos.filter((p) => p.user_id === usuario.id);
+
+    // 3. Obtener usuarios (solo si es admin)
+    let usuariosMap = {};
+    if (esAdmin) {
+      const { data: usuarios, error: errorUsuarios } = await supabase.auth.admin.listUsers();
+      if (errorUsuarios) {
+        console.error("❌ Error al obtener usuarios:", errorUsuarios);
+        return res.status(500).json({ error: "Error al obtener usuarios" });
+      }
+      usuarios.users.forEach((u) => {
+        usuariosMap[u.id] = u.user_metadata?.nombre || "Desconocido";
+      });
+    }
+
+    // 4. Preparar documento PDF
+    const doc = new PDFDocument({ margin: 40 });
+    res.setHeader("Content-Disposition", 'attachment; filename="reporte_productos.pdf"');
+    res.setHeader("Content-Type", "application/pdf; charset=utf-8");
+    doc.pipe(res);
+
+    // Título
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(18)
+      .text("Reporte de Productos", { align: "center" })
+      .moveDown();
+
+    doc
+      .font("Helvetica")
+      .fontSize(12)
+      .text(`Usuario: ${usuario.nombre || usuario.email}`)
+      .text(`Fecha: ${new Date().toLocaleDateString()}`)
+      .moveDown();
+
+    // 📊 Encabezados con spacing limpio
+    const columnX = {
+      id: 40,
+      nombre: 110,
+      cantidad: 250,
+      precio: 310,
+      total: 390,
+      creador: 470,
+    };
+
+    let y = doc.y;
+
+    doc
+      .font("Helvetica-Bold")
+      .fontSize(10)
+      .text("ID", columnX.id, y)
+      .text("Nombre", columnX.nombre, y)
+      .text("Cantidad", columnX.cantidad, y)
+      .text("Precio U.", columnX.precio, y)
+      .text("Total", columnX.total, y);
+    if (esAdmin) doc.text("Creado por", columnX.creador, y);
+
+    y += 20;
+
+    // 🧾 Filas
+    doc.font("Helvetica").fontSize(10);
+    productosFiltrados.forEach((p) => {
+      const total = (Number(p.precio) || 0) * (Number(p.cantidad) || 0);
+      const shortId = p.id.slice(0, 8);
+      const nombre = (p.nombre || "-").slice(0, 25);
+      const creador = esAdmin ? usuariosMap[p.user_id]?.slice(0, 20) || "Desconocido" : "";
+
+      doc
+        .text(shortId, columnX.id, y)
+        .text(nombre, columnX.nombre, y)
+        .text(p.cantidad?.toString() || "0", columnX.cantidad, y)
+        .text(`${p.precio} €`, columnX.precio, y)
+        .text(`${total} €`, columnX.total, y);
+
+      if (esAdmin) {
+        doc.text(creador, columnX.creador, y);
+      }
+
+      y += 20;
+
+      // ⚠️ Salto de página si se pasa del límite
+      if (y > 750) {
+        doc.addPage();
+        y = 40;
+      }
+    });
+
+    doc.end();
+    console.log("✅ PDF de productos generado correctamente");
+  } catch (err) {
+    console.error("❌ Error generando PDF de productos:", err);
+    res.status(500).json({ error: "Error al generar el PDF de productos" });
+  }
+});
+
+
+
 
 
 export default router;
