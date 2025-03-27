@@ -415,83 +415,125 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
 
     const { usuario } = req;
     const esAdmin = usuario.rol === "admin";
-
-    // 1. Filtro por usuario si no es admin
     const whereCondition = esAdmin ? {} : { user_id: usuario.id };
-
-    // 2. Obtener nombre (si tienes campo personalizado)
     const nombreUsuario = usuario.nombre || usuario.email || "Usuario";
 
-    // 3. Obtener movimientos
     const { data: movimientos, error: errorMov } = await supabase
       .from("movimientos")
-      .select("id, tipo, cantidad, fecha, producto:productos(nombre)")
+      .select("id, tipo, cantidad, fecha, user_id, producto:productos(nombre)")
       .match(whereCondition)
       .order("fecha", { ascending: false });
 
     if (errorMov || !movimientos || movimientos.length === 0) {
       console.error("❌ No hay movimientos para generar el PDF");
-      return res
-        .status(404)
-        .json({ error: "No hay movimientos para generar el PDF" });
+      return res.status(404).json({ error: "No hay movimientos para generar el PDF" });
     }
 
-    // 4. Crear documento PDF
-    const doc = new PDFDocument({ margin: 40 });
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="reporte_movimientos.pdf"'
-    );
+    let movimientosConUsuario = movimientos;
+    if (esAdmin) {
+      const { data: usuarios, error: errorUsuarios } = await supabase.auth.admin.listUsers();
+      if (errorUsuarios) {
+        console.error("❌ Error al obtener usuarios:", errorUsuarios);
+        return res.status(500).json({ error: "Error al obtener usuarios" });
+      }
+
+      const usuariosMap = {};
+      usuarios.users.forEach((u) => {
+        usuariosMap[u.id] = u.user_metadata?.nombre || u.email || "Desconocido";
+      });
+
+      movimientosConUsuario = movimientos.map((mov) => ({
+        ...mov,
+        nombreUsuario: usuariosMap[mov.user_id] || "Desconocido",
+      }));
+    }
+
+    // 📄 Crear PDF
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    res.setHeader("Content-Disposition", 'attachment; filename="reporte_movimientos.pdf"');
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    // ✅ Título principal
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(18)
-      .text(" Reporte de Movimientos", { align: "center" })
-      .moveDown();
-
-    // ✅ Datos del usuario
-    doc
-      .font("Helvetica")
-      .fontSize(12)
+    // 🧾 Título y usuario
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de Movimientos", { align: "center" }).moveDown();
+    doc.font("Helvetica").fontSize(12)
       .text(`Usuario: ${nombreUsuario}`)
       .text(`Fecha: ${new Date().toLocaleDateString()}`)
       .moveDown();
 
-    // ✅ Encabezados de tabla
+    // 🧱 Config tabla
     const startX = 40;
-    const spacing = 100;
+    const rowHeight = 20;
+    const columnWidths = [60, 100, 70, 70, 140];
+    if (esAdmin) columnWidths.push(100); // Para "Realizado por"
     let y = doc.y;
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(10)
-      .text("ID", startX, y)
-      .text("Producto", startX + spacing, y)
-      .text("Tipo", startX + spacing * 2, y)
-      .text("Cantidad", startX + spacing * 3, y)
-      .text("Fecha", startX + spacing * 4, y);
+    const renderEncabezado = () => {
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text("ID", startX, y, { width: columnWidths[0], align: "left" })
+        .text("Producto", startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text("Tipo", startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text("Cantidad", startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, { width: columnWidths[3], align: "left" })
+        .text("Fecha", startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, { width: columnWidths[4], align: "left" });
 
-    y += 20;
+      if (esAdmin) {
+        doc.text("Realizado por", startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
+      }
 
-    // ✅ Filas de datos
-    doc.font("Helvetica").fontSize(10);
-    movimientos.forEach((mov) => {
-      const shortId = mov.id.slice(0, 8); // ← Acortar UUID
+      y += rowHeight;
+    };
+
+    renderEncabezado();
+
+    movimientosConUsuario.forEach((mov) => {
+      if (y > doc.page.height - 50) {
+        doc.addPage();
+        y = 40;
+        renderEncabezado();
+      }
+
+      const shortId = mov.id.slice(0, 8);
       const producto = mov.producto?.nombre || "N/A";
       const tipo = mov.tipo === "entrada" ? "Entrada" : "Salida";
       const fecha = new Date(mov.fecha).toLocaleString();
+      const nombreUsuario = mov.nombreUsuario || "";
 
       doc
-        .text(shortId, startX, y)
-        .text(producto, startX + spacing, y)
-        .text(tipo, startX + spacing * 2, y)
-        .text(mov.cantidad.toString(), startX + spacing * 3, y)
-        .text(fecha, startX + spacing * 4, y);
+        .font("Helvetica")
+        .fontSize(10)
+        .text(shortId, startX, y, { width: columnWidths[0], align: "left" })
+        .text(producto, startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text(tipo, startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text(mov.cantidad.toString(), startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, {
+          width: columnWidths[3],
+          align: "left",
+        })
+        .text(fecha, startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, {
+          width: columnWidths[4],
+          align: "left",
+        });
 
-      y += 20;
+      if (esAdmin) {
+        doc.text(nombreUsuario, startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
+      }
+
+      // 🧩 Línea separadora
+      doc
+        .moveTo(startX, y + rowHeight - 5)
+        .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), y + rowHeight - 5)
+        .strokeColor("#ccc")
+        .lineWidth(0.5)
+        .stroke();
+
+      y += rowHeight;
     });
 
     doc.end();
@@ -510,17 +552,12 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
 
     const { usuario } = req;
     const esAdmin = usuario.rol === "admin";
-
-    // Filtro por usuario si no es admin
     const whereCondition = esAdmin ? {} : { user_id: usuario.id };
-
-    // Obtener nombre del usuario (opcional)
-    const nombreUsuario = usuario.nombre || usuario.email || "Usuario";
 
     // Obtener movimientos
     const { data: movimientos, error: errorMov } = await supabase
       .from("movimientos")
-      .select("id, tipo, cantidad, fecha, producto:productos(nombre)")
+      .select("id, tipo, cantidad, fecha, user_id, producto:productos(nombre)")
       .match(whereCondition)
       .order("fecha", { ascending: false });
 
@@ -531,23 +568,44 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
         .json({ error: "No hay movimientos para generar el CSV" });
     }
 
-    // Transformar datos a formato plano para CSV
-    const datosPlano = movimientos.map((mov) => ({
-      ID: mov.id.slice(0, 8),
-      Producto: mov.producto?.nombre || "N/A",
-      Tipo: mov.tipo === "entrada" ? "Entrada" : "Salida",
-      Cantidad: mov.cantidad,
-      Fecha: new Date(mov.fecha).toLocaleString(),
-    }));
+    // Si es admin, obtener mapa de usuarios
+    let usuariosMap = {};
+    if (esAdmin) {
+      const { data: usuarios, error: errorUsuarios } =
+        await supabase.auth.admin.listUsers();
 
-    // Generar CSV con json2csv
-    const parser = new Parser({ delimiter: ";" }); // Puedes usar "," si prefieres
+      if (errorUsuarios) {
+        console.error("❌ Error al obtener usuarios:", errorUsuarios);
+        return res.status(500).json({ error: "Error al obtener usuarios" });
+      }
+
+      usuarios.users.forEach((u) => {
+        usuariosMap[u.id] = u.user_metadata?.nombre || u.email || "Desconocido";
+      });
+    }
+
+    // Transformar datos a plano (con columna "Realizado por" si es admin)
+    const datosPlano = movimientos.map((mov) => {
+      const fila = {
+        ID: mov.id.slice(0, 8),
+        Producto: mov.producto?.nombre || "N/A",
+        Tipo: mov.tipo === "entrada" ? "Entrada" : "Salida",
+        Cantidad: mov.cantidad,
+        Fecha: new Date(mov.fecha).toLocaleString(),
+      };
+
+      if (esAdmin) {
+        fila["Realizado por"] = usuariosMap[mov.user_id] || "Desconocido";
+      }
+
+      return fila;
+    });
+
+    // Generar CSV
+    const parser = new Parser({ delimiter: ";" });
     const csv = parser.parse(datosPlano);
 
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="reporte_movimientos.csv"'
-    );
+    res.setHeader("Content-Disposition", 'attachment; filename="reporte_movimientos.csv"');
     res.setHeader("Content-Type", "text/csv");
     res.status(200).send(csv);
 
@@ -557,6 +615,129 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error al generar el CSV" });
   }
 });
+
+
+
+router.get("/reporte-productos", verificarToken, async (req, res) => {
+  try {
+    console.log("📥 Generando reporte de productos en PDF...");
+
+    const { usuario } = req;
+    const esAdmin = usuario.rol === "admin";
+
+    const { data: productos, error } = await supabase.from("productos").select("*");
+    if (error || !productos || productos.length === 0) {
+      console.error("❌ No se pudieron obtener los productos:", error);
+      return res.status(404).json({ error: "No se pudieron obtener los productos." });
+    }
+
+    const productosFiltrados = esAdmin
+      ? productos
+      : productos.filter((p) => p.user_id === usuario.id);
+
+    let usuariosMap = {};
+    if (esAdmin) {
+      const { data: usuarios, error: errorUsuarios } = await supabase.auth.admin.listUsers();
+      if (errorUsuarios) {
+        console.error("❌ Error al obtener usuarios:", errorUsuarios);
+        return res.status(500).json({ error: "Error al obtener usuarios" });
+      }
+      usuarios.users.forEach((u) => {
+        usuariosMap[u.id] = u.user_metadata?.nombre || u.email || "Desconocido";
+      });
+    }
+
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    res.setHeader("Content-Disposition", 'attachment; filename="reporte_productos.pdf"');
+    res.setHeader("Content-Type", "application/pdf; charset=utf-8");
+    doc.pipe(res);
+
+    // 🧾 Título y usuario
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de Productos", { align: "center" }).moveDown();
+    doc.font("Helvetica").fontSize(12)
+      .text(`Usuario: ${usuario.nombre || usuario.email}`)
+      .text(`Fecha: ${new Date().toLocaleDateString()}`)
+      .moveDown();
+
+    // 🧱 Config tabla
+    const startX = 40;
+    const rowHeight = 20;
+    const columnWidths = [60, 130, 60, 80, 80];
+    if (esAdmin) columnWidths.push(120); // "Creado por"
+    let y = doc.y;
+
+    const renderEncabezado = () => {
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text("ID", startX, y, { width: columnWidths[0], align: "left" })
+        .text("Nombre", startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text("Cantidad", startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text("Precio U.", startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, { width: columnWidths[3], align: "left" })
+        .text("Total", startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, { width: columnWidths[4], align: "left" });
+
+      if (esAdmin) {
+        doc.text("Creado por", startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
+      }
+
+      y += rowHeight;
+    };
+
+    renderEncabezado();
+
+    doc.font("Helvetica").fontSize(10);
+    productosFiltrados.forEach((p) => {
+      if (y > doc.page.height - 50) {
+        doc.addPage();
+        y = 40;
+        renderEncabezado();
+      }
+
+      const shortId = p.id.slice(0, 8);
+      const nombre = (p.nombre || "-").slice(0, 30);
+      const cantidad = p.cantidad?.toString() || "0";
+      const precio = `${p.precio} €`;
+      const total = `${(Number(p.precio) || 0) * (Number(p.cantidad) || 0)} €`;
+      const creador = esAdmin ? usuariosMap[p.user_id]?.slice(0, 25) || "Desconocido" : "";
+
+      doc
+        .text(shortId, startX, y, { width: columnWidths[0], align: "left" })
+        .text(nombre, startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text(cantidad, startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text(precio, startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, { width: columnWidths[3], align: "left" })
+        .text(total, startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, { width: columnWidths[4], align: "left" });
+
+      if (esAdmin) {
+        doc.text(creador, startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
+      }
+
+      // Línea separadora
+      doc
+        .moveTo(startX, y + rowHeight - 5)
+        .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), y + rowHeight - 5)
+        .strokeColor("#ccc")
+        .lineWidth(0.5)
+        .stroke();
+
+      y += rowHeight;
+    });
+
+    doc.end();
+    console.log("✅ PDF de productos generado correctamente");
+  } catch (err) {
+    console.error("❌ Error generando PDF de productos:", err);
+    res.status(500).json({ error: "Error al generar el PDF de productos" });
+  }
+});
+
+
+
 
 
 export default router;

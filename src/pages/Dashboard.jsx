@@ -256,16 +256,43 @@ useEffect(() => {
       </div>
     );
 
+    const descargarProductosPDF = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await api.get("/dashboard/reporte-productos", {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob",
+        });
+    
+        const blob = new Blob([res.data], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+    
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "productos.pdf";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      } catch (err) {
+        console.error("❌ Error al descargar el PDF de productos:", err);
+        setError("❌ No se pudo descargar el reporte de productos.");
+      }
+    };
+    
+
   return (
     <div className="min-h-screen p-6 pt-20 bg-black text-white space-y-6">
   <div className="flex justify-between items-center">
     <h1 className="text-3xl font-bold text-teal-400">📊 Dashboard</h1>
     <div className="flex gap-4">
       <Button onClick={descargarPDF} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
-        📥 Descargar PDF
+        📥 Movimientos PDF
       </Button>
       <Button onClick={descargarCSV} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
         📥 Descargar CSV
+      </Button>
+      <Button onClick={descargarProductosPDF} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
+        📥 Productos PDF
       </Button>
     </div>   
     </div>
