@@ -237,17 +237,52 @@ useEffect(() => {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white space-y-6">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-xl"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-2xl font-semibold text-teal-400"
         >
-          🔄 Cargando estadísticas...
+          📊 Cargando estadísticas...
         </motion.div>
+  
+        <motion.div
+          initial={{ opacity: 0, scale: 0.6 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: 0.6,
+            type: "spring",
+            stiffness: 120,
+          }}
+        >
+          <svg
+            className="w-12 h-12 text-teal-400 animate-spin"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+            ></path>
+          </svg>
+        </motion.div>
+  
+        <p className="text-gray-400 text-sm">
+          Preparando todos los datos, por favor espera...
+        </p>
       </div>
     );
+  
 
   if (error)
     return (
