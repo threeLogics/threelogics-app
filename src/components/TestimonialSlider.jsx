@@ -6,11 +6,11 @@ const testimonials = [
   {
     companyLogo:
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/github1.png",
-    companyName: "Github",
+    companyName: "GitHub",
     quote:
-      "Colaborar con ThreeLogics ha sido una experiencia excepcional. Su enfoque innovador y su capacidad para adaptarse a nuevos desafíos han llevado nuestros proyectos a otro nivel.",
+      "Trabajar junto a ThreeLogics ha sido una experiencia transformadora. Su enfoque estratégico, claridad técnica y compromiso con la excelencia han marcado la diferencia en el desarrollo de nuestras soluciones.",
     author: "Adrián Vaquero",
-    position: "CoFounder ThreeLogics",
+    position: "CoFundador · ThreeLogics",
     avatar:
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/adri.png",
   },
@@ -19,24 +19,25 @@ const testimonials = [
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/google.png",
     companyName: "Google",
     quote:
-      "El equipo de ThreeLogics demuestra un nivel de profesionalismo y dedicación inigualable. Su visión estratégica y atención al detalle han sido clave en la optimización de nuestros procesos.",
+      "El equipo de ThreeLogics destaca por su capacidad de adaptación, profesionalismo y visión orientada a resultados. Han sabido entender nuestras necesidades y convertirlas en soluciones escalables y funcionales.",
     author: "Iker Domínguez",
-    position: "CoFounder ThreeLogics",
+    position: "CoFundador · ThreeLogics",
     avatar:
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/ftoiker.png",
   },
   {
     companyLogo:
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/github1.png",
-    companyName: "Github",
+    companyName: "GitHub",
     quote:
-      "Desde la planificación hasta la ejecución, ThreeLogics ha demostrado ser un socio confiable y altamente competente. Su compromiso con la excelencia es evidente en cada entrega.",
+      "Desde la ideación hasta la entrega final, ThreeLogics ha demostrado una ejecución impecable. Son un equipo comprometido, eficiente y con una atención al detalle que genera confianza desde el primer día.",
     author: "Daniel Ramiro",
-    position: "CoFounder ThreeLogics",
+    position: "CoFundador · ThreeLogics",
     avatar:
       "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/dani.png",
   },
 ];
+
 
 export default function TestimonialSlider() {
   const [current, setCurrent] = useState(0);
@@ -87,78 +88,78 @@ export default function TestimonialSlider() {
   };
 
   return (
-    <div className="flex flex-col items-center text-center p-8 bg-black text-white">
-      <h2 className="text-3xl font-semibold mb-2">
-        Únete al <span className="text-teal-400">ThreeLogics Club</span>
-      </h2>
-      <p className="text-gray-400 mb-6 max-w-lg">
-        Estamos construyendo una comunidad empresarial extraordinaria basada en
-        valores compartidos y estándares profesionales.
-      </p>
-
-      <div className="relative w-full max-w-2xl bg-gray-800 p-6 rounded-xl shadow-xl overflow-hidden">
-        {/* Botón Izquierdo */}
-        <button
-          className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-all duration-300"
-          onClick={() => {
-            prevTestimonial();
-            handlePause();
-          }}
-        >
-          <ChevronLeft className="text-white w-6 h-6" />
-        </button>
-
-        {/* Contenido del Testimonio con Animación */}
-        <div className="relative h-60 flex justify-center items-center overflow-hidden">
-          <AnimatePresence custom={direction} mode="wait">
-            <motion.div
-              key={current}
-              className="absolute flex flex-col items-center"
-              custom={direction}
-              variants={slideVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
+    <div className="flex flex-col items-center text-center px-6 py-16 bg-black text-white">
+    <h2 className="text-4xl font-bold mb-4">
+      Únete al <span className="text-teal-400">ThreeLogics Club</span>
+    </h2>
+    <p className="text-gray-400 text-lg max-w-xl mb-10 leading-relaxed">
+      Estamos construyendo una <span className="text-white font-medium">comunidad empresarial extraordinaria</span>, basada en
+      <span className="text-teal-400 font-medium"> valores compartidos</span> y <span className="text-white font-medium">estándares profesionales</span>.
+    </p>
+  
+    <div className="relative w-full max-w-3xl bg-gray-800 px-8 py-10 rounded-2xl shadow-2xl overflow-hidden">
+      {/* Botón Izquierdo */}
+      <button
+        className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
+        onClick={() => {
+          prevTestimonial();
+          handlePause();
+        }}
+      >
+        <ChevronLeft className="text-white w-6 h-6" />
+      </button>
+  
+      {/* Testimonio */}
+      <div className="relative h-60 flex justify-center items-center">
+        <AnimatePresence custom={direction} mode="wait">
+          <motion.div
+            key={current}
+            className="absolute flex flex-col items-center px-4 text-center"
+            custom={direction}
+            variants={slideVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            <img
+              src={testimonials[current].companyLogo}
+              alt={testimonials[current].companyName}
+              className="w-20 mb-4 filter drop-shadow-lg"
+            />
+  
+            <p className="text-base md:text-lg italic text-gray-300 mb-6 max-w-xl leading-relaxed">
+              {testimonials[current].quote}
+            </p>
+  
+            <div className="flex items-center gap-4">
               <img
-                src={testimonials[current].companyLogo}
-                alt={testimonials[current].companyName}
-                className="w-20 mb-4 filter drop-shadow-md"
+                src={testimonials[current].avatar}
+                alt={testimonials[current].author}
+                className="w-12 h-12 rounded-full border border-gray-600 shadow-lg"
               />
-              <p className="text-base md:text-lg italic text-gray-300 mb-4">
-                {testimonials[current].quote}
-              </p>
-
-              <div className="flex items-center gap-3">
-                <img
-                  src={testimonials[current].avatar}
-                  alt={testimonials[current].author}
-                  className="w-12 h-12 rounded-full border border-gray-700 shadow-lg"
-                />
-                <div className="text-left">
-                  <p className="font-semibold">
-                    {testimonials[current].author}
-                  </p>
-                  <p className="text-sm text-gray-400">
-                    {testimonials[current].position}
-                  </p>
-                </div>
+              <div className="text-left">
+                <p className="font-semibold">{testimonials[current].author}</p>
+                <p className="text-sm text-gray-400">
+                  {testimonials[current].position}
+                </p>
               </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Botón Derecho */}
-        <button
-          className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-2 rounded-full hover:bg-gray-600 transition-all duration-300"
-          onClick={() => {
-            nextTestimonial();
-            handlePause();
-          }}
-        >
-          <ChevronRight className="text-white w-6 h-6" />
-        </button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
+  
+      {/* Botón Derecho */}
+      <button
+        className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
+        onClick={() => {
+          nextTestimonial();
+          handlePause();
+        }}
+      >
+        <ChevronRight className="text-white w-6 h-6" />
+      </button>
     </div>
+  </div>
   );
+  
 }

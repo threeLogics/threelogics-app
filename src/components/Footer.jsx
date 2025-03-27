@@ -55,30 +55,39 @@ export default function Footer() {
     <footer className="bg-black text-white py-16" id="footer">
       <div className="max-w-7xl mx-auto px-6 md:px-12">
         {/* Sección de Newsletter */}
-        <div className="text-center mb-16">
-          <h3 className="text-4xl font-bold mb-4">
-            Suscríbete a nuestro newsletter
-          </h3>
-          <p className="text-gray-400 text-lg">
-            Recibe actualizaciones y noticias sobre gestión de almacenes.
-          </p>
-          <div className="mt-6 flex justify-center">
-            <input
-              type="email"
-              placeholder="Tu correo electrónico"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="px-6 py-3 w-80 text-lg rounded-l bg-gray-800 text-white outline-none"
-            />
-            <button
-              className="bg-teal-500 px-6 py-3 text-lg rounded-r text-black font-bold hover:bg-teal-400 transition flex items-center cursor-pointer"
-              onClick={handleSubscribe}
-              disabled={isLoading}
-            >
-              {isLoading ? "⏳ Enviando..." : "Suscribirse"}
-            </button>
-          </div>
-        </div>
+        <div className="text-center max-w-2xl mx-auto mb-20 px-4">
+  <h3 className="text-4xl font-bold mb-4 text-white">
+    Suscríbete a nuestro <span className="text-teal-400">newsletter</span>
+  </h3>
+  <p className="text-gray-400 text-lg leading-relaxed">
+    Recibe <span className="text-white font-medium">actualizaciones</span> y noticias sobre 
+    <span className="text-teal-400 font-medium"> gestión de almacenes</span>, directamente en tu correo.
+  </p>
+
+  <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-3">
+    <input
+      type="email"
+      placeholder="Tu correo electrónico"
+      value={email}
+      onChange={(e) => setEmail(e.target.value)}
+      className="w-full sm:w-80 px-5 py-3 rounded-lg text-lg bg-gray-800 text-white placeholder-gray-500
+        focus:outline-none focus:ring-2 focus:ring-teal-500 transition
+        hover:ring-2 hover:ring-teal-300 hover:shadow-md"
+    />
+    <button
+      onClick={handleSubscribe}
+      disabled={isLoading}
+      className="bg-teal-500 px-6 py-3 text-lg font-semibold text-black rounded-lg w-full sm:w-auto 
+        transition-all duration-300 ease-in-out
+        hover:bg-teal-400 hover:scale-105 hover:shadow-lg
+        disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+    >
+      {isLoading ? "⏳ Enviando..." : "Suscribirse"}
+    </button>
+  </div>
+</div>
+
+
 
         {/* Información y enlaces */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center md:text-left">
