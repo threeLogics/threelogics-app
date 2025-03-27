@@ -30,6 +30,7 @@ import EstadoSistema from "./components/EstadoSistema";
 import ResetPassword from "./components/ResetPassword";
 import supabase from "./supabaseClient";
 import ConfiguracionInicial from "./pages/ConfiguracionInicial";
+import TestEnv from "./components/testEnv";
 
 const PrivateRoute = () => {
   const { usuario } = useContext(AuthContext);
@@ -84,6 +85,8 @@ function App() {
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/estado-sistema" element={<EstadoSistema />} />
+        <Route path="/test-env" element={<TestEnv />} />
+
         <Route
           path="/login"
           element={usuario ? <Navigate to="/productos" /> : <Login />}
