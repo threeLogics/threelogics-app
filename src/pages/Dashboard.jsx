@@ -286,13 +286,13 @@ useEffect(() => {
     <h1 className="text-3xl font-bold text-teal-400">📊 Dashboard</h1>
     <div className="flex gap-4">
       <Button onClick={descargarPDF} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
-        📥 Descargar PDF
+        📥 Movimientos PDF
       </Button>
       <Button onClick={descargarCSV} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
         📥 Descargar CSV
       </Button>
       <Button onClick={descargarProductosPDF} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
-        📥 Productos Pdf
+        📥 Productos PDF
       </Button>
     </div>   
     </div>

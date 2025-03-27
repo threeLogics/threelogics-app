@@ -601,6 +601,8 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error al generar el CSV" });
   }
 });
+
+
 router.get("/reporte-productos", verificarToken, async (req, res) => {
   try {
     console.log("📥 Generando reporte de productos en PDF...");
@@ -608,19 +610,16 @@ router.get("/reporte-productos", verificarToken, async (req, res) => {
     const { usuario } = req;
     const esAdmin = usuario.rol === "admin";
 
-    // 1. Obtener productos
     const { data: productos, error } = await supabase.from("productos").select("*");
     if (error || !productos || productos.length === 0) {
       console.error("❌ No se pudieron obtener los productos:", error);
       return res.status(404).json({ error: "No se pudieron obtener los productos." });
     }
 
-    // 2. Filtrar si no es admin
     const productosFiltrados = esAdmin
       ? productos
       : productos.filter((p) => p.user_id === usuario.id);
 
-    // 3. Obtener usuarios (solo si es admin)
     let usuariosMap = {};
     if (esAdmin) {
       const { data: usuarios, error: errorUsuarios } = await supabase.auth.admin.listUsers();
@@ -629,80 +628,89 @@ router.get("/reporte-productos", verificarToken, async (req, res) => {
         return res.status(500).json({ error: "Error al obtener usuarios" });
       }
       usuarios.users.forEach((u) => {
-        usuariosMap[u.id] = u.user_metadata?.nombre || "Desconocido";
+        usuariosMap[u.id] = u.user_metadata?.nombre || u.email || "Desconocido";
       });
     }
 
-    // 4. Preparar documento PDF
-    const doc = new PDFDocument({ margin: 40 });
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
     res.setHeader("Content-Disposition", 'attachment; filename="reporte_productos.pdf"');
     res.setHeader("Content-Type", "application/pdf; charset=utf-8");
     doc.pipe(res);
 
-    // Título
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(18)
-      .text("Reporte de Productos", { align: "center" })
-      .moveDown();
-
-    doc
-      .font("Helvetica")
-      .fontSize(12)
+    // 🧾 Título y usuario
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de Productos", { align: "center" }).moveDown();
+    doc.font("Helvetica").fontSize(12)
       .text(`Usuario: ${usuario.nombre || usuario.email}`)
       .text(`Fecha: ${new Date().toLocaleDateString()}`)
       .moveDown();
 
-    // 📊 Encabezados con spacing limpio
-    const columnX = {
-      id: 40,
-      nombre: 110,
-      cantidad: 250,
-      precio: 310,
-      total: 390,
-      creador: 470,
-    };
-
+    // 🧱 Config tabla
+    const startX = 40;
+    const rowHeight = 20;
+    const columnWidths = [60, 130, 60, 80, 80];
+    if (esAdmin) columnWidths.push(120); // "Creado por"
     let y = doc.y;
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(10)
-      .text("ID", columnX.id, y)
-      .text("Nombre", columnX.nombre, y)
-      .text("Cantidad", columnX.cantidad, y)
-      .text("Precio U.", columnX.precio, y)
-      .text("Total", columnX.total, y);
-    if (esAdmin) doc.text("Creado por", columnX.creador, y);
-
-    y += 20;
-
-    // 🧾 Filas
-    doc.font("Helvetica").fontSize(10);
-    productosFiltrados.forEach((p) => {
-      const total = (Number(p.precio) || 0) * (Number(p.cantidad) || 0);
-      const shortId = p.id.slice(0, 8);
-      const nombre = (p.nombre || "-").slice(0, 25);
-      const creador = esAdmin ? usuariosMap[p.user_id]?.slice(0, 20) || "Desconocido" : "";
-
+    const renderEncabezado = () => {
       doc
-        .text(shortId, columnX.id, y)
-        .text(nombre, columnX.nombre, y)
-        .text(p.cantidad?.toString() || "0", columnX.cantidad, y)
-        .text(`${p.precio} €`, columnX.precio, y)
-        .text(`${total} €`, columnX.total, y);
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text("ID", startX, y, { width: columnWidths[0], align: "left" })
+        .text("Nombre", startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text("Cantidad", startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text("Precio U.", startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, { width: columnWidths[3], align: "left" })
+        .text("Total", startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, { width: columnWidths[4], align: "left" });
 
       if (esAdmin) {
-        doc.text(creador, columnX.creador, y);
+        doc.text("Creado por", startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
       }
 
-      y += 20;
+      y += rowHeight;
+    };
 
-      // ⚠️ Salto de página si se pasa del límite
-      if (y > 750) {
+    renderEncabezado();
+
+    doc.font("Helvetica").fontSize(10);
+    productosFiltrados.forEach((p) => {
+      if (y > doc.page.height - 50) {
         doc.addPage();
         y = 40;
+        renderEncabezado();
       }
+
+      const shortId = p.id.slice(0, 8);
+      const nombre = (p.nombre || "-").slice(0, 30);
+      const cantidad = p.cantidad?.toString() || "0";
+      const precio = `${p.precio} €`;
+      const total = `${(Number(p.precio) || 0) * (Number(p.cantidad) || 0)} €`;
+      const creador = esAdmin ? usuariosMap[p.user_id]?.slice(0, 25) || "Desconocido" : "";
+
+      doc
+        .text(shortId, startX, y, { width: columnWidths[0], align: "left" })
+        .text(nombre, startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text(cantidad, startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text(precio, startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, { width: columnWidths[3], align: "left" })
+        .text(total, startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, { width: columnWidths[4], align: "left" });
+
+      if (esAdmin) {
+        doc.text(creador, startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
+      }
+
+      // Línea separadora
+      doc
+        .moveTo(startX, y + rowHeight - 5)
+        .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), y + rowHeight - 5)
+        .strokeColor("#ccc")
+        .lineWidth(0.5)
+        .stroke();
+
+      y += rowHeight;
     });
 
     doc.end();
