@@ -79,6 +79,8 @@
           toast.error("❌ No se pudo enviar el enlace de recuperación.");
         } else {
           toast.success("📧 Enlace de recuperación enviado al correo.");
+          logout();
+          navigate("/login");
         }
       } catch (err) {
         console.error("❌ Error al enviar enlace de recuperación:", err);
