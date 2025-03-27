@@ -124,8 +124,7 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
       for (const detalle of pedido.detallepedidos) {
         const productoId = detalle.producto_id;
         const cantidadMovimiento = detalle.cantidad;
-        const factor = pedido.tipo === "entrada" ? 1 : -1;
-
+        const factor = pedido.tipo === "entrada" ? 2 : 0;
         // 🔍 Buscar producto actual
         const { data: productoActual, error: errorProducto } = await supabase
           .from("productos")
