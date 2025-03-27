@@ -63,20 +63,30 @@ function CrearProducto() {
   
     try {
       if (creandoCategoria && nuevaCategoria.trim()) {
+        const normalizarTexto = (texto) =>
+          texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      
+        const nombreNormalizado = normalizarTexto(nuevaCategoria);
+      
         const existeCategoria = categorias.find(
-          (c) => c.nombre.toLowerCase() === nuevaCategoria.toLowerCase()
+          (c) => normalizarTexto(c.nombre) === nombreNormalizado
         );
-  
+      
         if (existeCategoria) {
           categoriaIdFinal = existeCategoria.id;
           toast.info(`ℹ️ La categoría "${nuevaCategoria}" ya existe y será usada.`);
         } else {
-          const responseCategoria = await api.post("/categorias", { nombre: nuevaCategoria });
-  
+          // 🧠 Si no existe, se intenta crear
+          const responseCategoria = await api.post(
+            "/categorias",
+            { nombre: nuevaCategoria },
+            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+          );
+      
           if (!responseCategoria.data || !responseCategoria.data.categoria) {
             throw new Error("No se pudo crear la categoría.");
           }
-  
+      
           categoriaIdFinal = responseCategoria.data.categoria.id;
           toast.success(`✅ Categoría "${nuevaCategoria}" creada con éxito!`);
           setCategorias((prev) => [...prev, responseCategoria.data.categoria]);
@@ -84,6 +94,7 @@ function CrearProducto() {
           setCreandoCategoria(false);
         }
       }
+      
   
       if (!categoriaIdFinal) {
         toast.error("❌ No se pudo obtener la categoría.");

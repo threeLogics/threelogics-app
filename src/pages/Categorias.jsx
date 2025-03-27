@@ -20,14 +20,37 @@ function Categorias() {
     const fetchCategorias = async () => {
       try {
         const token = localStorage.getItem("token");
+  
         const response = await api.get("/categorias", {
           headers: { Authorization: `Bearer ${token}` },
         });
   
-        setCategorias(response.data); // ✅ Se asignarán solo las categorías que permite el backend
+        const datos = response.data;
+  
+        // ✅ Normalizador para comparar nombres sin tildes, espacios raros ni mayúsculas
+        const normalizarTexto = (texto) =>
+          texto
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "") // elimina acentos
+            .toLowerCase()
+            .replace(/\s+/g, " ") // reemplaza múltiples espacios por uno
+            .trim();
+  
+        // ✅ Filtrar categorías únicas basadas en nombre normalizado
+        const categoriasUnicas = datos.filter((categoria, index, self) => {
+          const nombreNormalizado = normalizarTexto(categoria.nombre);
+          return (
+            index ===
+            self.findIndex(
+              (cat) => normalizarTexto(cat.nombre) === nombreNormalizado
+            )
+          );
+        });
+  
+        setCategorias(categoriasUnicas);
   
         if (!notificacionMostrada.current) {
-         
+          // Aquí podrías mostrar un toast si quisieras
           notificacionMostrada.current = true;
         }
       } catch (error) {
@@ -36,13 +59,14 @@ function Categorias() {
           toast.error("No se pudieron cargar las categorías.");
           notificacionMostrada.current = true;
         }
-      }finally {
-        setLoading(false); // ✅ Detener loading al final
+      } finally {
+        setLoading(false); // ✅ Detener loading al final siempre
       }
     };
   
     fetchCategorias();
   }, []);
+  
   
   if (loading)
     return (

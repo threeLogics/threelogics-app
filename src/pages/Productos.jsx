@@ -425,12 +425,7 @@ export default function Productos() {
           )}
         </AnimatePresence>
 
-        {/* 🚨 Alerta de stock bajo */}
-        {productos.some((p) => p.cantidad <= (p.stockMinimo || 5)) && (
-          <div className="bg-red-500 text-white p-3 rounded-md mb-4 text-center font-medium">
-            ⚠️ ¡Alerta! Algunos productos tienen stock bajo.
-          </div>
-        )}
+        
 
         {/* 🔍 Filtros (con fondo oscuro) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -471,6 +466,8 @@ export default function Productos() {
             className="border border-gray-700 bg-gray-900 text-white p-3 w-full rounded-md focus:ring focus:ring-teal-400"
           />
         </div>
+ 
+
 
         {/* 📋 Tabla de productos con fondo oscuro */}
         <div className="overflow-x-auto rounded-lg shadow-md">
@@ -484,27 +481,42 @@ export default function Productos() {
           )}
 
           <table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
-            <thead className="bg-gray-900 text-white">
-              <tr>
-                <th className="border px-4 py-2">🛠</th>
-                <th className="border px-4 py-2">ID</th>
-                <th className="border px-4 py-2">Nombre</th>
-                <th className="border px-4 py-2">Cantidad</th>
-                <th className="border px-4 py-2">Precio U.</th>
-                <th className="border px-4 py-2">💰 Total</th>
-                {usuario?.rol === "admin" && (
-                  <th className="border px-4 py-2">Creado por</th>
-                )}
-                <th className="border px-4 py-2">Acciones</th>
-              </tr>
-            </thead>
+          <thead className="bg-gray-900 text-white">
+  <tr>
+    <th className="border px-2 py-2 text-center w-8 !border-none bg-black"></th> {/* Aquí va el icono */}
+    <th className="border px-4 py-2">🛠</th>
+    <th className="border px-4 py-2">ID</th>
+    <th className="border px-4 py-2">Nombre</th>
+    <th className="border px-4 py-2">Cantidad</th>
+    <th className="border px-4 py-2">Precio U.</th>
+    <th className="border px-4 py-2">💰 Total</th>
+    {usuario?.rol === "admin" && (
+      <th className="border px-4 py-2">Creado por</th>
+    )}
+    <th className="border px-4 py-2">Acciones</th>
+  </tr>
+</thead>
+
             <tbody>
               {productosPaginados.length > 0 ? (
                 productosPaginados.map((producto) => (
                   <tr
-                    key={producto.id}
-                    className="hover:bg-gray-700 transition"
-                  >
+                  key={producto.id}
+                  className="hover:bg-gray-700 transition"
+                >
+       <td className="px-2 py-2 text-center !border-none bg-black">
+  {producto.cantidad <= (producto.stockMinimo || 5) && (
+    <span
+    title="Stock bajo"
+    className="animate-pulse text-yellow-400"
+  >
+    ⚠️
+  </span>
+  
+  )}
+</td>
+
+
                     <td className="border px-4 py-2 text-center">
                       <input
                         type="checkbox"

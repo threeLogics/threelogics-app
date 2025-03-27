@@ -16,26 +16,51 @@ function CrearCategoria() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!categoria.nombre.trim()) {
       toast.error("❌ El nombre de la categoría no puede estar vacío.");
       return;
     }
-
+  
     if (!usuario || !usuario.id) {
       toast.error("❌ Debes estar autenticado para crear una categoría.");
       return;
     }
-
+  
     try {
+      // 🧠 Normalizamos el nombre para comparación
+      const normalizarTexto = (texto) =>
+        texto
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "") // elimina acentos
+          .toLowerCase()
+          .trim();
+  
+      // 🔍 Obtener categorías existentes del backend
+      const { data: categorias } = await api.get("/categorias", {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+  
+      const nombreNormalizado = normalizarTexto(categoria.nombre);
+  
+      const existeCategoria = categorias.some(
+        (cat) => normalizarTexto(cat.nombre) === nombreNormalizado
+      );
+  
+      if (existeCategoria) {
+        toast.error("⚠️ Ya tienes una categoría con ese nombre.");
+        return;
+      }
+  
+      // ✅ Crear si no existe
       const response = await api.post("/categorias", {
         nombre: categoria.nombre,
         user_id: usuario.id,
       });
-
+  
       if (response.status === 201) {
         toast.success("✅ Categoría añadida con éxito!");
-        navigate("/categorias"); // Redirigir a la lista de categorías
+        navigate("/categorias");
       } else {
         toast.error("❌ No se pudo añadir la categoría.");
       }
@@ -45,6 +70,7 @@ function CrearCategoria() {
       toast.error(`❌ ${mensajeError}`);
     }
   };
+  
 
   return (
     <div className="w-full min-h-screen bg-black flex flex-col justify-center items-center">

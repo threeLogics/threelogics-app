@@ -15,8 +15,9 @@ import { AreaChart,Area,CartesianGrid , BarChart, Bar, XAxis, YAxis, Tooltip, Re
   PolarGrid,
   PolarAngleAxis,
   PolarRadiusAxis,
-  Radar, LineChart , Line
-  } from "recharts";
+  Radar, LineChart , Line,  Legend,
+   } from "recharts";
+  
 
 export default function Dashboard() {
   const { usuario } = useContext(AuthContext);
@@ -478,51 +479,53 @@ useEffect(() => {
       </h2>
 
       <ResponsiveContainer width="100%" height={280}>
-        <PieChart>
-          <defs>
-            <linearGradient id="stockGradient" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#00C49F" stopOpacity={0.7} />
-              <stop offset="100%" stopColor="#0088FE" stopOpacity={0.9} />
-            </linearGradient>
-          </defs>
+  <PieChart>
+    <defs>
+      <linearGradient id="stockGradient" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stopColor="#00C49F" stopOpacity={0.7} />
+        <stop offset="100%" stopColor="#0088FE" stopOpacity={0.9} />
+      </linearGradient>
+    </defs>
 
-          <Pie
-            data={stockDistribucion}
-            dataKey="total"
-            nameKey="nombre"
-            cx="50%"
-            cy="50%"
-            innerRadius={50}
-            outerRadius={90}
-            paddingAngle={2}
-            labelLine={false}
-            label={({ name, percent }) =>
-              `${name} (${(percent * 100).toFixed(1)}%)`
-            }
-            stroke="#fff"
-            strokeWidth={1}
-          >
-            {stockDistribucion.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={colores[index % colores.length]}
-              />
-            ))}
-          </Pie>
+    <Pie
+      data={stockDistribucion}
+      dataKey="total"
+      nameKey="nombre"
+      cx="50%"
+      cy="50%"
+      innerRadius={50}
+      outerRadius={90}
+      paddingAngle={2}
+      labelLine={false}
+      label={({ name, percent }) =>
+        percent > 0.04 ? `${name} (${(percent * 100).toFixed(1)}%)` : ""
+      }
+      stroke="#fff"
+      strokeWidth={1}
+    >
+      {stockDistribucion.map((_, index) => (
+        <Cell
+          key={`cell-${index}`}
+          fill={colores[index % colores.length]}
+        />
+      ))}
+    </Pie>
 
-          <Tooltip
-  contentStyle={{
-    backgroundColor: "gray",
-    borderRadius: "8px",
-    border: "none",
-    color: "#fff",
-    fontSize: "0.875rem",
-  }}
-  formatter={(value, name) => [`${value} unidades`, name]}
-/>
+    <Tooltip
+      contentStyle={{
+        backgroundColor: "gray",
+        borderRadius: "8px",
+        border: "none",
+        color: "#fff",
+        fontSize: "0.875rem",
+      }}
+      formatter={(value, name) => [`${value} unidades`, name]}
+    />
 
-        </PieChart>
-      </ResponsiveContainer>
+   
+  </PieChart>
+</ResponsiveContainer>
+
     </CardContent>
   </Card>
 </div>
@@ -593,41 +596,41 @@ useEffect(() => {
     </h2>
 
     {/* Movimientos */}
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">📥 Entradas</span>
       <span className="font-semibold">{movimientosEntrada}</span>
     </div>
 
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">📤 Salidas</span>
       <span className="font-semibold">{movimientosSalida}</span>
     </div>
 
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">📦 Total Movimientos</span>
       <span className="font-bold text-lg">{estadisticas?.totalMovimientos}</span>
     </div>
 
     {/* Promedio diario */}
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">🔁 Promedio diario</span>
       <span className="font-semibold">{(estadisticas?.totalMovimientos / 30).toFixed(1)}</span>
     </div>
 
     {/* Último movimiento */}
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">⏳ Último movimiento</span>
       <span className="font-semibold">{ultimaFechaMovimiento ? new Date(ultimaFechaMovimiento).toLocaleString() : "-"}</span>
     </div>
 
     {/* Ratio entrada/salida */}
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">🧮 Ratio entrada/salida</span>
       <span className="font-semibold">{(movimientosEntrada / Math.max(1, movimientosSalida)).toFixed(2)} : 1</span>
     </div>
 
     {/* Producto más movido */}
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">🛒 Más movido</span>
       <span className="font-semibold">{productoMasMovido?.nombre || "-"}</span>
     </div>
@@ -635,13 +638,13 @@ useEffect(() => {
 
 
     {/* Bajo stock */}
-    <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+    <div className="flex justify-between text-lg border-b border-white/30 pb-2">
       <span className="flex items-center gap-2">🚨 Bajo stock</span>
       <span className="font-semibold">{productosBajoStock?.length || 0} productos</span>
     </div>
 
     {/* Comparativa con el mes anterior (simulada) */}
-    <div className="flex justify-between text-sm">
+    <div className="flex justify-between text-lg">
       <span className="flex items-center gap-2">📉 Variación mensual</span>
       <span className="font-semibold">{variacionMensual > 0 ? `+${variacionMensual}% más entradas` : `${variacionMensual}% menos entradas`}</span>
 
@@ -649,7 +652,7 @@ useEffect(() => {
 
     {/* Cliente más activo */}
     {usuario?.rol === "admin" && (
-  <div className="flex justify-between text-sm border-b border-white/30 pb-2">
+  <div className="flex justify-between text-lg border-b border-white/30 pb-2">
     <span className="flex items-center gap-2">👤 Cliente más activo</span>
     <span className="font-semibold">{estadisticas?.clienteMasActivo || "Desconocido"}</span>
   </div>
