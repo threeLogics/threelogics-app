@@ -7,7 +7,7 @@ import { AuthContext } from "../context/AuthContext";
 
 export default function PasarelaPago() {
   const { id } = useParams();
-  const pedidoId = isNaN(parseInt(id, 10)) ? null : parseInt(id, 10);
+  const pedidoId = id; // 🚀 Ahora el ID se mantiene como UUID
   const navigate = useNavigate();
   const [procesando, setProcesando] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -52,30 +52,44 @@ export default function PasarelaPago() {
       toast.error("❌ Error: Los datos de la tarjeta son incorrectos.");
       return;
     }
-
+  
+    console.log("📤 Enviando solicitud de pago para el pedido ID:", pedidoId);
+  
     setProcesando(true);
     toast.info("💳 Procesando pago...");
-
+  
     setTimeout(async () => {
       try {
+        // 🔍 Verificar si el pedido existe antes de procesar el pago
         const response = await api.get(`/pedidos/${pedidoId}`);
-        if (response.data.estado !== "pagar") {
+        const pedido = response.data;
+  
+        if (!pedido) {
+          toast.error("❌ Error: Pedido no encontrado.");
+          setProcesando(false);
+          return;
+        }
+  
+        if (pedido.estado !== "pagar") {
           toast.error("❌ Error: El pedido no está listo para pagar.");
           setProcesando(false);
           return;
         }
-
+  
+        // ✅ Actualizar estado a "enviado"
         await api.put(`/pedidos/${pedidoId}/estado`, { estado: "enviado" });
         toast.success("✅ Pago realizado con éxito. Pedido enviado.");
         navigate("/pedidos");
       } catch (error) {
-        console.error("❌ Error al procesar el pago:", error);
+        console.error("❌ Error al procesar el pago:", error.response?.data || error);
         toast.error("❌ Error al procesar el pago.");
       } finally {
         setProcesando(false);
       }
     }, 3000);
   };
+  
+  
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center items-center pt-10">

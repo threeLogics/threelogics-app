@@ -1,38 +1,40 @@
-import jwt from "jsonwebtoken";
-import Usuario from "../models/Usuario.js";
+import supabase from "../supabaseClient.js";
 
 export const verificarToken = async (req, res, next) => {
-  const token = req.headers["authorization"];
-  if (!token) return res.status(403).json({ error: "Acceso denegado" });
+  const token = req.headers.authorization?.split(" ")[1]; // ✅ Extraer el token correctamente
+
+  if (!token) {
+    return res.status(403).json({ error: "⚠️ Token no proporcionado" });
+  }
 
   try {
-    const decoded = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
+    // ✅ Verificar el token con Supabase
+    const { data, error } = await supabase.auth.getUser(token);
 
-    // ✅ Obtener el usuario desde la base de datos
-    const usuario = await Usuario.findByPk(decoded.id, {
-      attributes: ["id", "nombre", "email", "rol"], // 🔹 Se añade email
-    });
-
-    if (!usuario) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
+    if (error || !data.user) {
+      console.error("❌ Error en autenticación:", error);
+      return res.status(401).json({ error: "⚠️ Token inválido o expirado" });
     }
 
+    // ✅ Asignar usuario autenticado a `req.usuario`
     req.usuario = {
-      id: usuario.id,
-      nombre: usuario.nombre, // ✅ Ahora el usuario tiene nombre
-      email: usuario.email, // ✅ También tiene email
-      rol: usuario.rol,
+      id: data.user.id,
+      email: data.user.email,
+      rol: data.user.user_metadata?.rol || "usuario", // 🔹 Si no tiene rol, asignar "usuario"
     };
 
     next();
   } catch (error) {
-    res.status(401).json({ error: "Token inválido o expirado" });
+    console.error("❌ Error en verificación de token:", error);
+    res.status(500).json({ error: "Error en el servidor." });
   }
 };
 
 export const verificarAdmin = (req, res, next) => {
   if (!req.usuario || req.usuario.rol !== "admin") {
-    return res.status(403).json({ error: "Acceso solo para administradores" });
+    return res
+      .status(403)
+      .json({ error: "⚠️ Acceso solo para administradores" });
   }
   next();
 };

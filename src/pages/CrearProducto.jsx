@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import { api } from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify"; 
+import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 
 function CrearProducto() {
@@ -14,94 +14,140 @@ function CrearProducto() {
     descripcion: "",
     precio: "",
     cantidad: "",
-    categoriaId: "",
+    categoria_id: "",
   });
-  
-  const [categorias, setCategorias] = useState([]); 
-  const [nuevaCategoria, setNuevaCategoria] = useState(""); // Estado para nueva categoría
-  const [creandoCategoria, setCreandoCategoria] = useState(false); // Estado para mostrar input
 
-  // Obtener categorías
+  const [categorias, setCategorias] = useState([]);
+  const [nuevaCategoria, setNuevaCategoria] = useState("");
+  const [creandoCategoria, setCreandoCategoria] = useState(false);
+
+  // 📌 Obtener categorías al cargar el componente
   useEffect(() => {
     api.get("/categorias")
-      .then((response) => setCategorias(response.data))
-      .catch((error) => console.error("Error al obtener categorías:", error));
+      .then((response) => {
+        if (response.data && Array.isArray(response.data)) {
+          setCategorias(response.data);
+        } else {
+          console.warn("⚠️ Respuesta inesperada al obtener categorías:", response.data);
+        }
+      })
+      .catch((error) => console.error("❌ Error al obtener categorías:", error));
   }, []);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setProducto({ ...producto, [name]: name === "categoriaId" ? Number(value) : value });
-
-    if (name === "categoriaId" && value === "crear") {
-      setCreandoCategoria(true);
-      setProducto({ ...producto, categoriaId: "" });
+  
+    if (name === "categoria_id") {
+      if (value === "crear") {
+        setCreandoCategoria(true);
+        setProducto((prev) => ({ ...prev, categoria_id: "" }));
+      } else {
+        setCreandoCategoria(false);
+        setProducto((prev) => ({ ...prev, categoria_id: value })); // ✅ Mantenerlo como string
+      }
     } else {
-      setCreandoCategoria(false);
+      setProducto((prev) => ({ ...prev, [name]: value }));
     }
   };
+  
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
   
+    if (!producto.nombre || !producto.precio || !producto.cantidad || (!producto.categoria_id && !creandoCategoria)) {
+      toast.error("❌ Todos los campos son obligatorios.");
+      return;
+    }
+  
+    let categoriaIdFinal = producto.categoria_id;
+  
     try {
-      let categoriaIdFinal = producto.categoriaId;
-  
-      // 🚀 Si no hay categorías disponibles, o si el usuario quiere crear una nueva categoría
-      if (!categoriaIdFinal || creandoCategoria) {
-        if (!nuevaCategoria.trim()) {
-          toast.error("❌ Debes ingresar un nombre para la nueva categoría.");
-          return;
-        }
-  
-        // 🔹 Verificar si la categoría ya existe
+      if (creandoCategoria && nuevaCategoria.trim()) {
+        const normalizarTexto = (texto) =>
+          texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      
+        const nombreNormalizado = normalizarTexto(nuevaCategoria);
+      
         const existeCategoria = categorias.find(
-          (c) => c.nombre.toLowerCase() === nuevaCategoria.toLowerCase()
+          (c) => normalizarTexto(c.nombre) === nombreNormalizado
         );
-  
+      
         if (existeCategoria) {
           categoriaIdFinal = existeCategoria.id;
           toast.info(`ℹ️ La categoría "${nuevaCategoria}" ya existe y será usada.`);
         } else {
-          // 🛑 Crear la categoría primero
-          const responseCategoria = await api.post("/categorias", { nombre: nuevaCategoria });
-  
+          // 🧠 Si no existe, se intenta crear
+          const responseCategoria = await api.post(
+            "/categorias",
+            { nombre: nuevaCategoria },
+            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+          );
+      
+          if (!responseCategoria.data || !responseCategoria.data.categoria) {
+            throw new Error("No se pudo crear la categoría.");
+          }
+      
           categoriaIdFinal = responseCategoria.data.categoria.id;
           toast.success(`✅ Categoría "${nuevaCategoria}" creada con éxito!`);
-  
-          // 🔹 Actualizar estado de categorías en el frontend
-          setCategorias((prevCategorias) => [...prevCategorias, responseCategoria.data.categoria]);
-  
-          // Resetear el estado de nueva categoría
+          setCategorias((prev) => [...prev, responseCategoria.data.categoria]);
           setNuevaCategoria("");
           setCreandoCategoria(false);
         }
       }
+      
   
-      // 🚨 Validación: Si `categoriaIdFinal` sigue vacío, mostrar error
       if (!categoriaIdFinal) {
         toast.error("❌ No se pudo obtener la categoría.");
         return;
       }
   
-      // ✅ Crear el producto después de asegurar que la categoría existe
+      console.log("📌 Enviando producto con datos:", {
+        nombre: producto.nombre,
+        descripcion: producto.descripcion,
+        precio: Number(producto.precio),
+        cantidad: Number(producto.cantidad),
+        categoria_id: categoriaIdFinal,
+        user_id: usuario?.id || null,
+      });
+  
       const responseProducto = await api.post("/productos", {
         nombre: producto.nombre,
         descripcion: producto.descripcion,
-        precio: producto.precio,
-        cantidad: producto.cantidad,
-        categoriaId: categoriaIdFinal, // 🚀 Ahora la categoría está asegurada
-        usuarioId: usuario?.id || null,
+        precio: Number(producto.precio),
+        cantidad: Number(producto.cantidad),
+        categoria_id: categoriaIdFinal,
+        user_id: usuario?.id || null,
       });
+      
+      console.log("✅ Respuesta completa del servidor:", responseProducto);
+      console.log("✅ Datos del servidor:", responseProducto.data);
+      
+      // ✅ Aseguramos que `responseProducto.data` es un objeto antes de acceder a `producto`
+      if (!responseProducto.data || typeof responseProducto.data !== "object") {
+        console.error("❌ Respuesta inesperada del servidor:", responseProducto);
+        throw new Error("Error en la respuesta del servidor.");
+      }
+      
+      if (!responseProducto.data.producto) {
+        console.error("🚨 Falta la clave 'producto' en la respuesta:", responseProducto.data);
+        throw new Error("No se pudo crear el producto.");
+      }
+      
   
-      toast.success(`✅ Producto "${responseProducto.data.nombre}" añadido con éxito!`);
+      toast.success(`✅ Producto "${responseProducto.data.producto.nombre}" añadido con éxito!`);
+  
+      // 🔄 Redirigir para forzar actualización en Productos.jsx
       navigate("/productos");
   
     } catch (error) {
-      toast.error(error.response?.data?.error || "❌ Error al añadir producto");
+      console.error("❌ Error al añadir producto:", error);
+      toast.error(error.response?.data?.error || "Error al añadir producto.");
     }
   };
   
-
+  
+  
+  
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center items-center pt-10">
@@ -153,8 +199,8 @@ function CrearProducto() {
   
             {/* Selección de Categoría */}
             <select
-              name="categoriaId"
-              value={producto.categoriaId}
+              name="categoria_id"
+              value={producto.categoria_id}
               onChange={handleChange}
               className="border border-gray-700 bg-gray-800 text-white p-3 rounded-lg focus:ring-2 focus:ring-teal-400 focus:outline-none cursor-pointer"
               required={!creandoCategoria}
@@ -233,5 +279,9 @@ function CrearProducto() {
   );
   
 }
+// 🔹 Estilos para inputs y botones
+const inputStyle = "border border-gray-700 bg-gray-800 text-white p-3 rounded-lg focus:ring-2 focus:ring-teal-400 focus:outline-none";
+const btnSubmit = "relative px-6 py-3 bg-teal-500 text-black font-semibold rounded-lg transition-all cursor-pointer hover:scale-105 hover:shadow-[0px_0px_20px_rgba(45,212,191,0.8)] hover:bg-teal-600";
+
 
 export default CrearProducto;

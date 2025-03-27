@@ -1,248 +1,275 @@
 import express from "express";
+import supabase from "../supabaseClient.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
-import Pedido from "../models/Pedido.js";
-import DetallePedido from "../models/DetallePedido.js";
-import Producto from "../models/Producto.js";
-import Movimiento from "../models/Movimiento.js";
-import sequelize from "../config/database.js";
-import { Op } from "sequelize";
-
 const router = express.Router();
 
-// 📌 Crear un pedido
+// 📌 Crear un pedido (entrada o salida)
 router.post("/", verificarToken, async (req, res) => {
-  const { productos } = req.body;
-  const usuarioId = req.usuario.id;
+  const { productos, tipo } = req.body;
+  const userId = req.usuario.id;
 
   if (!productos || productos.length === 0) {
     return res.status(400).json({ error: "El pedido no tiene productos" });
   }
 
+  if (!["entrada", "salida"].includes(tipo)) {
+    return res.status(400).json({ error: "Tipo de pedido no válido" });
+  }
+
   try {
     let total = 0;
 
-    const pedido = await sequelize.transaction(async (t) => {
-      const nuevoPedido = await Pedido.create(
-        { usuarioId, total: 0, estado: "pendiente" },
-        { transaction: t }
-      );
+    // 🛒 Insertar el nuevo pedido
+    const { data: nuevoPedido, error: errorPedido } = await supabase
+      .from("pedidos")
+      .insert([
+        {
+          user_id: userId,
+          total: 0,
+          estado: "pendiente",
+          tipo,
+          fecha: new Date(),
+        },
+      ])
+      .select()
+      .single();
 
-      for (const item of productos) {
-        const producto = await Producto.findByPk(item.productoId);
-        if (!producto) {
-          throw new Error(`Producto ${item.productoId} no encontrado`);
-        }
+    if (errorPedido) throw errorPedido;
 
-        const subtotal = producto.precio * item.cantidad;
-        total += subtotal;
+    const detalles = [];
 
-        await DetallePedido.create(
-          {
-            pedidoId: nuevoPedido.id,
-            productoId: item.productoId,
-            cantidad: item.cantidad,
-            precioUnitario: producto.precio,
-            subtotal,
-          },
-          { transaction: t }
-        );
+    for (const item of productos) {
+      const { data: producto, error: errorProducto } = await supabase
+        .from("productos")
+        .select("id, precio, cantidad")
+        .eq("id", item.productoId)
+        .single();
+
+      if (errorProducto || !producto) {
+        throw new Error(`Producto ${item.productoId} no encontrado`);
       }
 
-      await nuevoPedido.update({ total }, { transaction: t });
+      // 🚫 Validar que hay stock suficiente para pedidos de salida
+      if (tipo === "salida" && item.cantidad > producto.cantidad) {
+        return res.status(400).json({
+          error: `Stock insuficiente para el producto ${item.productoId}. Stock actual: ${producto.cantidad}, solicitado: ${item.cantidad}`,
+        });
+      }
 
-      return nuevoPedido;
+      const subtotal = producto.precio * item.cantidad;
+      total += subtotal;
+
+      detalles.push({
+        pedido_id: nuevoPedido.id,
+        producto_id: item.productoId,
+        cantidad: item.cantidad,
+        precio_unitario: producto.precio,
+        subtotal,
+      });
+    }
+
+    if (detalles.length > 0) {
+      await supabase.from("detallepedidos").insert(detalles);
+    }
+
+    // ✅ Actualizar el total del pedido
+    await supabase.from("pedidos").update({ total }).eq("id", nuevoPedido.id);
+
+    res.status(201).json({
+      mensaje: "Pedido creado con éxito",
+      pedido: { ...nuevoPedido, total, productos },
     });
-
-    res.status(201).json({ mensaje: "Pedido creado con éxito", pedido });
   } catch (error) {
-    console.error("Error al crear pedido:", error);
+    console.error("❌ Error al crear pedido:", error);
     res.status(500).json({ error: "Error al crear pedido" });
   }
 });
 
-// 📌 Obtener pedidos del usuario autenticado
-router.get("/", verificarToken, async (req, res) => {
-  try {
-    let whereCondition = {};
-
-    if (req.usuario.rol !== "admin") {
-      whereCondition.usuarioId = req.usuario.id;
-    }
-
-    const pedidos = await Pedido.findAll({
-      where: whereCondition,
-      include: [
-        {
-          model: DetallePedido,
-          include: { model: Producto, attributes: ["nombre", "precio"] },
-        },
-      ],
-      order: [["fecha", "DESC"]],
-    });
-
-    res.json(pedidos);
-  } catch (error) {
-    console.error("Error obteniendo pedidos:", error);
-    res.status(500).json({ error: "Error al obtener los pedidos" });
-  }
-});
-
-// 📌 Cambiar estado de un pedido
-// 📌 Cambiar estado de un pedido (Evitar que pase a "enviado" hasta el pago)
+// 📌 Actualizar estado del pedido y stock
+// 📌 Actualizar estado del pedido y stock
 router.put("/:id/estado", verificarToken, async (req, res) => {
   const { estado } = req.body;
   const { id } = req.params;
 
   try {
-    const pedido = await Pedido.findByPk(id, {
-      include: [
-        {
-          model: DetallePedido,
-          include: {
-            model: Producto,
-            attributes: ["id", "nombre", "cantidad"],
-          },
-        },
-      ],
-    });
+    // 📦 Obtener el pedido con sus detalles
+    const { data: pedido, error: pedidoError } = await supabase
+      .from("pedidos")
+      .select(
+        "id, estado, tipo, user_id, detallepedidos ( id, cantidad, producto_id )"
+      )
+      .eq("id", id)
+      .single();
 
-    if (!pedido) {
+    if (pedidoError || !pedido) {
       return res.status(404).json({ error: "Pedido no encontrado" });
     }
 
-    const estadosPermitidos = ["pendiente", "pagar", "enviado", "completado"];
+    // ✅ Estados válidos
+    const estadosPermitidos = [
+      "pendiente",
+      "procesado",
+      "cancelado",
+      "pagado",
+      "recibido",
+    ];
     if (!estadosPermitidos.includes(estado)) {
       return res.status(400).json({ error: "Estado no permitido" });
     }
 
-    // Evitar que pase a "enviado" sin haber pagado
-    if (estado === "enviado" && pedido.estado !== "pagar") {
-      return res
-        .status(400)
-        .json({ error: "El pedido debe pagarse antes de ser enviado" });
-    }
+    // 🔄 Estados que procesan el stock
+    const estadosProcesanStock = ["procesado", "pagado", "recibido"];
 
-    // Si el estado cambia a "completado", actualizar stock y registrar movimientos
-    if (estado === "completado") {
-      for (const detalle of pedido.DetallePedidos) {
-        const producto = await Producto.findByPk(detalle.productoId);
-        if (!producto) continue;
+    if (estadosProcesanStock.includes(estado)) {
+      for (const detalle of pedido.detallepedidos) {
+        const productoId = detalle.producto_id;
+        const cantidadMovimiento = detalle.cantidad;
+        const factor = pedido.tipo === "entrada" ? 2 : 0;
+        // 🔍 Buscar producto actual
+        const { data: productoActual, error: errorProducto } = await supabase
+          .from("productos")
+          .select("cantidad")
+          .eq("id", productoId)
+          .single();
 
-        producto.cantidad += detalle.cantidad;
-        await producto.save();
+        if (errorProducto || !productoActual) {
+          console.error(`❌ Producto ID ${productoId} no encontrado.`);
+          continue;
+        }
 
-        await Movimiento.create({
-          productoId: producto.id,
-          tipo: "entrada",
-          cantidad: detalle.cantidad,
-          usuarioId: req.usuario.id,
-          fecha: new Date(),
-        });
+        const nuevoStock =
+          productoActual.cantidad + cantidadMovimiento * factor;
+
+        // 📦 Actualizar stock
+        const { error: errorUpdate } = await supabase
+          .from("productos")
+          .update({ cantidad: nuevoStock })
+          .eq("id", productoId);
+
+        if (errorUpdate) {
+          console.error("❌ Error al actualizar stock:", errorUpdate);
+          continue;
+        }
+
+        // 📝 Registrar movimiento
+        const { error: errorMovimiento } = await supabase
+          .from("movimientos")
+          .insert([
+            {
+              producto_id: productoId,
+              tipo: pedido.tipo,
+              cantidad: cantidadMovimiento,
+              fecha: new Date(),
+              user_id: pedido.user_id,
+              pedido_id: pedido.id, // ✅ esto es lo que te faltaba
+            },
+          ]);
+
+        if (errorMovimiento) {
+          console.error("❌ Error al registrar movimiento:", errorMovimiento);
+        }
       }
     }
 
-    await pedido.update({ estado });
-    res.json({ mensaje: `Pedido actualizado a ${estado}`, pedido });
+    // 🟢 Actualizar el estado del pedido
+    await supabase.from("pedidos").update({ estado }).eq("id", id);
+
+    res.json({ mensaje: `Pedido actualizado a ${estado}` });
   } catch (error) {
-    console.error("Error al actualizar estado del pedido:", error);
+    console.error("❌ Error al actualizar estado del pedido:", error);
     res.status(500).json({ error: "Error al actualizar estado del pedido" });
   }
 });
-// 📌 Obtener un pedido por ID
-router.get("/:id", verificarToken, async (req, res) => {
-  const { id } = req.params;
 
+// 📌 Obtener todos los pedidos
+router.get("/", verificarToken, async (req, res) => {
   try {
-    const pedido = await Pedido.findByPk(id, {
-      include: [
-        {
-          model: DetallePedido,
-          include: { model: Producto, attributes: ["nombre", "precio"] },
-        },
-      ],
-    });
+    let query = supabase
+      .from("pedidos")
+      .select(
+        "id, fecha, total, estado, tipo, user_id, detallepedidos ( id, cantidad, precio_unitario, subtotal, productos (id, nombre, precio) )"
+      )
+      .order("fecha", { ascending: false });
 
-    if (!pedido) {
-      return res.status(404).json({ error: "Pedido no encontrado" });
+    if (req.usuario.rol !== "admin") {
+      query = query.eq("user_id", req.usuario.id);
     }
 
-    res.json(pedido);
+    const { data: pedidos, error } = await query;
+
+    if (error) throw error;
+
+    res.json(pedidos);
   } catch (error) {
-    console.error("❌ Error al obtener el pedido:", error);
-    res.status(500).json({ error: "Error al obtener el pedido" });
+    console.error("❌ Error obteniendo pedidos:", error);
+    res.status(500).json({ error: "Error al obtener los pedidos" });
   }
 });
 
 // 📌 Eliminar un pedido (Solo si está pendiente)
 router.delete("/:id", verificarToken, async (req, res) => {
   try {
-    const pedido = await Pedido.findByPk(req.params.id);
-    if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
+    const { data: pedido } = await supabase
+      .from("pedidos")
+      .select("estado")
+      .eq("id", req.params.id)
+      .single();
 
+    if (!pedido) return res.status(404).json({ error: "Pedido no encontrado" });
     if (pedido.estado !== "pendiente") {
       return res
         .status(400)
         .json({ error: "No se puede eliminar un pedido procesado" });
     }
 
-    await pedido.destroy();
+    await supabase.from("pedidos").delete().eq("id", req.params.id);
     res.json({ mensaje: "Pedido eliminado" });
   } catch (error) {
-    console.error("Error al eliminar pedido:", error);
+    console.error("❌ Error al eliminar pedido:", error);
     res.status(500).json({ error: "Error al eliminar pedido" });
   }
 });
 
-// 📌 Actualizar pedidos a "completado" automáticamente después de 2 minutes
-setInterval(async () => {
+// 📌 Resumen de Totales: pedidos, $ vendidos, productos movidos
+router.get("/resumen", verificarToken, async (req, res) => {
   try {
-    const pedidos = await Pedido.findAll({
-      where: {
-        estado: "enviado",
-        fecha: { [Op.lt]: new Date(Date.now() - 120) },
-      },
-      include: [
-        {
-          model: DetallePedido,
-          include: {
-            model: Producto,
-            attributes: ["id", "nombre", "cantidad"],
-          },
-        },
-      ],
-    });
+    const { rol, id: userId } = req.usuario;
 
-    for (const pedido of pedidos) {
-      pedido.estado = "completado";
-      await pedido.save();
+    const filtroBase = rol !== "admin" ? { user_id: userId } : {};
 
-      // 📌 Al completar el pedido, actualizar el stock y registrar movimientos
-      for (const detalle of pedido.DetallePedidos) {
-        const producto = await Producto.findByPk(detalle.productoId);
+    // 🔹 Total pedidos (todos)
+    const { count: totalPedidos } = await supabase
+      .from("pedidos")
+      .select("*", { count: "exact", head: true })
+      .match(filtroBase);
 
-        if (!producto) continue;
+    // 🔹 Total vendido ($) = solo pedidos de tipo "salida"
+    const { data: pedidosSalida, error: errorSalida } = await supabase
+      .from("pedidos")
+      .select("total")
+      .match({ ...filtroBase, tipo: "salida" });
 
-        // 🔄 Sumar cantidad al stock
-        producto.cantidad += detalle.cantidad;
-        await producto.save();
+    if (errorSalida) throw errorSalida;
 
-        // 🔄 Registrar movimiento de entrada
-        await Movimiento.create({
-          productoId: producto.id,
-          tipo: "entrada",
-          cantidad: detalle.cantidad,
-          usuarioId: pedido.usuarioId,
-          fecha: new Date(),
-        });
-      }
-    }
+    const totalVendido = pedidosSalida.reduce((sum, p) => sum + p.total, 0);
 
-    console.log(
-      "✅ Pedidos enviados ahora están completados y el stock ha sido actualizado."
-    );
+    // 🔹 Total productos movidos (precio total de productos de entrada)
+    const { data: detallesEntrada, error: errorDetalles } = await supabase
+      .from("pedidos")
+      .select("id, detallepedidos(subtotal)")
+      .match({ ...filtroBase, tipo: "entrada" });
+
+    if (errorDetalles) throw errorDetalles;
+
+    const totalProductosMovidos = detallesEntrada
+      .flatMap((p) => p.detallepedidos)
+      .reduce((sum, d) => sum + d.subtotal, 0);
+
+    res.json({ totalPedidos, totalVendido, totalProductosMovidos });
   } catch (error) {
-    console.error("❌ Error actualizando pedidos completados:", error);
+    console.error("❌ Error en resumen:", error);
+    res.status(500).json({ error: "Error al obtener el resumen" });
   }
-}, 60000); // Se ejecuta cada 60 segundos
+});
 
 export default router;

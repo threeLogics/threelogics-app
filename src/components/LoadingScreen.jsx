@@ -3,16 +3,16 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 
 export default function LoadingScreen() {
-  const navigate = useNavigate(); // ✅ Definir navigate correctamente
+  const navigate = useNavigate();
   const location = useLocation();
   const mensaje = location.state?.mensaje || "Procesando tu solicitud...";
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/");
-    }, 3000); // ⏳ Espera 3 segundos antes de redirigir
+      navigate("/"); // ✅ Redirigir sin alertas
+    }, 3000);
 
-    return () => clearTimeout(timer); // 🔹 Limpia el timeout si el usuario sale antes
+    return () => clearTimeout(timer);
   }, [navigate]);
 
   return (
@@ -20,11 +20,10 @@ export default function LoadingScreen() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }} // 🔥 Fade out antes de salir
+        exit={{ opacity: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="bg-gray-900 p-8 rounded-lg shadow-lg text-center"
       >
-        {/* Spinner Mejorado */}
         <motion.div
           className="relative w-16 h-16 flex items-center justify-center mb-6"
           animate={{ rotate: 360 }}
@@ -34,22 +33,10 @@ export default function LoadingScreen() {
           <div className="absolute w-full h-full border-t-4 border-teal-400 border-solid rounded-full"></div>
         </motion.div>
 
-        {/* Texto Animado */}
-        <motion.h2
-          className="text-xl font-semibold"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
+        <motion.h2 className="text-xl font-semibold" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3, duration: 0.5 }}>
           {mensaje}
         </motion.h2>
-
-        <motion.p
-          className="text-gray-400 mt-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-        >
+        <motion.p className="text-gray-400 mt-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6, duration: 0.5 }}>
           Por favor, espera...
         </motion.p>
       </motion.div>

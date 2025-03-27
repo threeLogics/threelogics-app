@@ -2,33 +2,50 @@ import { Link, useLocation } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Menu, X } from "lucide-react"; // Iconos para menú móvil
+import { NavLink } from "react-router-dom"; // para dar estilos cuando los links este activos
+
 
 export default function Navbar() {
   const { usuario, logout } = useContext(AuthContext);
   const [showNavbar, setShowNavbar] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // Estado del menú móvil
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
-  // Estado para controlar la apertura del modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [imagenPerfil, setImagenPerfil] = useState(() => {
-    // Intenta cargar desde localStorage en la primera renderización
+  const [imagenPerfil, setImagenPerfil] = useState(null);
+
+  // 📌 Definir imágenes de perfil predeterminadas
+  const AVATARS = {
+    default: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar_default.png",
+    avatar4: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar4.png",
+    avatar5: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
+  };
+
+  // 📌 Función para obtener la imagen de perfil desde localStorage o usar una predeterminada
+  const obtenerImagenPerfil = () => {
     const storedUser = localStorage.getItem("usuario");
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      return parsedUser.imagenPerfil || "src/assets/avatar.png";
+      return AVATARS[parsedUser.imagenPerfil] || AVATARS.default;
     }
-    return "src/assets/avatar.png"; // Imagen por defecto
-  });
-  
+    return AVATARS.default;
+  };
+
+  // 📌 Actualiza la imagen de perfil cuando el usuario cambia
   useEffect(() => {
-    if (usuario?.imagenPerfil) {
-      setImagenPerfil(usuario.imagenPerfil.startsWith("http") 
-        ? usuario.imagenPerfil 
-        : `data:image/png;base64,${usuario.imagenPerfil}`);
-    }
-  }, [usuario]);
+    const obtenerImagenPerfil = () => {
+      const storedUser = localStorage.getItem("usuario");
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        return parsedUser.imagenPerfil || AVATARS.default;
+      }
+      return AVATARS.default;
+    };
   
+    setImagenPerfil(obtenerImagenPerfil());
+  }, [usuario]);
+
+  // 📌 Manejo de scroll para ocultar/mostrar navbar
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -42,6 +59,8 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
 
+  
+
   const handleScrollToSection = (sectionId) => {
     if (location.pathname !== "/") {
       window.location.href = `/#${sectionId}`;
@@ -50,7 +69,7 @@ export default function Navbar() {
         .getElementById(sectionId)
         ?.scrollIntoView({ behavior: "smooth" });
     }
-    setIsMenuOpen(false); // Cierra el menú en móvil después de hacer scroll
+    setIsMenuOpen(false);
   };
 
   return (
@@ -59,8 +78,8 @@ export default function Navbar() {
         showNavbar ? "translate-y-0" : "-translate-y-full"
       }`}
     >
-      {/* Logo con imagen - Ahora lleva a Hero */}
-      <div className="flex items-center space-x-3">
+       {/* Logo con imagen */}
+       <div className="flex items-center space-x-3">
         <button
           onClick={() => handleScrollToSection("hero")}
           className="flex items-center space-x-3 bg-transparent border-none cursor-pointer"
@@ -80,19 +99,19 @@ export default function Navbar() {
           <>
             <button
               onClick={() => handleScrollToSection("testimonial-slider")}
-              className="hover:text-teal-400 transition"
+              className="hover:text-teal-400 transition cursor-pointer"
             >
               Nosotros
             </button>
             <button
               onClick={() => handleScrollToSection("services")}
-              className="hover:text-teal-400 transition"
+              className="hover:text-teal-400 transition cursor-pointer"
             >
               Servicios
             </button>
             <button
               onClick={() => handleScrollToSection("work-process")}
-              className="hover:text-teal-400 transition"
+              className="hover:text-teal-400 transition cursor-pointer"
             >
               Proceso
             </button>
@@ -106,21 +125,84 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link to="/productos" className="hover:text-teal-400 transition">
-              Productos
-            </Link>
-            <Link to="/movimientos" className="hover:text-teal-400 transition">
-              Movimientos
-            </Link>
-            <Link to="/categorias" className="hover:text-teal-400 transition">
-              Categorías
-            </Link>
-            <Link to="/pedidos" className="hover:text-teal-400 transition">
-              Pedidos
-            </Link>
-            <Link to="/dashboard" className="hover:text-teal-400 transition">
-              Dashboard
-            </Link>
+            <NavLink
+  to="/productos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Productos
+</NavLink>
+
+<NavLink
+  to="/movimientos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Movimientos
+</NavLink>
+
+<NavLink
+  to="/categorias"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Categorías
+</NavLink>
+
+<NavLink
+  to="/pedidos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Pedidos
+</NavLink>
+
+<NavLink
+  to="/ubicaciones"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Ubicaciones
+</NavLink>
+
+<NavLink
+  to="/dashboard"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Dashboard
+</NavLink>
+
           </>
         )}
       </div>
@@ -131,12 +213,14 @@ export default function Navbar() {
           <>
             {/* Imagen de usuario + Nombre */}
             <button
-              onClick={() => setIsModalOpen(!isModalOpen)}
-              className="text-sm flex items-center space-x-2 hover:text-teal-400 transition cursor-pointer"
-            >
-              <img src={imagenPerfil} alt="Perfil" className="w-8 h-8 rounded-full border-2 border-teal-500" />
-              <span>{usuario?.nombre || "Usuario"}</span>
-            </button>
+  onClick={() => setIsModalOpen(!isModalOpen)}
+  className="text-sm flex items-center space-x-2 hover:text-teal-400 transition cursor-pointer"
+>
+<img src={usuario?.imagenPerfil || "src/assets/avatar.png"} alt="Perfil" className="w-8 h-8 rounded-full border-2 border-teal-500" />
+
+  <span>{usuario?.nombre || "Usuario"}</span> {/* Asegura que se usa `nombre` */}
+</button>
+
 
             {/* Modal en la esquina superior derecha */}
             {isModalOpen && window.location.pathname !== "/perfil" && (
@@ -162,18 +246,21 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <Link
-              to="/login"
-              className="px-4 py-2 bg-teal-500 rounded-lg text-black hover:bg-teal-400 transition"
-            >
-              Iniciar sesión
-            </Link>
-            <Link
-              to="/register"
-              className="px-4 py-2 border border-teal-500 rounded-lg text-teal-500 hover:bg-teal-500 hover:text-black transition"
-            >
-              Registrarse
-            </Link>
+  <Link
+  to="/login"
+  className="px-6 py-2 bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Iniciar sesión
+</Link>
+
+<Link
+  to="/register"
+  className="px-6 py-2 border-2 border-teal-500 text-teal-400 font-semibold rounded-lg shadow-md hover:bg-teal-500 hover:text-white transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Registrarse
+</Link>
+
+
           </>
         )}
       </div>
@@ -215,27 +302,99 @@ export default function Navbar() {
               >
                 Contacto
               </a>
+              <Link
+  to="/login"
+  className="px-6 py-2 bg-teal-700 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Iniciar sesión
+</Link>
+
+<Link
+  to="/register"
+  className="px-6 py-2 border-2 border-teal-500 text-teal-400 font-semibold rounded-lg shadow-md hover:bg-teal-500 hover:text-white transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg"
+>
+  Registrarse
+</Link>
             </>
           ) : (
             <>
-              <Link to="/productos" className="hover:text-teal-400 transition">
-                Productos
-              </Link>
-              <Link
-                to="/movimientos"
-                className="hover:text-teal-400 transition"
-              >
-                Movimientos
-              </Link>
-              <Link to="/categorias" className="hover:text-teal-400 transition">
-                Categorías
-              </Link>
-              <Link to="/pedidos" className="hover:text-teal-400 transition">
-                Pedidos
-              </Link>
-              <Link to="/dashboard" className="hover:text-teal-400 transition">
-                Dashboard
-              </Link>
+               <NavLink
+  to="/productos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Productos
+</NavLink>
+
+<NavLink
+  to="/movimientos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Movimientos
+</NavLink>
+
+<NavLink
+  to="/categorias"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Categorías
+</NavLink>
+
+<NavLink
+  to="/pedidos"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Pedidos
+</NavLink>
+
+<NavLink
+  to="/ubicaciones"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Ubicaciones
+</NavLink>
+
+<NavLink
+  to="/dashboard"
+  className={({ isActive }) =>
+    `transition pb-1 border-b-2 ${
+      isActive
+        ? "text-teal-400 border-teal-400 font-semibold"
+        : "border-transparent hover:text-teal-400 hover:border-teal-400"
+    }`
+  }
+>
+  Dashboard
+</NavLink>
             </>
           )}
 

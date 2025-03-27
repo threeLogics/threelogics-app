@@ -1,6 +1,6 @@
 import express from "express";
 import { body, validationResult } from "express-validator";
-import Categoria from "../models/Categoria.js";
+import supabase from "../supabaseClient.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -14,90 +14,165 @@ const validarCampos = (req, res, next) => {
   next();
 };
 
-// Crear categoría con validación, usuarioId y evitar duplicados
+// ✅ Crear categoría con validación y evitar duplicados
 router.post(
   "/",
   [
-    verificarToken, // Asegurar que el usuario está autenticado
+    verificarToken,
     body("nombre").notEmpty().withMessage("El nombre es obligatorio").trim(),
   ],
   validarCampos,
   async (req, res) => {
     try {
-      const { nombre } = req.body;
-      const usuarioId = req.usuario.id;
+      console.log("✅ Datos recibidos en POST /categorias:", req.body);
 
-      // Verificar si la categoría ya existe para este usuario
-      const categoriaExistente = await Categoria.findOne({
-        where: { nombre, usuarioId },
-      });
+      const { nombre } = req.body;
+      const userId = req.usuario.id; // 🔹 Obtener el ID del usuario autenticado
+
+      console.log("🔍 Verificando si la categoría ya existe...");
+      const { data: categoriaExistente, error: errorExistente } = await supabase
+        .from("categorias")
+        .select("id")
+        .eq("nombre", nombre)
+        .eq("user_id", userId) // 🔹 Evita duplicados por usuario
+        .single();
 
       if (categoriaExistente) {
-        return res.status(400).json({
-          error: "Esta categoría ya existe para este usuario.",
-        });
+        return res.status(400).json({ error: "⚠️ La categoría ya existe." });
       }
 
-      // Crear la nueva categoría
-      const categoria = await Categoria.create({ nombre, usuarioId });
+      console.log("🆕 Insertando nueva categoría...");
+      const { data: nuevaCategoria, error: errorInsert } = await supabase
+        .from("categorias")
+        .insert([{ nombre, user_id: userId }]) // 🔹 Guardar el `user_id`
+        .select("id, nombre, user_id")
+        .single();
+
+      if (errorInsert) {
+        console.error("❌ Error al crear categoría:", errorInsert);
+        return res
+          .status(500)
+          .json({ error: "⚠️ Error al crear la categoría." });
+      }
 
       res.status(201).json({
-        mensaje: `Categoría "${categoria.nombre}" creada con éxito.`,
-        categoria,
+        mensaje: `✅ Categoría "${nombre}" creada con éxito.`,
+        categoria: nuevaCategoria,
       });
     } catch (error) {
-      console.error("Error al crear la categoría:", error);
-      res.status(500).json({ error: "Error interno del servidor" });
+      console.error("❌ Error interno al crear la categoría:", error);
+      res.status(500).json({ error: "⚠️ Error interno del servidor." });
     }
   }
 );
 
-// Obtener todas las categorías sin duplicados
+// ✅ Obtener categorías según el rol del usuario, sin modificar la eliminación de duplicados
 router.get("/", verificarToken, async (req, res) => {
   try {
-    let categorias;
+    const userId = req.usuario.id;
+    const userRole = req.usuario.rol; // 📌 Obtener el rol del usuario
 
-    if (req.usuario.rol === "admin") {
-      // Admin ve todas las categorías
-      categorias = await Categoria.findAll();
-    } else {
-      // Cliente solo ve sus propias categorías
-      categorias = await Categoria.findAll({
-        where: { usuarioId: req.usuario.id },
-      });
+    let query = supabase.from("categorias").select("id, nombre, user_id");
+
+    if (userRole !== "admin") {
+      query = query.eq("user_id", userId); // 🔹 Si NO es admin, solo ve sus propias categorías
     }
 
-    res.json(categorias);
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    res.json(data);
   } catch (error) {
-    console.error("Error al obtener categorías:", error);
-    res.status(500).json({ error: error.message });
+    console.error("❌ Error al obtener categorías:", error);
+    res.status(500).json({ error: "Error al obtener las categorías" });
   }
 });
 
-// Ruta para actualizar una categoría
+
+// ✅ Ruta para actualizar una categoría
 router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre } = req.body;
 
-    // Buscar la categoría en la base de datos
-    const categoria = await Categoria.findByPk(id);
+    // 🔹 Verificar si la categoría existe en Supabase
+    const { data: categoria, error: errorBuscar } = await supabase
+      .from("categorias")
+      .select("*")
+      .eq("id", id)
+      .single();
 
     if (!categoria) {
       return res.status(404).json({ error: "Categoría no encontrada" });
     }
 
-    // Actualizar el nombre de la categoría
-    categoria.nombre = nombre;
-    await categoria.save(); // Guardamos los cambios en la base de datos
+    if (errorBuscar) {
+      console.error("❌ Error al buscar la categoría:", errorBuscar);
+      return res.status(500).json({ error: "Error al buscar la categoría" });
+    }
+
+    // 🔹 Actualizar la categoría en Supabase
+    const { error: errorActualizar } = await supabase
+      .from("categorias")
+      .update({ nombre })
+      .eq("id", id);
+
+    if (errorActualizar) {
+      console.error("❌ Error al actualizar categoría:", errorActualizar);
+      return res
+        .status(500)
+        .json({ error: "Error al actualizar la categoría" });
+    }
+
+    res
+      .status(200)
+      .json({ mensaje: `Categoría "${nombre}" actualizada correctamente` });
+  } catch (error) {
+    console.error("❌ Error al actualizar la categoría:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
+
+// ✅ Eliminar múltiples categorías
+router.delete("/", verificarToken, async (req, res) => {
+  try {
+    const { categoriaIds } = req.body; // 📥 Recibir los IDs en el body
+
+    if (!categoriaIds || categoriaIds.length === 0) {
+      return res
+        .status(400)
+        .json({ error: "No se enviaron categorías para eliminar." });
+    }
+
+    // 🔍 Verificar si las categorías existen antes de eliminarlas
+    const { data: categoriasExistentes, error: errorBuscar } = await supabase
+      .from("categorias")
+      .select("id")
+      .in("id", categoriaIds);
+
+    if (errorBuscar) throw errorBuscar;
+
+    if (!categoriasExistentes || categoriasExistentes.length === 0) {
+      return res
+        .status(404)
+        .json({ error: "Las categorías seleccionadas no existen." });
+    }
+
+    // 🚀 Eliminar las categorías seleccionadas
+    const { error } = await supabase
+      .from("categorias")
+      .delete()
+      .in("id", categoriaIds);
+
+    if (error) throw error;
 
     res.status(200).json({
-      mensaje: `Categoría "${categoria.nombre}" actualizada correctamente`,
-      categoria,
+      mensaje: `✅ ${categoriaIds.length} categorías eliminadas correctamente.`,
     });
   } catch (error) {
-    console.error("Error al actualizar la categoría:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    console.error("❌ Error al eliminar categorías:", error);
+    res.status(500).json({ error: "Error al eliminar las categorías." });
   }
 });
 

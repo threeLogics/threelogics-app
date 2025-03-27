@@ -5,9 +5,12 @@
   import { useNavigate } from "react-router-dom";
   import { Eye, EyeOff, ArrowLeft } from "lucide-react"; // Iconos para mostrar/ocultar contraseña
   import zxcvbn from "zxcvbn"; // Biblioteca para evaluar la seguridad de la contraseña
+  import supabase from "../supabaseClient";
+
 
   export default function Perfil() {
-    const { usuario, setUsuario } = useContext(AuthContext);
+    const { usuario, actualizarPerfil, logout } = useContext(AuthContext);
+
     const navigate = useNavigate();
     const [user, setUser] = useState({ nombre: "", email: "" });
     const [nuevoPassword, setNuevoPassword] = useState(""); // Nueva contraseña
@@ -19,35 +22,46 @@
     const [isFormValid, setIsFormValid] = useState(false); // Control de validación
     const [imagenPerfil, setImagenPerfil] = useState(null); // Imagen del usuario
     const [imagenPreview, setImagenPreview] = useState(null); // Previsualización de imagen
-
+    // Avatares predefinidos
+  const AVATARS = [
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar.png",
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar4.png",
+    "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
+  ];
+    
     // Cargar datos del usuario autenticado al montar el componente
     useEffect(() => {
       async function fetchUserData() {
-        if (!usuario) return; // 🚀 Evitar llamadas innecesarias si ya se eliminó el usuario
+        if (!usuario) return;
     
         try {
           const response = await api.get("/usuarios/perfil");
+          
+          // 🔹 Validar que el usuario existe antes de actualizar el estado
+          if (!response.data || !response.data.usuario) {
+            console.error("❌ No se encontró información del usuario en la respuesta.");
+            return;
+          }
+    
           setUser({
-            nombre: response.data.usuario.nombre,
-            email: response.data.usuario.email,
+            nombre: response.data.usuario.nombre || "",
+            email: response.data.usuario.email || "",
           });
     
-          // Si el usuario tiene una imagen, cargarla
-          if (response.data.usuario.imagenPerfil) {
-            setImagenPerfil(response.data.usuario.imagenPerfil);
+          // 🔹 Manejar imagen de perfil
+          if (response.data.usuario.imagen_perfil) {
+            setImagenPerfil(response.data.usuario.imagen_perfil);
           }
+    
         } catch (error) {
           console.error("❌ Error al obtener perfil:", error);
     
-          // ✅ Si el usuario no existe o ha sido dado de baja, llevar a la pantalla de carga en lugar de login
           if (error.response?.status === 404 || error.response?.status === 403) {
-            setUsuario(null);
-            localStorage.removeItem("usuario");
+            logout(); // Cerrar sesión si el usuario no existe
             navigate("/loading", { state: { mensaje: "Estamos procesando tu salida..." } });
-            return; // 🔥 Evita que se muestre cualquier `toast.error()`
+            return;
           }
     
-          // ⚠️ Solo mostrar error si no es un 404/403
           toast.error("❌ Error al obtener el perfil. Intenta de nuevo.");
         }
       }
@@ -55,31 +69,25 @@
       fetchUserData();
     }, [usuario]);
     
+    const enviarEnlaceRecuperacion = async () => {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+          redirectTo: "http://localhost:5173/reset-password", // Ajusta si es producción
+        });
     
-    // Manejar la subida de imágenes y previsualización
-    const handleImagenChange = (e) => {
-      const file = e.target.files[0];
-      const MAX_SIZE_MB = 16; // Tamaño máximo permitido en MB
-
-      if (file) {
-        // Verificar que el archivo sea una imagen
-        if (!file.type.startsWith("image/")) {
-          toast.error("❌ El archivo debe ser una imagen.");
-          return;
+        if (error) {
+          toast.error("❌ No se pudo enviar el enlace de recuperación.");
+        } else {
+          toast.success("📧 Enlace de recuperación enviado al correo.");
+          logout();
+          navigate("/login");
         }
-
-        // Verificar que el tamaño no exceda 16MB
-        if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-          toast.error(
-            `❌ La imagen es demasiado grande. Máximo permitido: ${MAX_SIZE_MB}MB.`
-          );
-          return;
-        }
-
-        setImagenPreview(URL.createObjectURL(file)); // Mostrar imagen antes de subirla
-        setImagenPerfil(file); // Guardar el archivo en el estado
+      } catch (err) {
+        console.error("❌ Error al enviar enlace de recuperación:", err);
+        toast.error("❌ Hubo un error al enviar el correo.");
       }
     };
+    
 
     // Validar contraseña en tiempo real
     const validarPassword = (password) => {
@@ -132,37 +140,36 @@
       }
     
       try {
-        const formData = new FormData();
-        formData.append("nombre", user.nombre);
-        formData.append("email", user.email);
-        if (nuevoPassword) {
-          formData.append("nuevoPassword", nuevoPassword);
-        }
-        if (imagenPerfil instanceof File) {
-          formData.append("imagenPerfil", imagenPerfil);
-        }
+        // 📌 Verificar si la imagen seleccionada es válida, si no, usar la predeterminada
+        const imagenPerfilUrl = AVATARS.includes(imagenPerfil) ? imagenPerfil : AVATARS[0];
     
-        console.log("🔍 Enviando FormData:", Object.fromEntries(formData.entries()));
-    
-        const response = await api.put("/usuarios/perfil", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-    
-        // Si el usuario fue eliminado, no intentar navegar a /perfil
-        if (!usuario) return;
-    
-        const updatedUser = {
-          ...usuario,
+        // 📌 Crear el objeto de datos a enviar
+        const updateData = {
           nombre: user.nombre,
           email: user.email,
-          imagenPerfil: response.data.usuario.imagenPerfil,
+          imagenPerfil: imagenPerfilUrl,
         };
-        setUsuario(updatedUser);
+    
+        if (nuevoPassword) {
+          updateData.nuevoPassword = nuevoPassword;
+        }
+    
+        // 📌 Enviar actualización al backend
+        const response = await api.put("/usuarios/perfil", updateData);
+    
+        // 📌 Actualizar datos en el contexto y localStorage
+        const updatedUser = {
+          ...usuario,
+          nombre: response.data.usuario.nombre,
+          email: response.data.usuario.email,
+          imagenPerfil: response.data.usuario.imagen_perfil,
+        };
+    
+        actualizarPerfil(updatedUser);
         localStorage.setItem("usuario", JSON.stringify(updatedUser));
     
         toast.success("✅ Perfil actualizado con éxito");
     
-        // ✅ Evita navegar a /perfil si el usuario fue dado de baja
         setTimeout(() => {
           if (usuario) navigate("/perfil");
         }, 1500);
@@ -172,26 +179,30 @@
       }
     };
     
+    
+    
     const handleBajaUsuario = async () => {
       if (!window.confirm("⚠️ ¿Estás seguro de que quieres darte de baja? Esta acción no se puede deshacer.")) {
         return;
       }
     
-      // ✅ Redirigir primero a la pantalla de carga con un mensaje personalizado
       navigate("/loading", { state: { mensaje: "Estamos eliminando tu cuenta..." } });
     
       try {
         await api.delete("/usuarios/perfil");
     
-        // 🔹 Eliminar usuario inmediatamente para evitar errores
-        setUsuario(null);
-        localStorage.removeItem("usuario");
+        logout(); // ✅ Cerrar sesión correctamente
     
+        setTimeout(() => {
+          navigate("/"); // ✅ Redirigir al usuario a la página principal
+        }, 1500); // Esperar 1.5s antes de redirigir (sin que el usuario lo haga manualmente)
       } catch (error) {
         console.error("❌ Error al dar de baja:", error);
         toast.error(error.response?.data?.error || "❌ No se pudo dar de baja la cuenta.");
       }
     };
+    
+    
     
     
     
@@ -207,23 +218,22 @@
         </button>
     
         <h2 className="text-2xl font-bold mb-4">Editar Perfil</h2>
-    
-        {/* Imagen de perfil */}
-        <div className="mb-4">
-          <label className="block text-gray-400 mt-4">Imagen de Perfil</label>
-          <div className="flex justify-center mt-4">
-            <img
-              src={imagenPreview || imagenPerfil || "src/assets/avatar.png"}
-              alt="Perfil"
-              className="w-24 h-24 rounded-full object-cover border-2 border-gray-500"
-            />
+     {/* Selector de imagen de perfil */}
+     <div className="mb-4">
+          <label className="block text-gray-400 mt-4">Selecciona tu avatar</label>
+          <div className="flex justify-center gap-4 mt-4">
+            {AVATARS.map((avatar, index) => (
+              <img
+                key={index}
+                src={avatar}
+                alt={`Avatar ${index + 1}`}
+                className={`w-20 h-20 rounded-full border-4 cursor-pointer ${
+                  imagenPerfil === avatar ? "border-teal-400" : "border-gray-500"
+                }`}
+                onClick={() => setImagenPerfil(avatar)}
+              />
+            ))}
           </div>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImagenChange}
-            className="mt-4 text-gray-300 cursor-pointer"
-          />
         </div>
     
         {/* FORMULARIO - Dos columnas */}
@@ -254,41 +264,20 @@
             />
           </div>
     
-          {/* Nueva Contraseña */}
-          <div className="text-left relative">
-            <label className="text-gray-400 block">Nueva Contraseña (opcional)</label>
-            <input
-              type={showNewPassword ? "text" : "password"}
-              placeholder="Mínimo 8 caracteres, 1 mayúscula y 1 símbolo"
-              value={nuevoPassword}
-              onChange={handlePasswordChange}
-              className="w-full p-2 mt-1 rounded bg-gray-800 text-white pr-10"
-              autoComplete="new-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-              className="absolute right-3 top-9 text-gray-400 hover:text-gray-200"
-            >
-              {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-            {passwordError && (
-              <p className="text-red-400 text-sm mt-1">{passwordError}</p>
-            )}
-          </div>
-    
-          {/* Confirmar Nueva Contraseña */}
-          <div className="text-left relative">
-            <label className="text-gray-400 block">Confirmar Nueva Contraseña</label>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Repite la nueva contraseña"
-              value={confirmarPassword}
-              onChange={handleConfirmPasswordChange}
-              onPaste={(e) => e.preventDefault()}
-              className="w-full p-2 mt-1 rounded bg-gray-800 text-white pr-10"
-            />
-          </div>
+        
+
+          <div className="col-span-2 flex justify-center mt-2">
+  <button
+    type="button"
+    onClick={enviarEnlaceRecuperacion}
+    className="flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 transition duration-300 cursor-pointer"
+    title="Se enviará un enlace de recuperación al correo asociado"
+  >
+    <span role="img" aria-label="candado">🔐</span>
+    ¿Prefieres cambiar tu contraseña por correo?
+  </button>
+</div>
+
     
           {/* BOTONES (ocupan las 2 columnas) */}
           <div className="col-span-2 flex flex-col gap-3 mt-4">
@@ -300,11 +289,11 @@
             </button>
     
             <button
-              onClick={handleBajaUsuario}
-              className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition cursor-pointer"
-            >
-              Dar de Baja Cuenta
-            </button>
+      onClick={handleBajaUsuario}
+      className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition cursor-pointer"
+    >
+      Dar de Baja Cuenta
+    </button>
           </div>
         </form>
       </div>
