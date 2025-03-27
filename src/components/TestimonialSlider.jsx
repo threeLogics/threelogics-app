@@ -38,7 +38,6 @@ const testimonials = [
   },
 ];
 
-
 export default function TestimonialSlider() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -89,77 +88,81 @@ export default function TestimonialSlider() {
 
   return (
     <div className="flex flex-col items-center text-center px-6 py-16 bg-black text-white">
-    <h2 className="text-4xl font-bold mb-4">
-      Únete al <span className="text-teal-400">ThreeLogics Club</span>
-    </h2>
-    <p className="text-gray-400 text-lg max-w-xl mb-10 leading-relaxed">
-      Estamos construyendo una <span className="text-white font-medium">comunidad empresarial extraordinaria</span>, basada en
-      <span className="text-teal-400 font-medium"> valores compartidos</span> y <span className="text-white font-medium">estándares profesionales</span>.
-    </p>
-  
-    <div className="relative w-full max-w-3xl bg-gray-800 px-8 py-10 rounded-2xl shadow-2xl overflow-hidden">
-      {/* Botón Izquierdo */}
-      <button
-        className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
-        onClick={() => {
-          prevTestimonial();
-          handlePause();
-        }}
-      >
-        <ChevronLeft className="text-white w-6 h-6" />
-      </button>
-  
-      {/* Testimonio */}
-      <div className="relative h-60 flex justify-center items-center">
-        <AnimatePresence custom={direction} mode="wait">
-          <motion.div
-            key={current}
-            className="absolute flex flex-col items-center px-4 text-center"
-            custom={direction}
-            variants={slideVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            <img
-              src={testimonials[current].companyLogo}
-              alt={testimonials[current].companyName}
-              className="w-20 mb-4 filter drop-shadow-lg"
-            />
-  
-            <p className="text-base md:text-lg italic text-gray-300 mb-6 max-w-xl leading-relaxed">
-              {testimonials[current].quote}
-            </p>
-  
-            <div className="flex items-center gap-4">
-              <img
-                src={testimonials[current].avatar}
-                alt={testimonials[current].author}
-                className="w-12 h-12 rounded-full border border-gray-600 shadow-lg"
-              />
-              <div className="text-left">
-                <p className="font-semibold">{testimonials[current].author}</p>
-                <p className="text-sm text-gray-400">
-                  {testimonials[current].position}
-                </p>
+      <h2 className="text-4xl font-bold mb-4">
+        Únete al <span className="text-teal-400">ThreeLogics Club</span>
+      </h2>
+      <p className="text-gray-400 text-lg max-w-xl mb-10 leading-relaxed">
+        Estamos construyendo una{" "}
+        <span className="text-white font-medium">
+          comunidad empresarial extraordinaria
+        </span>
+        , basada en
+        <span className="text-teal-400 font-medium">
+          {" "}
+          valores compartidos
+        </span>{" "}
+        y{" "}
+        <span className="text-white font-medium">estándares profesionales</span>
+        .
+      </p>
+
+      <div className="relative w-full max-w-3xl bg-gray-800 px-8 py-10 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Botón Izquierdo */}
+        <button
+          className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
+          onClick={() => {
+            prevTestimonial();
+            handlePause();
+          }}
+        >
+          <ChevronLeft className="text-white w-6 h-6" />
+        </button>
+
+        {/* Testimonio */}
+        <div className="relative h-60 flex justify-center items-center">
+          <AnimatePresence custom={direction} mode="wait">
+            <motion.div
+              key={current}
+              className="absolute flex flex-col items-center px-4 text-center"
+              custom={direction}
+              variants={slideVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <div className="flex items-center gap-4 mb-5">
+                <img
+                  src={testimonials[current].avatar}
+                  alt={testimonials[current].author}
+                  className="w-20 h-20 rounded-full border border-gray-600 shadow-lg"
+                />
+                <div className="text-left">
+                  <p className="font-semibold">
+                    {testimonials[current].author}
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    {testimonials[current].position}
+                  </p>
+                </div>
               </div>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+              <p className="text-base md:text-lg italic text-gray-300 mb-6 max-w-xl leading-relaxed">
+                {testimonials[current].quote}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Botón Derecho */}
+        <button
+          className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
+          onClick={() => {
+            nextTestimonial();
+            handlePause();
+          }}
+        >
+          <ChevronRight className="text-white w-6 h-6" />
+        </button>
       </div>
-  
-      {/* Botón Derecho */}
-      <button
-        className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
-        onClick={() => {
-          nextTestimonial();
-          handlePause();
-        }}
-      >
-        <ChevronRight className="text-white w-6 h-6" />
-      </button>
     </div>
-  </div>
   );
-  
 }
