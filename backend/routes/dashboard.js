@@ -415,83 +415,125 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
 
     const { usuario } = req;
     const esAdmin = usuario.rol === "admin";
-
-    // 1. Filtro por usuario si no es admin
     const whereCondition = esAdmin ? {} : { user_id: usuario.id };
-
-    // 2. Obtener nombre (si tienes campo personalizado)
     const nombreUsuario = usuario.nombre || usuario.email || "Usuario";
 
-    // 3. Obtener movimientos
     const { data: movimientos, error: errorMov } = await supabase
       .from("movimientos")
-      .select("id, tipo, cantidad, fecha, producto:productos(nombre)")
+      .select("id, tipo, cantidad, fecha, user_id, producto:productos(nombre)")
       .match(whereCondition)
       .order("fecha", { ascending: false });
 
     if (errorMov || !movimientos || movimientos.length === 0) {
       console.error("❌ No hay movimientos para generar el PDF");
-      return res
-        .status(404)
-        .json({ error: "No hay movimientos para generar el PDF" });
+      return res.status(404).json({ error: "No hay movimientos para generar el PDF" });
     }
 
-    // 4. Crear documento PDF
-    const doc = new PDFDocument({ margin: 40 });
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="reporte_movimientos.pdf"'
-    );
+    let movimientosConUsuario = movimientos;
+    if (esAdmin) {
+      const { data: usuarios, error: errorUsuarios } = await supabase.auth.admin.listUsers();
+      if (errorUsuarios) {
+        console.error("❌ Error al obtener usuarios:", errorUsuarios);
+        return res.status(500).json({ error: "Error al obtener usuarios" });
+      }
+
+      const usuariosMap = {};
+      usuarios.users.forEach((u) => {
+        usuariosMap[u.id] = u.user_metadata?.nombre || u.email || "Desconocido";
+      });
+
+      movimientosConUsuario = movimientos.map((mov) => ({
+        ...mov,
+        nombreUsuario: usuariosMap[mov.user_id] || "Desconocido",
+      }));
+    }
+
+    // 📄 Crear PDF
+    const doc = new PDFDocument({ margin: 40, size: "A4" });
+    res.setHeader("Content-Disposition", 'attachment; filename="reporte_movimientos.pdf"');
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    // ✅ Título principal
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(18)
-      .text(" Reporte de Movimientos", { align: "center" })
-      .moveDown();
-
-    // ✅ Datos del usuario
-    doc
-      .font("Helvetica")
-      .fontSize(12)
+    // 🧾 Título y usuario
+    doc.font("Helvetica-Bold").fontSize(18).text("Reporte de Movimientos", { align: "center" }).moveDown();
+    doc.font("Helvetica").fontSize(12)
       .text(`Usuario: ${nombreUsuario}`)
       .text(`Fecha: ${new Date().toLocaleDateString()}`)
       .moveDown();
 
-    // ✅ Encabezados de tabla
+    // 🧱 Config tabla
     const startX = 40;
-    const spacing = 100;
+    const rowHeight = 20;
+    const columnWidths = [60, 100, 70, 70, 140];
+    if (esAdmin) columnWidths.push(100); // Para "Realizado por"
     let y = doc.y;
 
-    doc
-      .font("Helvetica-Bold")
-      .fontSize(10)
-      .text("ID", startX, y)
-      .text("Producto", startX + spacing, y)
-      .text("Tipo", startX + spacing * 2, y)
-      .text("Cantidad", startX + spacing * 3, y)
-      .text("Fecha", startX + spacing * 4, y);
+    const renderEncabezado = () => {
+      doc
+        .font("Helvetica-Bold")
+        .fontSize(10)
+        .text("ID", startX, y, { width: columnWidths[0], align: "left" })
+        .text("Producto", startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text("Tipo", startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text("Cantidad", startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, { width: columnWidths[3], align: "left" })
+        .text("Fecha", startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, { width: columnWidths[4], align: "left" });
 
-    y += 20;
+      if (esAdmin) {
+        doc.text("Realizado por", startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
+      }
 
-    // ✅ Filas de datos
-    doc.font("Helvetica").fontSize(10);
-    movimientos.forEach((mov) => {
-      const shortId = mov.id.slice(0, 8); // ← Acortar UUID
+      y += rowHeight;
+    };
+
+    renderEncabezado();
+
+    movimientosConUsuario.forEach((mov) => {
+      if (y > doc.page.height - 50) {
+        doc.addPage();
+        y = 40;
+        renderEncabezado();
+      }
+
+      const shortId = mov.id.slice(0, 8);
       const producto = mov.producto?.nombre || "N/A";
       const tipo = mov.tipo === "entrada" ? "Entrada" : "Salida";
       const fecha = new Date(mov.fecha).toLocaleString();
+      const nombreUsuario = mov.nombreUsuario || "";
 
       doc
-        .text(shortId, startX, y)
-        .text(producto, startX + spacing, y)
-        .text(tipo, startX + spacing * 2, y)
-        .text(mov.cantidad.toString(), startX + spacing * 3, y)
-        .text(fecha, startX + spacing * 4, y);
+        .font("Helvetica")
+        .fontSize(10)
+        .text(shortId, startX, y, { width: columnWidths[0], align: "left" })
+        .text(producto, startX + columnWidths[0], y, { width: columnWidths[1], align: "left" })
+        .text(tipo, startX + columnWidths[0] + columnWidths[1], y, { width: columnWidths[2], align: "left" })
+        .text(mov.cantidad.toString(), startX + columnWidths[0] + columnWidths[1] + columnWidths[2], y, {
+          width: columnWidths[3],
+          align: "left",
+        })
+        .text(fecha, startX + columnWidths[0] + columnWidths[1] + columnWidths[2] + columnWidths[3], y, {
+          width: columnWidths[4],
+          align: "left",
+        });
 
-      y += 20;
+      if (esAdmin) {
+        doc.text(nombreUsuario, startX + columnWidths.slice(0, 5).reduce((a, b) => a + b, 0), y, {
+          width: columnWidths[5],
+          align: "left",
+        });
+      }
+
+      // 🧩 Línea separadora
+      doc
+        .moveTo(startX, y + rowHeight - 5)
+        .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), y + rowHeight - 5)
+        .strokeColor("#ccc")
+        .lineWidth(0.5)
+        .stroke();
+
+      y += rowHeight;
     });
 
     doc.end();
@@ -501,6 +543,8 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error al generar el PDF" });
   }
 });
+
+
 
 
 
