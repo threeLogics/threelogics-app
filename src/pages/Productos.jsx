@@ -471,96 +471,75 @@ export default function Productos() {
 
         {/* 📋 Tabla de productos con fondo oscuro */}
         <div className="overflow-x-auto rounded-lg shadow-md">
-          {productosSeleccionados.length > 0 && (
-            <button
-              onClick={eliminarProductosSeleccionados}
-              className="mb-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
-            >
-              🗑 Eliminar Seleccionados ({productosSeleccionados.length})
-            </button>
-          )}
-
-          <table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
-          <thead className="bg-gray-900 text-white">
-  <tr>
-    <th className="border px-2 py-2 text-center w-8 !border-none bg-black"></th> {/* Aquí va el icono */}
-    <th className="border px-4 py-2">🛠</th>
-    <th className="border px-4 py-2">ID</th>
-    <th className="border px-4 py-2">Nombre</th>
-    <th className="border px-4 py-2">Cantidad</th>
-    <th className="border px-4 py-2">Precio U.</th>
-    <th className="border px-4 py-2">💰 Total</th>
-    {usuario?.rol === "admin" && (
-      <th className="border px-4 py-2">Creado por</th>
-    )}
-    <th className="border px-4 py-2">Acciones</th>
-  </tr>
-</thead>
-
-            <tbody>
-              {productosPaginados.length > 0 ? (
-                productosPaginados.map((producto) => (
-                  <tr
-                  key={producto.id}
-                  className="hover:bg-gray-700 transition"
-                >
-       <td className="px-2 py-2 text-center !border-none bg-black">
-  {producto.cantidad <= (producto.stockMinimo || 5) && (
-    <span
-    title="Stock bajo"
-    className="animate-pulse text-yellow-400"
-  >
-    ⚠️
-  </span>
-  
+  {productosSeleccionados.length > 0 && (
+    <button
+      onClick={eliminarProductosSeleccionados}
+      className="mb-4 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
+    >
+      🗑 Eliminar Seleccionados ({productosSeleccionados.length})
+    </button>
   )}
-</td>
-
-
-                    <td className="border px-4 py-2 text-center">
-                      <input
-                        type="checkbox"
-                        checked={productosSeleccionados.includes(producto.id)}
-                        onChange={() => toggleSeleccion(producto.id)}
-                      />
-                    </td>
-                    <td className="border px-4 py-2">{producto.id}</td>
-                    <td className="border px-4 py-2 font-semibold">
-                      {producto.nombre}
-                    </td>
-                    <td className="border px-4 py-2">{producto.cantidad}</td>
-                    <td className="border px-4 py-2">${producto.precio}</td>
-                    <td className="border px-4 py-2 font-bold text-green-400">
-                      ${producto.precio * producto.cantidad}
-                    </td>
-                    {usuario?.rol === "admin" && (
-                      <td className="border px-4 py-2">
-                        {producto.creador_nombre  || "Desconocido"}
-                      </td>
-                    )}
-                    <td className="border px-4 py-2 flex gap-2 justify-center">
-                      <button
-                        onClick={() => abrirModalEdicion(producto)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded cursor-pointer"
-                      >
-                        ✏️ Editar
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="8"
-                    className="border px-4 py-2 text-center text-gray-400"
-                  >
-                    No hay productos registrados
-                  </td>
-                </tr>
+  <table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
+    <thead className="bg-gray-900 text-white">
+      <tr>
+        <th className="border px-2 py-2 text-center w-8 !border-none bg-black"></th>
+        <th className="border px-4 py-2">🛠</th>
+        <th className="border px-4 py-2">ID</th>
+        <th className="border px-4 py-2">Nombre</th>
+        <th className="border px-4 py-2">Cantidad</th>
+        <th className="border px-4 py-2">Precio U.</th>
+        <th className="border px-4 py-2">💰 Total</th>
+        {usuario?.rol === "admin" && <th className="border px-4 py-2">Creado por</th>}
+        <th className="border px-4 py-2">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {productosPaginados.length > 0 ? (
+        productosPaginados.map((producto) => (
+          <tr key={producto.id} className="hover:bg-gray-700 transition">
+            <td className="px-2 py-2 text-center !border-none bg-black">
+              {producto.cantidad <= (producto.stockMinimo || 5) && (
+                <span title="Stock bajo" className="animate-pulse text-yellow-400">⚠️</span>
               )}
-            </tbody>
-          </table>
-        </div>
+            </td>
+            <td className="border px-4 py-2 text-center">
+              <input
+                type="checkbox"
+                checked={productosSeleccionados.includes(producto.id)}
+                onChange={() => toggleSeleccion(producto.id)}
+              />
+            </td>
+            <td className="border px-4 py-2">{producto.id}</td>
+            <td className="border px-4 py-2 font-semibold">{producto.nombre}</td>
+            <td className="border px-4 py-2">{producto.cantidad}</td>
+            <td className="border px-4 py-2">${producto.precio}</td>
+            <td className="border px-4 py-2 font-bold text-green-400">${producto.precio * producto.cantidad}</td>
+            {usuario?.rol === "admin" && (
+              <td className="border px-4 py-2">{producto.creador_nombre || "Desconocido"}</td>
+            )}
+            <td className="border px-4 py-2">
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={() => abrirModalEdicion(producto)}
+                  className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded cursor-pointer"
+                >
+                  ✏️ Editar
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))
+      ) : (
+        <tr>
+          <td colSpan="8" className="border px-4 py-2 text-center text-gray-400">
+            No hay productos registrados
+          </td>
+        </tr>
+      )}
+    </tbody>
+  </table>
+</div>
+
 
         {/* 📄 Paginación */}
   {/* 📄 Paginación Inteligente */}
