@@ -12,7 +12,11 @@ function Movimientos() {
   const [filtroTipo, setFiltroTipo] = useState("");
   const { usuario } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
+  const [pagina, setPagina] = useState(1);
+  
+  const [movimientosPorPagina, setMovimientosPorPagina] = useState(10);
 
+  
 
   // ✅ Obtener movimientos desde Supabase
   const fetchMovimientos = useCallback(async () => {
@@ -73,6 +77,32 @@ function Movimientos() {
       );
     });
   }, [movimientos, filtroCategoria, filtroFecha, filtroTipo]);
+
+  const indiceInicial = (pagina - 1) * movimientosPorPagina;
+  const movimientosPaginados = movimientosFiltrados.slice(
+    indiceInicial,
+    indiceInicial + movimientosPorPagina
+  );
+  
+useEffect(() => {
+  setPagina(1);
+}, [filtroCategoria, filtroFecha, filtroTipo]);
+useEffect(() => {
+  const calcularMovimientosPorPantalla = () => {
+    const alturaDisponible = window.innerHeight;
+    const alturaCabecera = 230; // Ajusta según tu UI (filtros, títulos...)
+    const alturaFila = 50; // Aproximado, puedes ajustar si usas Tailwind
+    const filasVisibles = Math.floor((alturaDisponible - alturaCabecera) / alturaFila);
+    setMovimientosPorPagina(Math.max(filasVisibles, 5)); // mínimo de 5 filas
+  };
+
+  calcularMovimientosPorPantalla();
+  window.addEventListener("resize", calcularMovimientosPorPantalla);
+
+  return () => window.removeEventListener("resize", calcularMovimientosPorPantalla);
+}, []);
+
+const totalPaginas = Math.ceil(movimientosFiltrados.length / movimientosPorPagina);
 
 
   if (loading)
@@ -158,7 +188,8 @@ function Movimientos() {
             </thead>
             <tbody>
               {movimientosFiltrados.length > 0 ? (
-                movimientosFiltrados.map((mov) => (
+                movimientosPaginados.map((mov) => (
+
                   <tr key={mov.id} className="hover:bg-gray-700 transition">
                     <td className="border px-4 py-2">{mov.id}</td>
                     <td className="border px-4 py-2">
@@ -196,6 +227,71 @@ function Movimientos() {
               )}
             </tbody>
           </table>
+{/* 📄 Paginación */}
+<div className="flex justify-center mt-6 space-x-2">
+  {pagina > 1 && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina - 1)}
+    >
+      ←
+    </button>
+  )}
+
+  {Array.from({
+    length: totalPaginas,
+  }).map((_, index) => {
+    const currentPage = index + 1;
+    const isFirst = currentPage === 1;
+    const isLast = currentPage === totalPaginas;
+    const isCurrent = currentPage === pagina;
+    const isNearCurrent = Math.abs(pagina - currentPage) <= 1;
+
+    if (
+      isFirst ||
+      isLast ||
+      isCurrent ||
+      isNearCurrent ||
+      (pagina <= 3 && currentPage <= 5) ||
+      (pagina >= totalPaginas - 2 && currentPage >= totalPaginas - 4)
+    ) {
+      return (
+        <button
+          key={index}
+          className={`px-4 py-2 rounded-md transition cursor-pointer ${
+            isCurrent ? "bg-teal-500 text-black" : "bg-gray-700 text-white"
+          }`}
+          onClick={() => setPagina(currentPage)}
+        >
+          {currentPage}
+        </button>
+      );
+    }
+
+    if (
+      (currentPage === pagina - 2 && pagina > 4) ||
+      (currentPage === pagina + 2 && pagina < totalPaginas - 3)
+    ) {
+      return (
+        <span key={index} className="px-2 py-2 text-gray-400">
+          ...
+        </span>
+      );
+    }
+
+    return null;
+  })}
+
+  {pagina < totalPaginas && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina + 1)}
+    >
+      →
+    </button>
+  )}
+</div>
+
         </div>
       </div>
     </div>

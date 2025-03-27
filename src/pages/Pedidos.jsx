@@ -8,6 +8,11 @@ export default function Pedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pagina, setPagina] = useState(1);
+const [pedidosPorPagina, setPedidosPorPagina] = useState(8); // valor inicial por si acaso
+
+
+
 
   // 📌 Filtros
   const [filtroEstado, setFiltroEstado] = useState("");
@@ -17,6 +22,7 @@ export default function Pedidos() {
   const [busquedaProducto] = useState("");
   const [precioMin] = useState("");
   const [precioMax] = useState("");
+  
 
   const navigate = useNavigate();
 
@@ -94,6 +100,32 @@ export default function Pedidos() {
     busquedaProducto,
   ]);
 
+  useEffect(() => {
+    const calcularPedidosPorPantalla = () => {
+      const alturaDisponible = window.innerHeight;
+      const alturaCabecera = 290; // Aproximado, puedes ajustar según tu layout
+      const alturaTarjeta = 180;  // Ajusta si tus tarjetas ocupan más o menos
+      const filasVisibles = Math.floor((alturaDisponible - alturaCabecera) / alturaTarjeta);
+      setPedidosPorPagina(Math.max(filasVisibles, 4)); // mínimo de 4 pedidos
+    };
+  
+    calcularPedidosPorPantalla();
+    window.addEventListener("resize", calcularPedidosPorPantalla);
+  
+    return () => window.removeEventListener("resize", calcularPedidosPorPantalla);
+  }, []);
+  
+  const indiceInicial = (pagina - 1) * pedidosPorPagina;
+const pedidosPaginados = pedidosFiltrados.slice(
+  indiceInicial,
+  indiceInicial + pedidosPorPagina
+);
+
+useEffect(() => {
+  setPagina(1);
+}, [filtroEstado, filtroTipo]);
+const totalPaginas = Math.ceil(pedidosFiltrados.length / pedidosPorPagina);
+
   // ✅ Pantalla de carga con animación
   if (loading)
     return (
@@ -160,7 +192,7 @@ export default function Pedidos() {
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-      {pedidosFiltrados.map((pedido) => {
+      {pedidosPaginados.map((pedido) => {
  const esFinalizado = pedido.estado === "pagado" || pedido.estado === "recibido";
  const esCancelado = pedido.estado === "cancelado";
  const esPendiente = pedido.estado === "pendiente";
@@ -236,6 +268,55 @@ export default function Pedidos() {
         </div>
         
         )}
+   <div className="flex justify-center mt-6 space-x-2 flex-wrap">
+  {/* ⬅ Botón anterior */}
+  {pagina > 1 && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina - 1)}
+    >
+      ←
+    </button>
+  )}
+  {/* Botones dinámicos */}
+  {Array.from({ length: totalPaginas }).map((_, index) => {
+    const num = index + 1;
+    const mostrar =
+      num === 1 ||
+      num === totalPaginas ||
+      (num >= pagina - 1 && num <= pagina + 1);
+
+    const mostrarPuntosInicio = index === 1 && pagina > 3;
+    const mostrarPuntosFinal = index === totalPaginas - 2 && pagina < totalPaginas - 2;
+
+    return mostrar ? (
+      <button
+        key={num}
+        onClick={() => setPagina(num)}
+        className={`px-3 py-2 rounded-md ${
+          pagina === num ? "bg-teal-500 text-black" : "bg-gray-700 text-white"
+        } transition cursor-pointer`}
+      >
+        {num}
+      </button>
+    ) : mostrarPuntosInicio || mostrarPuntosFinal ? (
+      <span key={`dots-${num}`} className="px-2 text-white">
+        ...
+      </span>
+    ) : null;
+  })}
+
+  {/* ➡ Botón siguiente */}
+  {pagina < totalPaginas && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina + 1)}
+    >
+      →
+    </button>
+  )}
+</div>
+
       </div>
     </div>
   );

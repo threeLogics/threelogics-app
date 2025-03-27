@@ -16,7 +16,9 @@
       const [categorias, setCategorias] = useState([]);
     const [filtroCategoria, setFiltroCategoria] = useState("");
 
-
+    const [pagina, setPagina] = useState(1);
+    const [ubicacionesPorPagina, setUbicacionesPorPagina] = useState(9); 
+    
 
 
 
@@ -126,10 +128,35 @@
       });
 
 
-    
+      useEffect(() => {
+        const calcularUbicacionesPorPantalla = () => {
+          const alturaDisponible = window.innerHeight;
+          const alturaCabecera = 320; // ajusta según tu UI
+          const alturaTarjeta = 230; // altura estimada por tarjeta
+          const filas = Math.floor((alturaDisponible - alturaCabecera) / alturaTarjeta);
+          const columnas = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
+          const total = filas * columnas;
+          setUbicacionesPorPagina(Math.max(total, 3));
+        };
       
+        calcularUbicacionesPorPantalla();
+        window.addEventListener("resize", calcularUbicacionesPorPantalla);
+      
+        return () => window.removeEventListener("resize", calcularUbicacionesPorPantalla);
+      }, []);
+      
+      const indiceInicial = (pagina - 1) * ubicacionesPorPagina;
+const ubicacionesPaginadas = ubicacionesFiltradas.slice(
+  indiceInicial,
+  indiceInicial + ubicacionesPorPagina
+);
 
-      
+useEffect(() => {
+  setPagina(1);
+}, [searchTerm, filtroCategoria, orden]);
+
+const totalPaginas = Math.ceil(ubicacionesFiltradas.length / ubicacionesPorPagina);
+    
       return (
         <div className="flex flex-col items-start pt-20 min-h-screen bg-black text-white p-6">
           <div className="w-full max-w-6xl mx-auto">
@@ -201,7 +228,7 @@
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
-      {ubicacionesFiltradas.map((u) => {
+      {ubicacionesPaginadas.map((u) => {
         // ✅ Lógica del stock
         const cantidad = u.productos.cantidad;
         const minimo = u.productos.stock_minimo;
@@ -265,6 +292,68 @@
                 </div>
               </div>
             )}
+      <div className="flex justify-center mt-6 space-x-2">
+  {pagina > 1 && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina - 1)}
+    >
+      ←
+    </button>
+  )}
+
+  {Array.from({ length: totalPaginas }).map((_, index) => {
+    const currentPage = index + 1;
+    const isFirst = currentPage === 1;
+    const isLast = currentPage === totalPaginas;
+    const isCurrent = currentPage === pagina;
+    const isNearCurrent = Math.abs(pagina - currentPage) <= 1;
+
+    if (
+      isFirst || 
+      isLast || 
+      isCurrent || 
+      isNearCurrent || 
+      (pagina <= 3 && currentPage <= 5) || 
+      (pagina >= totalPaginas - 2 && currentPage >= totalPaginas - 4)
+    ) {
+      return (
+        <button
+          key={index}
+          className={`px-4 py-2 rounded-md transition cursor-pointer ${
+            isCurrent ? "bg-teal-500 text-black" : "bg-gray-700 text-white"
+          }`}
+          onClick={() => setPagina(currentPage)}
+        >
+          {currentPage}
+        </button>
+      );
+    }
+
+    if (
+      (currentPage === pagina - 2 && pagina > 4) ||
+      (currentPage === pagina + 2 && pagina < totalPaginas - 3)
+    ) {
+      return (
+        <span key={index} className="px-2 py-2 text-gray-400">
+          ...
+        </span>
+      );
+    }
+
+    return null;
+  })}
+
+  {pagina < totalPaginas && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina + 1)}
+    >
+      →
+    </button>
+  )}
+</div>
+
           </div>
         </div>
       );

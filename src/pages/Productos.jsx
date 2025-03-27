@@ -17,11 +17,13 @@ export default function Productos() {
   const [precioMax, setPrecioMax] = useState("");
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
   const [pagina, setPagina] = useState(1);
-  const productosPorPagina = 8;
+  
   const [productoEditado, setProductoEditado] = useState(null);
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modalCargaMasiva, setModalCargaMasiva] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [productosPorPagina, setMovimientosPorPagina] = useState(10);
+
 
   // 🆕 Estado para la carga masiva de productos
   const [archivo, setArchivo] = useState(null);
@@ -160,7 +162,21 @@ export default function Productos() {
     indiceInicial,
     indiceInicial + productosPorPagina
   );
-
+  useEffect(() => {
+    const calcularMovimientosPorPantalla = () => {
+      const alturaDisponible = window.innerHeight;
+      const alturaCabecera = 390; // Ajusta según tu UI (filtros, títulos...)
+      const alturaFila = 50; // Aproximado, puedes ajustar si usas Tailwind
+      const filasVisibles = Math.floor((alturaDisponible - alturaCabecera) / alturaFila);
+      setMovimientosPorPagina(Math.max(filasVisibles, 5)); // mínimo de 5 filas
+    };
+  
+    calcularMovimientosPorPantalla();
+    window.addEventListener("resize", calcularMovimientosPorPantalla);
+  
+    return () => window.removeEventListener("resize", calcularMovimientosPorPantalla);
+  }, []);
+  
   const abrirModalEdicion = (producto) => {
     setProductoEditado(producto);
     setModalAbierto(true);
@@ -241,6 +257,8 @@ export default function Productos() {
     hidden: { opacity: 0, y: 0 },
     visible: { opacity: 1, y: 10, transition: { duration: 0.5 } },
   };
+  const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
+
   if (loading)
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
@@ -498,23 +516,71 @@ export default function Productos() {
         </div>
 
         {/* 📄 Paginación */}
-        <div className="flex justify-center mt-6 space-x-2 cursor-">
-          {Array.from({
-            length: Math.ceil(productosFiltrados.length / productosPorPagina),
-          }).map((_, index) => (
-            <button
-              key={index}
-              className={`px-4 py-2 rounded-md ${
-                pagina === index + 1
-                  ? "bg-teal-500 text-black"
-                  : "bg-gray-700 text-white"
-              } transition cursor-pointer`}
-              onClick={() => setPagina(index + 1)}
-            >
-              {index + 1}
-            </button>
-          ))}
-        </div>
+  {/* 📄 Paginación Inteligente */}
+<div className="flex justify-center mt-6 space-x-2">
+  {pagina > 1 && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina - 1)}
+    >
+      ←
+    </button>
+  )}
+
+  {Array.from({
+    length: totalPaginas,
+  }).map((_, index) => {
+    const currentPage = index + 1;
+    const isFirst = currentPage === 1;
+    const isLast = currentPage === totalPaginas;
+    const isCurrent = currentPage === pagina;
+    const isNearCurrent = Math.abs(pagina - currentPage) <= 1;
+
+    if (
+      isFirst ||
+      isLast ||
+      isCurrent ||
+      isNearCurrent ||
+      (pagina <= 3 && currentPage <= 5) ||
+      (pagina >= totalPaginas - 2 && currentPage >= totalPaginas - 4)
+    ) {
+      return (
+        <button
+          key={index}
+          className={`px-4 py-2 rounded-md transition cursor-pointer ${
+            isCurrent ? "bg-teal-500 text-black" : "bg-gray-700 text-white"
+          }`}
+          onClick={() => setPagina(currentPage)}
+        >
+          {currentPage}
+        </button>
+      );
+    }
+
+    if (
+      (currentPage === pagina - 2 && pagina > 4) ||
+      (currentPage === pagina + 2 && pagina < totalPaginas - 3)
+    ) {
+      return (
+        <span key={index} className="px-2 py-2 text-gray-400">
+          ...
+        </span>
+      );
+    }
+
+    return null;
+  })}
+
+  {pagina < totalPaginas && (
+    <button
+      className="px-3 py-1 bg-gray-700 text-white rounded-md cursor-pointer"
+      onClick={() => setPagina(pagina + 1)}
+    >
+      →
+    </button>
+  )}
+</div>
+
       </div>
       {/* 🔧 Modal de Edición */}
       {modalAbierto && productoEditado && (
