@@ -30,7 +30,10 @@ import EstadoSistema from "./components/EstadoSistema";
 import ResetPassword from "./components/ResetPassword";
 import supabase from "./supabaseClient";
 import ConfiguracionInicial from "./pages/ConfiguracionInicial";
-import TestEnv from "./components/testEnv";
+import { TestEnv } from "./pages/PrivacyPolicy"; // ajusta la ruta si es distinta
+
+
+
 
 const PrivateRoute = () => {
   const { usuario } = useContext(AuthContext);
