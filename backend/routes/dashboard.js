@@ -546,25 +546,18 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
 
 
 
-
-
 router.get("/reporte-csv", verificarToken, async (req, res) => {
   try {
     console.log("📥 Generando reporte en CSV...");
 
     const { usuario } = req;
     const esAdmin = usuario.rol === "admin";
-
-    // Filtro por usuario si no es admin
     const whereCondition = esAdmin ? {} : { user_id: usuario.id };
-
-    // Obtener nombre del usuario (opcional)
-    const nombreUsuario = usuario.nombre || usuario.email || "Usuario";
 
     // Obtener movimientos
     const { data: movimientos, error: errorMov } = await supabase
       .from("movimientos")
-      .select("id, tipo, cantidad, fecha, producto:productos(nombre)")
+      .select("id, tipo, cantidad, fecha, user_id, producto:productos(nombre)")
       .match(whereCondition)
       .order("fecha", { ascending: false });
 
@@ -575,23 +568,44 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
         .json({ error: "No hay movimientos para generar el CSV" });
     }
 
-    // Transformar datos a formato plano para CSV
-    const datosPlano = movimientos.map((mov) => ({
-      ID: mov.id.slice(0, 8),
-      Producto: mov.producto?.nombre || "N/A",
-      Tipo: mov.tipo === "entrada" ? "Entrada" : "Salida",
-      Cantidad: mov.cantidad,
-      Fecha: new Date(mov.fecha).toLocaleString(),
-    }));
+    // Si es admin, obtener mapa de usuarios
+    let usuariosMap = {};
+    if (esAdmin) {
+      const { data: usuarios, error: errorUsuarios } =
+        await supabase.auth.admin.listUsers();
 
-    // Generar CSV con json2csv
-    const parser = new Parser({ delimiter: ";" }); // Puedes usar "," si prefieres
+      if (errorUsuarios) {
+        console.error("❌ Error al obtener usuarios:", errorUsuarios);
+        return res.status(500).json({ error: "Error al obtener usuarios" });
+      }
+
+      usuarios.users.forEach((u) => {
+        usuariosMap[u.id] = u.user_metadata?.nombre || u.email || "Desconocido";
+      });
+    }
+
+    // Transformar datos a plano (con columna "Realizado por" si es admin)
+    const datosPlano = movimientos.map((mov) => {
+      const fila = {
+        ID: mov.id.slice(0, 8),
+        Producto: mov.producto?.nombre || "N/A",
+        Tipo: mov.tipo === "entrada" ? "Entrada" : "Salida",
+        Cantidad: mov.cantidad,
+        Fecha: new Date(mov.fecha).toLocaleString(),
+      };
+
+      if (esAdmin) {
+        fila["Realizado por"] = usuariosMap[mov.user_id] || "Desconocido";
+      }
+
+      return fila;
+    });
+
+    // Generar CSV
+    const parser = new Parser({ delimiter: ";" });
     const csv = parser.parse(datosPlano);
 
-    res.setHeader(
-      "Content-Disposition",
-      'attachment; filename="reporte_movimientos.csv"'
-    );
+    res.setHeader("Content-Disposition", 'attachment; filename="reporte_movimientos.csv"');
     res.setHeader("Content-Type", "text/csv");
     res.status(200).send(csv);
 
@@ -601,6 +615,7 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
     res.status(500).json({ error: "Error al generar el CSV" });
   }
 });
+
 
 
 router.get("/reporte-productos", verificarToken, async (req, res) => {
