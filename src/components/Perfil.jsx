@@ -5,6 +5,8 @@
   import { useNavigate } from "react-router-dom";
   import { Eye, EyeOff, ArrowLeft } from "lucide-react"; // Iconos para mostrar/ocultar contraseña
   import zxcvbn from "zxcvbn"; // Biblioteca para evaluar la seguridad de la contraseña
+  import supabase from "../supabaseClient";
+
 
   export default function Perfil() {
     const { usuario, actualizarPerfil, logout } = useContext(AuthContext);
@@ -67,7 +69,23 @@
       fetchUserData();
     }, [usuario]);
     
-
+    const enviarEnlaceRecuperacion = async () => {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+          redirectTo: "http://localhost:5173/reset-password", // Ajusta si es producción
+        });
+    
+        if (error) {
+          toast.error("❌ No se pudo enviar el enlace de recuperación.");
+        } else {
+          toast.success("📧 Enlace de recuperación enviado al correo.");
+        }
+      } catch (err) {
+        console.error("❌ Error al enviar enlace de recuperación:", err);
+        toast.error("❌ Hubo un error al enviar el correo.");
+      }
+    };
+    
 
     // Validar contraseña en tiempo real
     const validarPassword = (password) => {
@@ -244,41 +262,20 @@
             />
           </div>
     
-          {/* Nueva Contraseña */}
-          <div className="text-left relative">
-            <label className="text-gray-400 block">Nueva Contraseña (opcional)</label>
-            <input
-              type={showNewPassword ? "text" : "password"}
-              placeholder="Mínimo 8 caracteres, 1 mayúscula y 1 símbolo"
-              value={nuevoPassword}
-              onChange={handlePasswordChange}
-              className="w-full p-2 mt-1 rounded bg-gray-800 text-white pr-10"
-              autoComplete="new-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-              className="absolute right-3 top-9 text-gray-400 hover:text-gray-200"
-            >
-              {showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-            {passwordError && (
-              <p className="text-red-400 text-sm mt-1">{passwordError}</p>
-            )}
-          </div>
-    
-          {/* Confirmar Nueva Contraseña */}
-          <div className="text-left relative">
-            <label className="text-gray-400 block">Confirmar Nueva Contraseña</label>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Repite la nueva contraseña"
-              value={confirmarPassword}
-              onChange={handleConfirmPasswordChange}
-              onPaste={(e) => e.preventDefault()}
-              className="w-full p-2 mt-1 rounded bg-gray-800 text-white pr-10"
-            />
-          </div>
+        
+
+          <div className="col-span-2 flex justify-center mt-2">
+  <button
+    type="button"
+    onClick={enviarEnlaceRecuperacion}
+    className="flex items-center gap-2 text-sm text-yellow-400 hover:text-yellow-300 transition duration-300 cursor-pointer"
+    title="Se enviará un enlace de recuperación al correo asociado"
+  >
+    <span role="img" aria-label="candado">🔐</span>
+    ¿Prefieres cambiar tu contraseña por correo?
+  </button>
+</div>
+
     
           {/* BOTONES (ocupan las 2 columnas) */}
           <div className="col-span-2 flex flex-col gap-3 mt-4">
