@@ -31,7 +31,8 @@ const Community = () => {
 
   const fetchQuestions = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/community/questions");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/questions`)
+
       const data = await res.json();
   
       console.log("📌 Preguntas obtenidas:", data);
@@ -58,7 +59,7 @@ const Community = () => {
     }
   
     try {
-      const res = await fetch("http://localhost:5000/api/community/questions", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/questions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -66,7 +67,7 @@ const Community = () => {
         },
         body: JSON.stringify({ text: newQuestion }),
       });
-  
+      
       const data = await res.json();
   
       if (!res.ok) {
@@ -85,7 +86,7 @@ const Community = () => {
 
   const fetchAnswers = async (questionId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/community/answers/${questionId}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/answers/${questionId}`);
       const data = await res.json();
       setAnswers((prev) => ({ ...prev, [questionId]: data }));
     } catch (error) {
@@ -105,7 +106,7 @@ const Community = () => {
     }
   
     try {
-      const res = await fetch("http://localhost:5000/api/community/answers", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/answers`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
