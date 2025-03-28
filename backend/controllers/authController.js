@@ -42,8 +42,8 @@ export const register = async (req, res) => {
       email,
       password,
       options: {
-        data: { nombre, rol },
-        emailRedirectTo: "http://localhost:5173/verificar-cuenta",
+        data: { nombre, rol }, //http://localhost:5173
+        emailRedirectTo: "https://threelogicsapp.vercel.app//verificar-cuenta",
       },
     });
 
@@ -131,7 +131,7 @@ export const recoverPassword = async (req, res) => {
 
     // Enviar el enlace de recuperación con redirección al frontend
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `http://localhost:5173/reset-password`,
+      redirectTo: `https://threelogicsapp.vercel.app/reset-password`, //http://localhost:5173
     });
 
     if (error) return res.status(400).json({ error: error.message });

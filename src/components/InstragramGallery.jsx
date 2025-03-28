@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
-import img1 from "../assets/1Insta.webp";
-console.log(img1);
-import img2 from "../assets/2Insta.webp";
-import img3 from "../assets/3Insta.webp";
+
+
 
 const images = [
   {

@@ -36,7 +36,7 @@ export default function UltimosClientes() {
 
   useEffect(() => {
     fetchClientes();
-    const interval = setInterval(fetchClientes, 10000);
+    const interval = setInterval(fetchClientes, 3600000);
     return () => clearInterval(interval);
   }, []);
 
