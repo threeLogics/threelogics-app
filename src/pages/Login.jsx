@@ -80,7 +80,7 @@ export default function Login() {
   
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(recoveryEmail, {
-        redirectTo: `http://localhost:5173/reset-password`,
+        redirectTo: `https://threelogicsapp.vercel.app/reset-password`,
       });
   
       if (error) {
