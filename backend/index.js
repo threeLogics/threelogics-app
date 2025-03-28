@@ -24,7 +24,7 @@ const app = express();
 // 📌 Configurar CORS correctamente
 app.use(
   cors({
-    origin: "https://threelogicsapp.vercel.app/", // Permitir peticiones desde el frontend
+    origin: "https://threelogicsapp.vercel.app", // Permitir peticiones desde el frontend
     credentials: true, // Habilita el envío de cookies o tokens
     methods: ["GET", "POST", "PUT", "DELETE"], // Métodos HTTP permitidos
     allowedHeaders: ["Content-Type", "Authorization"], // Headers permitidos en las peticiones
