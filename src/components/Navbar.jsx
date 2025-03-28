@@ -216,7 +216,7 @@ export default function Navbar() {
   onClick={() => setIsModalOpen(!isModalOpen)}
   className="text-sm flex items-center space-x-2 hover:text-teal-400 transition cursor-pointer"
 >
-<img src={usuario?.imagenPerfil || "src/assets/avatar.png"} alt="Perfil" className="w-8 h-8 rounded-full border-2 border-teal-500" />
+<img src={usuario?.imagenPerfil || "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar.png"} alt="Perfil" className="w-8 h-8 rounded-full border-2 border-teal-500" />
 
   <span>{usuario?.nombre || "Usuario"}</span> {/* Asegura que se usa `nombre` */}
 </button>
