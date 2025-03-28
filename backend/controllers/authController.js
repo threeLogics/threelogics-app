@@ -43,7 +43,7 @@ export const register = async (req, res) => {
       password,
       options: {
         data: { nombre, rol }, //http://localhost:5173
-        emailRedirectTo: "https://threelogicsapp.vercel.app//verificar-cuenta",
+        emailRedirectTo: "https://threelogicsapp.vercel.app/verificar-cuenta",
       },
     });
 
