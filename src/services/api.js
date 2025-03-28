@@ -8,7 +8,6 @@ export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  withCredentials: true, // 👈 Añade esto
 });
 
 // Interceptor para incluir el token en cada petición
