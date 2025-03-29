@@ -25,20 +25,22 @@ const ChatBot = () => {
 
   ];
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const sendMessage = async (msg = input) => {
     const sanitizedMessage = sanitizeMessage(msg);
     if (!sanitizedMessage) return;
-
+  
     const userMessage = { role: "user", content: sanitizedMessage };
     setMessages((prev) => [...prev, userMessage]);
-
+  
     try {
-      const res = await fetch("http://localhost:5000/api/chatbot/chat", {
+      const res = await fetch(`${API_URL}/api/chatbot/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: sanitizedMessage }),
       });
-
+  
       const data = await res.json();
       setMessages((prev) => [
         ...prev,
@@ -51,9 +53,10 @@ const ChatBot = () => {
         { role: "bot", content: "Ocurrió un error, inténtalo más tarde." }
       ]);
     }
-
+  
     setInput(""); // Limpiar input después de enviar
   };
+  
 
   // Auto-scroll al nuevo mensaje
   useEffect(() => {
