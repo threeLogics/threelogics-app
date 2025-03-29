@@ -35,7 +35,7 @@ router.get("/", async (req, res) => {
 
     const inicioAPI = Date.now();
     try {
-      await fetch("http://localhost:5000");
+      await fetch("https://tu-backend.onrender.com");
       servidorTiempo = `${Date.now() - inicioAPI}ms`;
     } catch {
       servidorEstado = "error";
@@ -59,11 +59,12 @@ router.get("/", async (req, res) => {
 
     const inicioDB = Date.now();
     const { error: dbError } = await supabase
-      .from("usuarios")
+      .from("productos") // ✅ una tabla válida
       .select("id")
       .limit(1);
 
     if (dbError) {
+      console.error("Error al conectar con Supabase:", dbError.message);
       dbEstado = "error";
     } else {
       dbTiempo = `${Date.now() - inicioDB}ms`;
@@ -76,26 +77,24 @@ router.get("/", async (req, res) => {
       tiempo_respuesta: dbTiempo,
     });
 
-    // 🔹 Verificar API Externa (Ejemplo: Stripe)
+    // 🔹 Verificar API Externa
     let apiExternaEstado = "operativo";
+    let apiExternaTiempo = "N/A";
+
+    const inicioAPIExterna = Date.now();
     try {
-      await fetch("https://api.stripe.com/v1/charges", { method: "HEAD" });
+      await fetch("https://threelogics-app.onrender.com/api/ping", {
+        method: "GET",
+      });
+      apiExternaTiempo = `${Date.now() - inicioAPIExterna}ms`;
     } catch {
       apiExternaEstado = "error";
     }
 
     servicios.push({
-      servicio: "API Externa",
+      servicio: "API Backend",
       estado: apiExternaEstado,
-      tiempo_respuesta: "N/A",
-    });
-
-    // 🔹 Verificar almacenamiento (Supabase Storage)
-    const { error: storageError } = await supabase.storage.listBuckets();
-    servicios.push({
-      servicio: "Almacenamiento",
-      estado: storageError ? "error" : "operativo",
-      tiempo_respuesta: "N/A",
+      tiempo_respuesta: apiExternaTiempo,
     });
 
     // 🔹 Verificar carga del servidor
