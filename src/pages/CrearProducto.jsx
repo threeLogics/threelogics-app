@@ -148,14 +148,14 @@ function CrearProducto() {
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center items-center pt-10">
-      <div className="p-8 max-w-5xl w-full bg-gray-900 text-white rounded-lg shadow-2xl flex gap-10">
-        {/* Formulario para añadir productos */}
+<div className="p-6 max-w-5xl w-full bg-gray-900 text-white rounded-lg shadow-2xl flex flex-col lg:flex-row gap-8">
+{/* Formulario para añadir productos */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1 }}
-          className="w-1/2"
-        >
+          className="w-full lg:w-1/2"
+          >
           <h1 className="text-3xl font-bold text-teal-400 mb-6">➕ Añadir Producto</h1>
           <form onSubmit={handleSubmit} className="grid gap-4">
             <input
@@ -241,8 +241,8 @@ function CrearProducto() {
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1 }}
-          className="w-1/2"
-        >
+          className="w-full lg:w-1/2"
+          >
           <h1 className="text-3xl font-bold text-teal-400 mb-6">📂 Categorías Disponibles</h1>
           <div className="overflow-x-auto rounded-lg shadow-md">
             <table className="w-full border-collapse bg-gray-800 text-white rounded-lg">
