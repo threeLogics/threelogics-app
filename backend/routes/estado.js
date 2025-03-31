@@ -54,7 +54,7 @@ router.get("/", async (req, res) => {
 
     const inicioDB = Date.now();
     const { error: dbError } = await supabase
-      .from("auth.users") 
+      .from("estado_sistema")
       .select("id")
       .limit(1);
 
@@ -91,7 +91,7 @@ router.get("/", async (req, res) => {
       tiempo_respuesta: apiExternaTiempo,
     });
 
-    const cargaCPU = os.loadavg()[0]; 
+    const cargaCPU = os.loadavg()[0];
     servicios.push({
       servicio: "Carga del Servidor",
       estado: cargaCPU > 2 ? "degradado" : "operativo",
