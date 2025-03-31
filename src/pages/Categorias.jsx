@@ -233,7 +233,7 @@ function Categorias() {
   animate="visible"
   className="flex flex-col gap-3 sm:gap-4 md:flex-row md:justify-between md:items-center mb-4 sm:mb-6"
 >
-  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-teal-400 text-center md:text-left leading-tight">
+  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-teal-400 text-left leading-tight">
     {usuario?.rol === "admin"
       ? "🏷️ Todas las Categorías"
       : "🏷️ Mis Categorías"}
@@ -258,6 +258,7 @@ function Categorias() {
     </button>
   </div>
 </motion.div>
+
 
 
 
