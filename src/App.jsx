@@ -1,6 +1,8 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "./context/AuthContext";
+import { useLocation } from "react-router-dom";
+import { trackPageView } from "./utils/analytics";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -39,6 +41,12 @@ const PrivateRoute = () => {
   const { usuario } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [configuracionCompleta, setConfiguracionCompleta] = useState(false);
+  const location = useLocation();
+
+useEffect(() => {
+  trackPageView(location.pathname); 
+}, [location]);
+
 
   useEffect(() => {
     const verificarConfiguracion = async () => {
