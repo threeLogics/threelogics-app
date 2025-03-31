@@ -227,36 +227,38 @@ function Categorias() {
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-18">
       <div className="p-6 max-w-6xl w-full">
-        <motion.div
-          variants={fadeIn}
-          initial="hidden"
-          animate="visible"
-          className="flex justify-between items-center mb-6"
-        >
-          <h1 className="text-3xl font-bold text-teal-400">
-            {usuario?.rol === "admin"
-              ? "🏷️ Todas las Categorías"
-              : "🏷️ Mis Categorías"}
-          </h1>
-          <div className="flex gap-4">
-            <button
-              onClick={() => navigate("/crear-categoria")}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
-            >
-              ➕ Añadir Categoría
-            </button>
-            <button
-              onClick={() => setModoEliminar(!modoEliminar)}
-              className={`px-5 py-2 rounded-md shadow-md transition cursor-pointer ${
-                modoEliminar
-                  ? "bg-red-700 hover:bg-red-800"
-                  : "bg-red-500 hover:bg-red-600"
-              } text-white`}
-            >
-              {modoEliminar ? "❌ Cancelar" : "🗑 Eliminar Categorías"}
-            </button>
-          </div>
-        </motion.div>
+      <motion.div
+  variants={fadeIn}
+  initial="hidden"
+  animate="visible"
+  className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-6"
+>
+  <h1 className="text-2xl sm:text-3xl font-bold text-teal-400 text-center md:text-left">
+    {usuario?.rol === "admin"
+      ? "🏷️ Todas las Categorías"
+      : "🏷️ Mis Categorías"}
+  </h1>
+
+  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center md:justify-end">
+    <button
+      onClick={() => navigate("/crear-categoria")}
+      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md shadow-md transition"
+    >
+      ➕ Añadir Categoría
+    </button>
+    <button
+      onClick={() => setModoEliminar(!modoEliminar)}
+      className={`px-5 py-2 rounded-md shadow-md transition ${
+        modoEliminar
+          ? "bg-red-700 hover:bg-red-800"
+          : "bg-red-500 hover:bg-red-600"
+      } text-white`}
+    >
+      {modoEliminar ? "❌ Cancelar" : "🗑 Eliminar Categorías"}
+    </button>
+  </div>
+</motion.div>
+
 
         {categorias.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
