@@ -76,9 +76,9 @@
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, ease: "easeOut" }}
-          className="flex bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-lg text-white rounded-lg shadow-2xl max-w-3xl w-full overflow-hidden"
+           className="flex flex-col md:flex-row bg-gradient-to-b from-gray-900/90 to-black/90 backdrop-blur-lg text-white rounded-lg shadow-2xl max-w-3xl w-full overflow-hidden"
         >
-          <div className="w-1/2 p-10">
+          <div className="w-full md:w-1/2 p-6 sm:p-10">
             <motion.h1
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -219,7 +219,7 @@
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, delay: 0.5 }}
-            className="w-1/2 relative hidden md:block"
+            className="hidden md:block w-1/2 relative"
           >
             <img
               src="./map.webp"
