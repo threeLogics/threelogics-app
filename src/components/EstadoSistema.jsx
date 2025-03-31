@@ -19,7 +19,7 @@ const EstadoSistema = () => {
     };
 
     fetchEstado();
-    const interval = setInterval(fetchEstado, 15000); // Actualización cada 15s
+    const interval = setInterval(fetchEstado, 15000);
     return () => clearInterval(interval);
   }, []);
 

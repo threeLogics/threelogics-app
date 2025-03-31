@@ -11,7 +11,6 @@ export default function VerificarCuenta() {
 
   useEffect(() => {
     async function verificar() {
-      // 🔹 Convertir el hash en parámetros de URL
       const urlParams = new URLSearchParams(window.location.hash.replace("#", "?"));
       const accessToken = urlParams.get("access_token");
       const refreshToken = urlParams.get("refresh_token");
@@ -23,7 +22,6 @@ export default function VerificarCuenta() {
         return;
       }
 
-      // ✅ Guardar el token en Supabase
       const { data, error } = await supabase.auth.setSession({
         access_token: accessToken,
         refresh_token: refreshToken,
@@ -39,7 +37,6 @@ export default function VerificarCuenta() {
       
       setEsError(false);
 
-      // 🔄 Redirigir al login después de 3 segundos
       setTimeout(() => navigate("/login"), 3000);
     }
 

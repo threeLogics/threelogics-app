@@ -2,7 +2,7 @@ import { useState, useContext } from "react";
 import { api } from "../services/api";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { toast } from "react-toastify"; // ✅ Notificaciones
+import { toast } from "react-toastify"; 
 import { motion } from "framer-motion";
 
 function CrearCategoria() {
@@ -28,15 +28,13 @@ function CrearCategoria() {
     }
   
     try {
-      // 🧠 Normalizamos el nombre para comparación
       const normalizarTexto = (texto) =>
         texto
           .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "") // elimina acentos
+          .replace(/[\u0300-\u036f]/g, "") 
           .toLowerCase()
           .trim();
   
-      // 🔍 Obtener categorías existentes del backend
       const { data: categorias } = await api.get("/categorias", {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });

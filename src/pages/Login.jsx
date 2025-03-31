@@ -1,5 +1,5 @@
 import { useState, useContext, useRef } from "react";
-import supabase from "../supabaseClient"; // ✅ Sin llaves { }
+import supabase from "../supabaseClient";
 
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +7,7 @@ import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import DOMPurify from "dompurify";
 import SplitText from "../components/SplitText";
-import { Eye, EyeOff } from "lucide-react"; // Iconos de ojo
+import { Eye, EyeOff } from "lucide-react"; 
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -23,7 +23,6 @@ export default function Login() {
     return DOMPurify.sanitize(input.trim());
   };
 
-  // ✅ Función para iniciar sesión con Supabase Auth
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -37,7 +36,7 @@ export default function Login() {
         password: sanitizedPassword,
       });
   
-      console.log("📢 Datos recibidos en login:", data); // 🔹 Verifica qué devuelve
+      console.log("📢 Datos recibidos en login:", data); 
   
       if (error) {
         toast.error(error.message);
@@ -48,7 +47,6 @@ export default function Login() {
         toast.error("⚠️ Error en la autenticación.");
         return;
       }
-         // 📌 Verificar si el usuario ha sido dado de baja
     if (data.user.user_metadata?.deleted_at) {
       toast.error(
         "Tu cuenta ha sido dada de baja. Contacta con soporte para más información."
@@ -71,7 +69,6 @@ export default function Login() {
   };
   
 
-  // ✅ Función para recuperar la contraseña con Supabase Auth
   const handleRecoverPassword = async () => {
     if (!recoveryEmail.trim()) {
       toast.error("⚠️ Por favor, ingresa tu correo.");

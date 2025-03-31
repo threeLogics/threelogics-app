@@ -7,7 +7,7 @@ export default function Hero() {
   const footerRef = useRef(null);
   const [text, setText] = useState("");
   const fullText = "Gestión de almacenes";
-  const typingSpeed = 100; // Velocidad de escritura en ms
+  const typingSpeed = 100; 
 
   useEffect(() => {
     let index = 0;

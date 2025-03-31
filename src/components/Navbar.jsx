@@ -1,8 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
-import { Menu, X } from "lucide-react"; // Iconos para menú móvil
-import { NavLink } from "react-router-dom"; // para dar estilos cuando los links este activos
+import { Menu, X } from "lucide-react"; 
+import { NavLink } from "react-router-dom";
 
 
 export default function Navbar() {
@@ -14,14 +14,14 @@ export default function Navbar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [imagenPerfil, setImagenPerfil] = useState(null);
 
-  // 📌 Definir imágenes de perfil predeterminadas
+  
   const AVATARS = {
     default: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar_default.png",
     avatar4: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar4.png",
     avatar5: "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
   };
 
-  // 📌 Función para obtener la imagen de perfil desde localStorage o usar una predeterminada
+
   const obtenerImagenPerfil = () => {
     const storedUser = localStorage.getItem("usuario");
     if (storedUser) {
@@ -31,7 +31,7 @@ export default function Navbar() {
     return AVATARS.default;
   };
 
-  // 📌 Actualiza la imagen de perfil cuando el usuario cambia
+
   useEffect(() => {
     const obtenerImagenPerfil = () => {
       const storedUser = localStorage.getItem("usuario");
@@ -45,7 +45,7 @@ export default function Navbar() {
     setImagenPerfil(obtenerImagenPerfil());
   }, [usuario]);
 
-  // 📌 Manejo de scroll para ocultar/mostrar navbar
+
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;

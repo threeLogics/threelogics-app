@@ -7,7 +7,7 @@ export default function UltimosClientes() {
   const [clientesEliminados, setClientesEliminados] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 📌 Función para cargar los últimos clientes
+  
   const fetchClientes = async () => {
     try {
       setLoading(true);
@@ -21,7 +21,7 @@ export default function UltimosClientes() {
       setNuevosClientes(nuevos);
       setClientesEliminados(eliminados);
   
-      // ✅ Solo desactiva loading si hay datos
+      
       if (nuevos.length > 0 || eliminados.length > 0) {
         setLoading(false);
       }
@@ -29,7 +29,7 @@ export default function UltimosClientes() {
       console.error("❌ Error al cargar clientes:", error);
       setNuevosClientes([]);
       setClientesEliminados([]);
-      // ❗ No seteamos loading a false si falló
+      
     }
   };
   
@@ -40,7 +40,7 @@ export default function UltimosClientes() {
     return () => clearInterval(interval);
   }, []);
 
-  // 📌 Variantes de animación
+  
   const scaleIn = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } },

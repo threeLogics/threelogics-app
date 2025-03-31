@@ -3,9 +3,8 @@ import { RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Tooltip,
 import { Card, CardContent } from "../components/ui/card";
 
 export default function PrediccionDemandaRadar({ pedidosPorProducto = [] }) {
-  // 🔮 Cálculo de predicción basada en promedio simple
   const prediccionDemanda = useMemo(() => {
-    const agrupado = {}; // producto => array de cantidades
+    const agrupado = {}; 
 
     pedidosPorProducto.forEach((p) => {
       if (!agrupado[p.nombre]) agrupado[p.nombre] = [];

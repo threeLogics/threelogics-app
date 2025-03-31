@@ -8,7 +8,7 @@
       const [loading, setLoading] = useState(true);
       const [userRole, setUserRole] = useState(null);
       const [searchParams, setSearchParams] = useSearchParams();
-      const pedidoId = searchParams.get("pedidoId"); // obtiene pedidoId desde URL
+      const pedidoId = searchParams.get("pedidoId"); 
       const [modalOpen, setModalOpen] = useState(false);
       const [ubicacionesModal, setUbicacionesModal] = useState([]);
       const [searchTerm, setSearchTerm] = useState("");
@@ -77,7 +77,6 @@
             
 
             if (pedidoId) {
-              // Aquí obtienes la ubicación específica relacionada con pedidoId
               const { data: pedidoData, error: pedidoError } = await supabase
                 .from("detallepedidos")
                 .select(`producto_id`)
@@ -131,8 +130,8 @@
       useEffect(() => {
         const calcularUbicacionesPorPantalla = () => {
           const alturaDisponible = window.innerHeight;
-          const alturaCabecera = 320; // ajusta según tu UI
-          const alturaTarjeta = 230; // altura estimada por tarjeta
+          const alturaCabecera = 320; 
+          const alturaTarjeta = 230; 
           const filas = Math.floor((alturaDisponible - alturaCabecera) / alturaTarjeta);
           const columnas = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
           const total = filas * columnas;

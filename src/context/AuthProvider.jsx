@@ -5,23 +5,23 @@ import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
-  const [mensajeExpiracion, setMensajeExpiracion] = useState(""); // Mensaje de expiración
+  const [mensajeExpiracion, setMensajeExpiracion] = useState(""); 
   const logoutTimeoutRef = useRef(null);
 
-  // Se ejecuta cuando el componente se monta
+
   useEffect(() => {
     const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("usuario");
 
     if (token && storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      setUsuario(parsedUser); // Establece el usuario si existe en localStorage
+      setUsuario(parsedUser); 
 
       try {
         const decodedToken = jwtDecode(token);
         const currentTime = Date.now() / 1000;
 
-        // Si el token está expirado, se cierra la sesión automáticamente
+        
         if (decodedToken.exp < currentTime) {
           console.warn("⚠️ Token expirado, cerrando sesión...");
           cerrarSesionAutomatica();
@@ -46,10 +46,10 @@ export function AuthProvider({ children }) {
         logout();
       }
     } else {
-      // Si no hay token ni usuario, cierra sesión
+      
       logout();
     }
-  }, []); // Este useEffect se ejecuta una vez al iniciar
+  }, []); 
 
   const cerrarSesionAutomatica = () => {
     console.warn("⚠️ Token expirado. Cerrando sesión...");
@@ -71,10 +71,10 @@ export function AuthProvider({ children }) {
     try {
       const decodedToken = jwtDecode(data.token);
 
-      // Extraer correctamente el nombre desde user_metadata
+      
       const usuario = {
-        id: decodedToken.sub, // ID del usuario en Supabase
-        nombre: decodedToken.user_metadata?.nombre || "Usuario", // 👈 Extrae correctamente el nombre
+        id: decodedToken.sub, 
+        nombre: decodedToken.user_metadata?.nombre || "Usuario", 
         email: decodedToken.email,
         rol: decodedToken.user_metadata?.rol || "usuario",
         imagenPerfil:
@@ -89,12 +89,12 @@ export function AuthProvider({ children }) {
         cerrarSesionAutomatica();
       }, (decodedToken.exp - Date.now() / 1000) * 1000);
 
-      setMensajeExpiracion(""); // Limpiar mensaje si inicia sesión nuevamente
+      setMensajeExpiracion(""); 
       setUsuario(usuario);
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(usuario));
 
-      console.log("✅ Usuario autenticado:", usuario); // Verifica los datos en la consola
+      console.log("✅ Usuario autenticado:", usuario); 
     } catch (error) {
       console.error("❌ Error al decodificar el token:", error);
       return;

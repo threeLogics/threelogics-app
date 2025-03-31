@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from "react";
-import supabase from "../supabaseClient"; // ✅ Sin llaves { }
+import supabase from "../supabaseClient"; 
 
-import { AuthContext } from "../context/AuthContext"; // ✅ Importar el contexto de autenticación
+import { AuthContext } from "../context/AuthContext"; 
 
 import { MessageCircle, User, Send, Clock } from "lucide-react";
 
@@ -17,11 +17,11 @@ const Community = () => {
   const [newQuestion, setNewQuestion] = useState("");
   const [answers, setAnswers] = useState({});
   const [newAnswers, setNewAnswers] = useState({});
-  const { usuario } = useContext(AuthContext); // Asegurar que el contexto de autenticación está disponible
+  const { usuario } = useContext(AuthContext); 
 
 
   useEffect(() => {
-      // Al cargar el componente, desplazar al inicio de la página
+      
       window.scrollTo({
         top: 0,
         behavior: "smooth",
@@ -44,7 +44,7 @@ const Community = () => {
       setQuestions(data);
     } catch (error) {
       console.error("❌ Error al recuperar preguntas:", error);
-      setQuestions([]); // ✅ Evita errores dejando un array vacío
+      setQuestions([]); 
     }
   };
   
@@ -75,7 +75,7 @@ const Community = () => {
       }
   
       setNewQuestion("");
-      fetchQuestions(); // Recargar preguntas
+      fetchQuestions(); 
     } catch (error) {
       console.error("❌ Error al insertar pregunta:", error.message);
     }
@@ -110,7 +110,7 @@ const Community = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Enviar el token para autenticación
+          Authorization: `Bearer ${token}`, 
         },
         body: JSON.stringify({
           text: newAnswers[questionId],
@@ -125,7 +125,7 @@ const Community = () => {
       }
   
       setNewAnswers({ ...newAnswers, [questionId]: "" });
-      fetchAnswers(questionId); // Recargar respuestas
+      fetchAnswers(questionId); 
     } catch (error) {
       console.error("❌ Error al insertar respuesta:", error.message);
     }

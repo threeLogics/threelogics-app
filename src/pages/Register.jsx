@@ -12,10 +12,9 @@
     const [showPassword, setShowPassword] = useState(false);
     const [rol, setRol] = useState("usuario");
     const [errors, setErrors] = useState({ nombre: "", email: "", password: "" });
-    const [isSubmitting, setIsSubmitting] = useState(false); // 🔹 Evita doble envío
+    const [isSubmitting, setIsSubmitting] = useState(false); 
     const navigate = useNavigate();
 
-    // 🔹 Validaciones de entrada
     const validateNombre = (nombre) => /^[a-zA-ZÀ-ÿ\s]{3,40}$/.test(nombre);
     const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     const validatePassword = (password) =>
@@ -25,7 +24,6 @@
 
     const isDisabled = !validatePassword(password) || isSubmitting;
 
-    // 🔹 Medidor de fuerza de contraseña
     const getPasswordStrength = (password) => {
       if (!password) return 0;
       if (password.length < 5) return 0;
@@ -41,7 +39,6 @@
 
     const passwordStrength = getPasswordStrength(password);
 
-    // 🔹 Manejar el envío del formulario
     const handleRegister = async (e) => {
       e.preventDefault();
       if (!validateNombre(nombre) || !validateEmail(email) || !validatePassword(password)) {
@@ -204,7 +201,7 @@
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.7 }}
                 type="submit"
-                disabled={isDisabled} // Botón deshabilitado si la contraseña no es válida
+                disabled={isDisabled} 
                 className={`relative px-6 py-3 font-semibold rounded-lg transition-all cursor-pointer
       ${
         isDisabled

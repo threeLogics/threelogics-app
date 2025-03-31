@@ -10,7 +10,7 @@ import Footer from "../components/Footer";
 import Services from "../components/Services";
 import WebDevelopment from "../components/WebDevelopment";
 import UltimosClientes from "../components/UltimosClientes";
-import GoBackUp from "../components/GoBackUp"; // 🔹 Importamos el botón
+import GoBackUp from "../components/GoBackUp"; 
 import InstagramGallery from "../components/InstragramGallery";
 import { motion } from "framer-motion";
 
@@ -18,27 +18,24 @@ const Home = () => {
   const [showCookie, setShowCookie] = useState(false);
 
   useEffect(() => {
-    // 📌 Comprobar si la cookie ya existe
     if (!Cookies.get("visitor_id")) {
-      // 📌 Generar un identificador único para el visitante
       const visitorId = `visitor-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-      // 📌 Guardar la cookie con duración de 30 días
       Cookies.set("visitor_id", visitorId, {
-        expires: 30, // Expira en 30 días
+        expires: 30, 
         secure: true,
         sameSite: "Strict",
       });
 
       console.log("✅ Nueva cookie creada:", visitorId);
-      setShowCookie(true); // Mostrar la notificación de cookies
+      setShowCookie(true); 
     } else {
       console.log("🔹 Cookie existente:", Cookies.get("visitor_id"));
     }
   }, []);
 
   const handleAcceptCookie = () => {
-    setShowCookie(false); // Ocultar la cookie al hacer clic en "Aceptar"
+    setShowCookie(false); 
   };
 
   return (

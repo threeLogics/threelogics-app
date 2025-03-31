@@ -54,7 +54,7 @@ export default function TestimonialSlider() {
     setCurrent((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
   }, []);
 
-  // 🔹 Manejo de auto-slide con pausa/reanudación
+  
   useEffect(() => {
     if (isPaused) return;
     intervalRef.current = setInterval(nextTestimonial, 5000);
@@ -62,11 +62,11 @@ export default function TestimonialSlider() {
     return () => clearInterval(intervalRef.current);
   }, [isPaused, nextTestimonial]);
 
-  // 🔹 Función para pausar el slider temporalmente
+  
   const handlePause = () => {
     setIsPaused(true);
     clearInterval(intervalRef.current);
-    setTimeout(() => setIsPaused(false), 8000); // Reanuda después de 8s
+    setTimeout(() => setIsPaused(false), 8000); 
   };
 
   const slideVariants = {

@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 const TermsConditions = () => {
   useEffect(() => {
-    // Al cargar el componente, desplazar la vista al inicio
+    
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 

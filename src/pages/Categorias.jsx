@@ -14,7 +14,7 @@ function Categorias() {
   const [seleccionadas, setSeleccionadas] = useState([]);
   const notificacionMostrada = useRef(false);
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true); // 🆕 loading
+  const [loading, setLoading] = useState(true); 
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -27,16 +27,16 @@ function Categorias() {
   
         const datos = response.data;
   
-        // ✅ Normalizador para comparar nombres sin tildes, espacios raros ni mayúsculas
+      
         const normalizarTexto = (texto) =>
           texto
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "") // elimina acentos
+            .replace(/[\u0300-\u036f]/g, "") 
             .toLowerCase()
-            .replace(/\s+/g, " ") // reemplaza múltiples espacios por uno
+            .replace(/\s+/g, " ") 
             .trim();
   
-        // ✅ Filtrar categorías únicas basadas en nombre normalizado
+       
         const categoriasUnicas = datos.filter((categoria, index, self) => {
           const nombreNormalizado = normalizarTexto(categoria.nombre);
           return (
@@ -50,7 +50,7 @@ function Categorias() {
         setCategorias(categoriasUnicas);
   
         if (!notificacionMostrada.current) {
-          // Aquí podrías mostrar un toast si quisieras
+        
           notificacionMostrada.current = true;
         }
       } catch (error) {
@@ -60,7 +60,7 @@ function Categorias() {
           notificacionMostrada.current = true;
         }
       } finally {
-        setLoading(false); // ✅ Detener loading al final siempre
+        setLoading(false); 
       }
     };
   
@@ -113,13 +113,13 @@ function Categorias() {
         <p className="text-gray-400 text-sm">Preparando tus categorías...</p>
       </div>
     );
-  // ✅ Función para manejar la edición de la categoría
+ 
   const handleEditar = (categoria) => {
     setEditarCategoria(categoria);
     setNuevoNombre(categoria.nombre);
   };
 
-  // ✅ Función para guardar la edición de la categoría
+ 
   const handleGuardarEdicion = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -149,14 +149,12 @@ function Categorias() {
     }
   };
 
-  // ✅ Función para manejar selección de categorías para eliminar
   const toggleSeleccion = (id) => {
     setSeleccionadas((prev) =>
       prev.includes(id) ? prev.filter((catId) => catId !== id) : [...prev, id]
     );
   };
 
-  // ✅ Función para eliminar las categorías seleccionadas
   const confirmarEliminacion = (seleccionadas, eliminarCategorias) => {
     toast(
       ({ closeToast }) => (
@@ -170,7 +168,7 @@ function Categorias() {
               className="bg-red-500 px-4 py-2 text-black rounded hover:bg-red-700 transition"
               onClick={() => {
                 eliminarCategorias();
-                closeToast(); // Cierra el toast después de confirmar
+                closeToast(); 
               }}
             >
               🗑 Sí, eliminar
@@ -188,30 +186,27 @@ function Categorias() {
       ),
       {
         position: "top-center",
-        autoClose: false, // ❌ No se cerrará automáticamente
-        closeOnClick: false, // ❌ No se cerrará al hacer clic fuera
+        autoClose: false, 
+        closeOnClick: false,
         draggable: false,
-        closeButton: false, // ❌ Ocultar botón de cerrar
+        closeButton: false, 
       }
     );
   };
   
-  // ✅ Función principal para eliminar categorías
   const eliminarSeleccionadas = async () => {
     if (seleccionadas.length === 0) {
       toast.error("⚠️ No has seleccionado ninguna categoría.");
       return;
     }
   
-    // 🛑 Mostrar la confirmación antes de eliminar
     confirmarEliminacion(seleccionadas, async () => {
       try {
-        // ✅ Hacer una única petición DELETE enviando los IDs en el body
         await api.delete("/categorias", {
-          data: { categoriaIds: seleccionadas }, // 👈 Enviar IDs en `data`
+          data: { categoriaIds: seleccionadas },
         });
   
-        // ✅ Actualizar el estado eliminando las categorías borradas
+      
         setCategorias((prev) =>
           prev.filter((cat) => !seleccionadas.includes(cat.id))
         );

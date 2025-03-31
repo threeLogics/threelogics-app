@@ -25,7 +25,6 @@ export default function Productos() {
   const [productosPorPagina, setMovimientosPorPagina] = useState(10);
 
 
-  // 🆕 Estado para la carga masiva de productos
   const [archivo, setArchivo] = useState(null);
   const [procesados, setProcesados] = useState([]);
   const [errores, setErrores] = useState([]);
@@ -57,20 +56,18 @@ export default function Productos() {
         console.error("Error en fetchDatos:", error);
         toast.error("❌ Error al obtener los datos.");
       }finally {
-        setLoading(false); // 👈 Esto garantiza que el loading se desactive siempre
+        setLoading(false); 
       }
     };
 
     fetchDatos();
   }, []);
 
-  // ✅ Nuevo useEffect para resetear la página cuando se cambian filtros
   useEffect(() => {
     setPagina(1);
   }, [filtroCategoria, precioMin, precioMax, busqueda]);
 
 
-  // 🔍 Aplicar filtros con `useMemo` para optimización
   const productosFiltrados = useMemo(() => {
     return productos.filter((p) => {
       return (
@@ -101,7 +98,7 @@ export default function Productos() {
               className="bg-red-500 px-4 py-2 text-black rounded hover:bg-red-700 transition"
               onClick={() => {
                 eliminarProductos();
-                closeToast(); // Cierra el toast después de confirmar
+                closeToast(); 
               }}
             >
               🗑 Sí, eliminar
@@ -119,10 +116,10 @@ export default function Productos() {
       ),
       {
         position: "top-center",
-        autoClose: false, // ❌ No se cerrará automáticamente
-        closeOnClick: false, // ❌ No se cerrará al hacer clic fuera
+        autoClose: false,
+        closeOnClick: false,
         draggable: false,
-        closeButton: false, // ❌ Ocultar botón de cerrar
+        closeButton: false, 
       }
     );
   };
@@ -134,7 +131,6 @@ export default function Productos() {
       return;
     }
   
-    // 🛑 Mostrar la confirmación antes de eliminar
     confirmarEliminacionProductos(productosSeleccionados, async () => {
       try {
         const eliminaciones = await Promise.allSettled(
@@ -165,10 +161,10 @@ export default function Productos() {
   useEffect(() => {
     const calcularMovimientosPorPantalla = () => {
       const alturaDisponible = window.innerHeight;
-      const alturaCabecera = 390; // Ajusta según tu UI (filtros, títulos...)
-      const alturaFila = 50; // Aproximado, puedes ajustar si usas Tailwind
+      const alturaCabecera = 390; 
+      const alturaFila = 50; 
       const filasVisibles = Math.floor((alturaDisponible - alturaCabecera) / alturaFila);
-      setMovimientosPorPagina(Math.max(filasVisibles, 5)); // mínimo de 5 filas
+      setMovimientosPorPagina(Math.max(filasVisibles, 5)); 
     };
   
     calcularMovimientosPorPantalla();
@@ -211,7 +207,6 @@ export default function Productos() {
   };
   
 
-  // 🆕 Funciones para la carga masiva de productos
   const handleArchivoSeleccionado = (e) => {
     const file = e.target.files[0];
     console.log("📂 Archivo seleccionado:", file);
@@ -239,12 +234,11 @@ export default function Productos() {
       setErrores(response.data.errores);
       toast.success("✅ Carga completada correctamente");
 
-      // 🚨 Forzar actualización de productos después de la carga
       setTimeout(async () => {
         const productosRes = await api.get("/productos");
         console.log("📦 Productos después de la carga:", productosRes.data);
         setProductos(productosRes.data);
-      }, 1000); // Espera breve antes de recargar (para asegurar que el backend procese los datos)
+      }, 1000); 
     } catch (error) {
       console.error("❌ Error al subir el archivo:", error);
       toast.error("❌ Error al subir el archivo.");
@@ -365,7 +359,7 @@ export default function Productos() {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={handleSubirArchivo} // ✅ Ahora llama correctamente a la función
+                    onClick={handleSubirArchivo} 
                     disabled={subiendo}
                     className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition cursor-pointer"
                   >
@@ -541,7 +535,7 @@ export default function Productos() {
 </div>
 
 
-        {/* 📄 Paginación */}
+       
   {/* 📄 Paginación Inteligente */}
 <div className="flex justify-center mt-6 space-x-2">
   {pagina > 1 && (

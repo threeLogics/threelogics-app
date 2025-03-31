@@ -9,7 +9,7 @@ export default function LoadingScreen() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/"); // ✅ Redirigir sin alertas
+      navigate("/"); 
     }, 3000);
 
     return () => clearTimeout(timer);

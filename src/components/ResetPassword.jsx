@@ -11,12 +11,12 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 Función para sanitizar inputs
+ 
   const sanitizeInput = (input) => {
     return DOMPurify.sanitize(input.trim());
   };
 
-  // 🔹 Función para validar la contraseña
+  
   const validatePassword = (password) => {
     const minLength = password.length >= 8;
     const hasUppercase = /[A-Z]/.test(password);
@@ -26,17 +26,17 @@ export default function ResetPassword() {
     if (!hasUppercase) return "⚠️ Debe contener al menos una letra mayúscula.";
     if (!hasSpecialChar) return "⚠️ Debe contener al menos un carácter especial (@, $, !, %, *, ? o &).";
 
-    return null; // ✅ Todo correcto
+    return null; 
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
-    // 🔹 Sanitizar entradas
+    
     const sanitizedNewPassword = sanitizeInput(newPassword);
     const sanitizedConfirmPassword = sanitizeInput(confirmPassword);
 
-    // 🔹 Validar contraseña
+    
     const error = validatePassword(sanitizedNewPassword);
     if (error) {
       toast.error(error);
@@ -49,7 +49,7 @@ export default function ResetPassword() {
     }
 
     try {
-      // 🔹 Cambiar la contraseña en Supabase
+      
       const { error } = await supabase.auth.updateUser({
         password: sanitizedNewPassword,
       });

@@ -23,7 +23,7 @@ const ConfiguracionInicial = () => {
           .single();
 
         if (data) {
-          navigate("/productos"); // Redirigir si ya tiene ubicación
+          navigate("/productos"); 
         }
       }
       setLoading(false);
@@ -50,7 +50,7 @@ const ConfiguracionInicial = () => {
       if (error) {
         console.error("Error al guardar ubicación:", error);
       } else {
-        navigate("/productos"); // Redirigir a productos tras guardar ubicación
+        navigate("/productos"); 
       }
     }
   };

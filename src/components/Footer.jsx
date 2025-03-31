@@ -1,5 +1,5 @@
 import { useState } from "react";
-import supabase from "../supabaseClient"; // ✅ Sin llaves { }
+import supabase from "../supabaseClient"; 
 
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
@@ -20,7 +20,7 @@ export default function Footer() {
     setIsLoading(true);
 
     try {
-      // 🔹 Verificar si el email ya está en la base de datos
+    
       const { data: existe, error: errorExiste } = await supabase
         .from("suscriptors")
         .select("email")

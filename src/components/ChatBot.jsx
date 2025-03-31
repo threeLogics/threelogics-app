@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, MessageCircle, X } from "lucide-react";
 
-// Función para sanitizar mensajes (elimina espacios extra y caracteres raros)
+// Función para sanitizar mensajes 
 const sanitizeMessage = (text) => {
-  return text.trim().replace(/\s+/g, " ").slice(0, 200); // Máximo 200 caracteres por seguridad
+  return text.trim().replace(/\s+/g, " ").slice(0, 200); 
 };
 
 const ChatBot = () => {
@@ -12,7 +12,7 @@ const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // Sugerencias rápidas iniciales
+ 
   const quickReplies = [
     "Hola",
     "¿Cómo inicio sesión?",
@@ -54,11 +54,11 @@ const ChatBot = () => {
       ]);
     }
   
-    setInput(""); // Limpiar input después de enviar
+    setInput(""); 
   };
   
 
-  // Auto-scroll al nuevo mensaje
+  
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -119,7 +119,7 @@ const ChatBot = () => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Campo para escribir mensaje */}
+          {/* Enviar mensaje */}
           <div className="flex mt-2">
             <input
               value={input}

@@ -1,3 +1,5 @@
+// PAGE INACTIVA
+
 import { useState, useContext } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../services/api";

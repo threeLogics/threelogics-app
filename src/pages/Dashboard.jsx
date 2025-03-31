@@ -58,7 +58,6 @@ export default function Dashboard() {
             user_id
           `);
   
-        // Solo filtra si no es admin
         if (usuario?.rol !== "admin") {
           query = query.eq("user_id", usuario.id);
         }
@@ -181,7 +180,7 @@ useEffect(() => {
   
   const manejarClickMasEventos = (arg) => {
     abrirPopoverConEventosDelDia(arg.dateStr);
-    return "none"; // 👈 evita que se abra el modal interno
+    return "none"; 
   };
   
   const abrirPopoverConEventosDelDia = (fechaStr) => {
@@ -381,10 +380,10 @@ useEffect(() => {
   dataKey="nombre"
   stroke="#9ca3af"
   tick={{ fontSize: 12 }}
-  angle={-25}                 // 👈 Inclina las etiquetas
-  textAnchor="end"            // 👈 Las alinea al final
-  tickMargin={12}             // 👈 Añade separación
-  height={50}                 // 👈 Da más espacio para etiquetas largas
+  angle={-25}                 
+  textAnchor="end"            
+  tickMargin={12}             
+  height={50}                 
 />
 
 
@@ -666,7 +665,7 @@ useEffect(() => {
 
     
 {/* 📅 Mini Calendario de Actividad */}
-{/* 📅 Mini Calendario de Actividad */}
+
 <Card className="bg-white dark:bg-gray-900 text-black dark:text-white mt-6 shadow-xl rounded-lg">
   <CardContent className="p-6">
     <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">📅 Calendario de Actividad</h2>

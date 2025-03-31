@@ -3,8 +3,8 @@
   import { AuthContext } from "../context/AuthContext";
   import { toast } from "react-toastify";
   import { useNavigate } from "react-router-dom";
-  import { Eye, EyeOff, ArrowLeft } from "lucide-react"; // Iconos para mostrar/ocultar contraseña
-  import zxcvbn from "zxcvbn"; // Biblioteca para evaluar la seguridad de la contraseña
+  import { Eye, EyeOff, ArrowLeft } from "lucide-react"; 
+  import zxcvbn from "zxcvbn"; 
   import supabase from "../supabaseClient";
 
 
@@ -13,23 +13,23 @@
 
     const navigate = useNavigate();
     const [user, setUser] = useState({ nombre: "", email: "" });
-    const [nuevoPassword, setNuevoPassword] = useState(""); // Nueva contraseña
-    const [confirmarPassword, setConfirmarPassword] = useState(""); // Confirmar contraseña
-    const [passwordStrength, setPasswordStrength] = useState(0); // Nivel de seguridad
+    const [nuevoPassword, setNuevoPassword] = useState(""); 
+    const [confirmarPassword, setConfirmarPassword] = useState(""); 
+    const [passwordStrength, setPasswordStrength] = useState(0); 
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [passwordError, setPasswordError] = useState(null); // Mensaje de error en tiempo real
-    const [isFormValid, setIsFormValid] = useState(false); // Control de validación
-    const [imagenPerfil, setImagenPerfil] = useState(null); // Imagen del usuario
-    const [imagenPreview, setImagenPreview] = useState(null); // Previsualización de imagen
-    // Avatares predefinidos
+    const [passwordError, setPasswordError] = useState(null); 
+    const [isFormValid, setIsFormValid] = useState(false); 
+    const [imagenPerfil, setImagenPerfil] = useState(null); 
+    const [imagenPreview, setImagenPreview] = useState(null); 
+ 
   const AVATARS = [
     "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar.png",
     "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar4.png",
     "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
   ];
     
-    // Cargar datos del usuario autenticado al montar el componente
+    
     useEffect(() => {
       async function fetchUserData() {
         if (!usuario) return;
@@ -37,7 +37,7 @@
         try {
           const response = await api.get("/usuarios/perfil");
           
-          // 🔹 Validar que el usuario existe antes de actualizar el estado
+          
           if (!response.data || !response.data.usuario) {
             console.error("❌ No se encontró información del usuario en la respuesta.");
             return;
@@ -48,7 +48,7 @@
             email: response.data.usuario.email || "",
           });
     
-          // 🔹 Manejar imagen de perfil
+          
           if (response.data.usuario.imagen_perfil) {
             setImagenPerfil(response.data.usuario.imagen_perfil);
           }
@@ -57,7 +57,7 @@
           console.error("❌ Error al obtener perfil:", error);
     
           if (error.response?.status === 404 || error.response?.status === 403) {
-            logout(); // Cerrar sesión si el usuario no existe
+            logout(); 
             navigate("/loading", { state: { mensaje: "Estamos procesando tu salida..." } });
             return;
           }
@@ -72,7 +72,7 @@
     const enviarEnlaceRecuperacion = async () => {
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-          redirectTo: "http://localhost:5173/reset-password", // Ajusta si es producción
+          redirectTo: "http://localhost:5173/reset-password", 
         });
     
         if (error) {
@@ -89,10 +89,10 @@
     };
     
 
-    // Validar contraseña en tiempo real
+   
     const validarPassword = (password) => {
-      const regexMayuscula = /[A-Z]/; // Al menos una mayúscula
-      const regexSimbolo = /[!@#$%^&*(),.?":{}|<>]/; // Al menos un símbolo
+      const regexMayuscula = /[A-Z]/; 
+      const regexSimbolo = /[!@#$%^&*(),.?":{}|<>]/;
 
       if (password.length < 8) {
         return "❌ La contraseña debe tener al menos 8 caracteres.";
@@ -103,28 +103,27 @@
       if (!regexSimbolo.test(password)) {
         return "❌ La contraseña debe incluir al menos un símbolo (@, #, $, etc.).";
       }
-      return null; // Si todo está bien, retorna null
+      return null; 
     };
 
-    // Manejar cambios en la contraseña nueva y calcular la seguridad
+   
     const handlePasswordChange = (e) => {
       const password = e.target.value;
       setNuevoPassword(password);
       const result = zxcvbn(password);
-      setPasswordStrength(result.score); // 0 (débil) - 4 (fuerte)
+      setPasswordStrength(result.score);
 
       const error = validarPassword(password);
       setPasswordError(error);
       validarFormulario(password, confirmarPassword);
     };
 
-    // Manejar cambios en la confirmación de contraseña
+    
     const handleConfirmPasswordChange = (e) => {
       setConfirmarPassword(e.target.value);
       validarFormulario(nuevoPassword, e.target.value);
     };
 
-    // Validar si el formulario es válido
     const validarFormulario = (password, confirmPassword) => {
       const isValid =
         password && !validarPassword(password) && password === confirmPassword;
@@ -140,10 +139,8 @@
       }
     
       try {
-        // 📌 Verificar si la imagen seleccionada es válida, si no, usar la predeterminada
         const imagenPerfilUrl = AVATARS.includes(imagenPerfil) ? imagenPerfil : AVATARS[0];
     
-        // 📌 Crear el objeto de datos a enviar
         const updateData = {
           nombre: user.nombre,
           email: user.email,
@@ -154,10 +151,8 @@
           updateData.nuevoPassword = nuevoPassword;
         }
     
-        // 📌 Enviar actualización al backend
         const response = await api.put("/usuarios/perfil", updateData);
     
-        // 📌 Actualizar datos en el contexto y localStorage
         const updatedUser = {
           ...usuario,
           nombre: response.data.usuario.nombre,
@@ -191,11 +186,11 @@
       try {
         await api.delete("/usuarios/perfil");
     
-        logout(); // ✅ Cerrar sesión correctamente
+        logout(); 
     
         setTimeout(() => {
-          navigate("/"); // ✅ Redirigir al usuario a la página principal
-        }, 1500); // Esperar 1.5s antes de redirigir (sin que el usuario lo haga manualmente)
+          navigate("/"); 
+        }, 1500); 
       } catch (error) {
         console.error("❌ Error al dar de baja:", error);
         toast.error(error.response?.data?.error || "❌ No se pudo dar de baja la cuenta.");

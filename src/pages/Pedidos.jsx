@@ -9,7 +9,7 @@ export default function Pedidos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pagina, setPagina] = useState(1);
-const [pedidosPorPagina, setPedidosPorPagina] = useState(8); // valor inicial por si acaso
+const [pedidosPorPagina, setPedidosPorPagina] = useState(8); 
 
 
 
@@ -42,7 +42,7 @@ const [pedidosPorPagina, setPedidosPorPagina] = useState(8); // valor inicial po
     }
   };
 
-  // ✅ Modificar el estado del pedido desde el frontend
+ 
   const actualizarEstado = async (pedidoId, nuevoEstado) => {
     try {
       console.log(
@@ -52,7 +52,7 @@ const [pedidosPorPagina, setPedidosPorPagina] = useState(8); // valor inicial po
       );
 
       const response = await api.put(`/pedidos/${pedidoId}/estado`, {
-        estado: nuevoEstado, // Asegurar que 'estado' se envía correctamente
+        estado: nuevoEstado, 
       });
 
       console.log("✅ Respuesta del servidor:", response.data);
@@ -70,13 +70,13 @@ const [pedidosPorPagina, setPedidosPorPagina] = useState(8); // valor inicial po
     }
   };
 
-  // ✅ Filtrado optimizado con `useMemo`
+  
   const pedidosFiltrados = useMemo(() => {
     return pedidos.filter((p) => {
       const fechaPedido = new Date(p.fecha);
       return (
         (!filtroEstado || p.estado === filtroEstado) &&
-        (!filtroTipo || p.tipo === filtroTipo) && // 🔹 Filtrar por tipo
+        (!filtroTipo || p.tipo === filtroTipo) && 
         (!fechaInicio || fechaPedido >= new Date(fechaInicio)) &&
         (!fechaFin || fechaPedido <= new Date(fechaFin)) &&
         (!precioMin || p.total >= Number(precioMin)) &&
@@ -103,10 +103,10 @@ const [pedidosPorPagina, setPedidosPorPagina] = useState(8); // valor inicial po
   useEffect(() => {
     const calcularPedidosPorPantalla = () => {
       const alturaDisponible = window.innerHeight;
-      const alturaCabecera = 290; // Aproximado, puedes ajustar según tu layout
-      const alturaTarjeta = 180;  // Ajusta si tus tarjetas ocupan más o menos
+      const alturaCabecera = 290; 
+      const alturaTarjeta = 180;  
       const filasVisibles = Math.floor((alturaDisponible - alturaCabecera) / alturaTarjeta);
-      setPedidosPorPagina(Math.max(filasVisibles, 4)); // mínimo de 4 pedidos
+      setPedidosPorPagina(Math.max(filasVisibles, 4)); 
     };
   
     calcularPedidosPorPantalla();
@@ -126,7 +126,6 @@ useEffect(() => {
 }, [filtroEstado, filtroTipo]);
 const totalPaginas = Math.ceil(pedidosFiltrados.length / pedidosPorPagina);
 
-  // ✅ Pantalla de carga con animación
   if (loading)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white space-y-6">

@@ -18,27 +18,23 @@ function Movimientos() {
 
   
 
-  // ✅ Obtener movimientos desde Supabase
   const fetchMovimientos = useCallback(async () => {
     try {
-      const res = await api.get("/movimientos"); // 👈 Llama a tu endpoint backend
+      const res = await api.get("/movimientos"); 
       setMovimientos(res.data);
     } catch (error) {
       console.error("❌ Error al obtener movimientos:", error);
     }finally {
-      setLoading(false); // 👈 Esto garantiza que el loading se desactive siempre
+      setLoading(false); 
     }
   }, []);
 
-  // ✅ Obtener categorías desde Supabase
   const fetchCategorias = useCallback(async () => {
-    // Espera a que AuthContext cargue el usuario
     if (!usuario) return;
   
     try {
       let query = supabase.from("categorias").select("*");
   
-      // Solo filtra por usuario si no es admin
       if (usuario.rol !== "admin") {
         query = query.eq("user_id", usuario.id);
       }
@@ -63,7 +59,6 @@ function Movimientos() {
   }, [fetchMovimientos, fetchCategorias, usuario]);
   
 
-  // ✅ Filtrar movimientos según los filtros seleccionados
   const movimientosFiltrados = useMemo(() => {
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - parseInt(filtroFecha, 10));
@@ -72,7 +67,7 @@ function Movimientos() {
       const fechaMovimiento = new Date(mov.fecha);
       return (
         (!filtroCategoria || mov.productos?.categoria_id === filtroCategoria) &&
-        (!filtroTipo || mov.tipo === filtroTipo) && // 🔹 Filtrar por tipo de movimiento
+        (!filtroTipo || mov.tipo === filtroTipo) && 
         fechaMovimiento >= fechaLimite
       );
     });
@@ -90,10 +85,10 @@ useEffect(() => {
 useEffect(() => {
   const calcularMovimientosPorPantalla = () => {
     const alturaDisponible = window.innerHeight;
-    const alturaCabecera = 230; // Ajusta según tu UI (filtros, títulos...)
-    const alturaFila = 50; // Aproximado, puedes ajustar si usas Tailwind
+    const alturaCabecera = 230; 
+    const alturaFila = 50; 
     const filasVisibles = Math.floor((alturaDisponible - alturaCabecera) / alturaFila);
-    setMovimientosPorPagina(Math.max(filasVisibles, 5)); // mínimo de 5 filas
+    setMovimientosPorPagina(Math.max(filasVisibles, 5)); 
   };
 
   calcularMovimientosPorPantalla();

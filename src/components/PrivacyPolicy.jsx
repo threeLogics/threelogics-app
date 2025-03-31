@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const PrivacyPolicy = () => {
   useEffect(() => {
-    // Desplazar la vista al inicio al cargar el componente
+   
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 

@@ -21,7 +21,6 @@ function CrearProducto() {
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [creandoCategoria, setCreandoCategoria] = useState(false);
 
-  // 📌 Obtener categorías al cargar el componente
   useEffect(() => {
     api.get("/categorias")
       .then((response) => {
@@ -42,7 +41,7 @@ function CrearProducto() {
         setProducto((prev) => ({ ...prev, categoria_id: "" }));
       } else {
         setCreandoCategoria(false);
-        setProducto((prev) => ({ ...prev, categoria_id: value })); // ✅ Mantenerlo como string
+        setProducto((prev) => ({ ...prev, categoria_id: value })); 
       }
     } else {
       setProducto((prev) => ({ ...prev, [name]: value }));
@@ -122,7 +121,6 @@ function CrearProducto() {
       console.log("✅ Respuesta completa del servidor:", responseProducto);
       console.log("✅ Datos del servidor:", responseProducto.data);
       
-      // ✅ Aseguramos que `responseProducto.data` es un objeto antes de acceder a `producto`
       if (!responseProducto.data || typeof responseProducto.data !== "object") {
         console.error("❌ Respuesta inesperada del servidor:", responseProducto);
         throw new Error("Error en la respuesta del servidor.");
@@ -136,7 +134,6 @@ function CrearProducto() {
   
       toast.success(`✅ Producto "${responseProducto.data.producto.nombre}" añadido con éxito!`);
   
-      // 🔄 Redirigir para forzar actualización en Productos.jsx
       navigate("/productos");
   
     } catch (error) {

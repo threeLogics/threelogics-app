@@ -63,7 +63,6 @@ const PrivateRoute = () => {
 
   if (loading) return <LoadingScreen />;
 
-  // Si el usuario no ha configurado su ubicación, redirigirlo a la Configuración Inicial
   if (!configuracionCompleta) {
     return <Navigate to="/configuracion-inicial" />;
   }
@@ -77,7 +76,7 @@ function App() {
   return (
     <div>
       <Navbar />
-      <ChatBot /> {/* ✅ Agregar el chatbot flotante */}
+      <ChatBot /> 
       <Routes>
         {/* 🔹 Rutas públicas */}
         <Route path="/" element={<Home />} />
