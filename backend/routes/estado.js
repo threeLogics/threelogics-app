@@ -54,7 +54,7 @@ router.get("/", async (req, res) => {
 
     const inicioDB = Date.now();
     const { error: dbError } = await supabase
-      .from("productos") 
+      .from("productos") // ✅ una tabla válida
       .select("id")
       .limit(1);
 
