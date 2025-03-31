@@ -4,6 +4,8 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { trackEvent } from "../utils/analytics";
+
 
 function CrearProducto() {
   const { usuario } = useContext(AuthContext);
@@ -133,6 +135,12 @@ function CrearProducto() {
       
   
       toast.success(`✅ Producto "${responseProducto.data.producto.nombre}" añadido con éxito!`);
+      trackEvent({
+        category: "Productos",
+        action: "Crear producto",
+        label: `Producto: ${responseProducto.data.producto.nombre}`,
+      });
+      
   
       navigate("/productos");
   
