@@ -306,30 +306,33 @@ export default function Productos() {
       <div className="p-6 max-w-7xl w-full">
         {/* 📌 Header */}
         <motion.div
-          variants={fadeIn}
-          initial="hidden"
-          animate="visible"
-          className="flex justify-between items-center mb-6"
-        >
-          <h1 className="text-3xl font-bold text-teal-400">
-            {usuario?.rol === "admin"
-              ? "📦 Todos los Productos"
-              : "📦 Mis Productos"}
-          </h1>
-          {/* 📤 Botón de Carga Masiva */}
-          <button
-            onClick={() => setModalCargaMasiva(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-md shadow-md transition cursor-pointer ml-120 gap-2"
-          >
-            📤 Carga Masiva
-          </button>
-          <button
-            onClick={() => navigate("/crear-producto")}
-            className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
-          >
-            ➕ Añadir Producto
-          </button>
-        </motion.div>
+  variants={fadeIn}
+  initial="hidden"
+  animate="visible"
+  className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+>
+  <h1 className="text-2xl md:text-3xl font-bold text-teal-400">
+    {usuario?.rol === "admin"
+      ? "📦 Todos los Productos"
+      : "📦 Mis Productos"}
+  </h1>
+
+  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+    <button
+      onClick={() => setModalCargaMasiva(true)}
+      className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-5 py-2 rounded-md shadow-md transition cursor-pointer"
+    >
+      📤 Carga Masiva
+    </button>
+    <button
+      onClick={() => navigate("/crear-producto")}
+      className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-md shadow-md transition cursor-pointer"
+    >
+      ➕ Añadir Producto
+    </button>
+  </div>
+</motion.div>
+
         {/* 🆕 MODAL DE CARGA MASIVA */}
         <AnimatePresence>
           {modalCargaMasiva && (
