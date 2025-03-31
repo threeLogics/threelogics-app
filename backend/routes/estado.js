@@ -54,8 +54,8 @@ router.get("/", async (req, res) => {
 
     const inicioDB = Date.now();
     const { error: dbError } = await supabase
-    .from("auth.users") 
-    .select("id")
+      .from("auth.users") 
+      .select("id")
       .limit(1);
 
     if (dbError) {
