@@ -317,10 +317,11 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen p-6 pt-20 bg-black text-white space-y-6">
-  <div className="flex justify-between items-center">
+  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <h1 className="text-3xl font-bold text-teal-400">📊 Dashboard</h1>
-    <div className="flex gap-4">
-      <Button onClick={descargarPDF} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
+    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+      <Button onClick={descargarPDF} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer"
+      >
         📥 Movimientos PDF
       </Button>
       <Button onClick={descargarCSV} className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 px-4 py-2 rounded-xl shadow-md transition cursor-pointer">
