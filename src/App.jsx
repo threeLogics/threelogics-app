@@ -43,9 +43,45 @@ const PrivateRoute = () => {
   const [configuracionCompleta, setConfiguracionCompleta] = useState(false);
   const location = useLocation();
 
-useEffect(() => {
-  trackPageView(location.pathname); 
-}, [location]);
+  useEffect(() => {
+    // 1. Enviar evento de página a Google Analytics
+    trackPageView(location.pathname);
+
+    // 2. Actualizar título de la pestaña
+    const rutasTitulos = {
+      "/": "Inicio | ThreeLogics",
+      "/faq": "FAQ | ThreeLogics",
+      "/reset-password": "Restablecer contraseña | ThreeLogics",
+      "/comunidad": "Comunidad | ThreeLogics",
+      "/terms": "Términos y condiciones | ThreeLogics",
+      "/privacy": "Política de privacidad | ThreeLogics",
+      "/estado-sistema": "Estado del sistema | ThreeLogics",
+      "/login": "Iniciar sesión | ThreeLogics",
+      "/register": "Registro | ThreeLogics",
+      "/verificar-cuenta": "Verificar cuenta | ThreeLogics",
+      "/perfil": "Perfil | ThreeLogics",
+      "/loading": "Cargando... | ThreeLogics",
+      "/pago": "Pasarela de pago | ThreeLogics",
+      "/productos": "Productos | ThreeLogics",
+      "/movimientos": "Movimientos | ThreeLogics",
+      "/categorias": "Categorías | ThreeLogics",
+      "/crear-producto": "Crear producto | ThreeLogics",
+      "/crear-categoria": "Crear categoría | ThreeLogics",
+      "/dashboard": "Dashboard | ThreeLogics",
+      "/pedidos": "Pedidos | ThreeLogics",
+      "/crear-pedido": "Nuevo pedido | ThreeLogics",
+      "/ubicaciones": "Ubicaciones | ThreeLogics",
+      "/configuracion-inicial": "Configuración inicial | ThreeLogics",
+    };
+
+    // Ajuste especial para rutas dinámicas como /pago/:id
+    const pathBase = location.pathname.startsWith("/pago")
+      ? "/pago"
+      : location.pathname;
+
+    const titulo = rutasTitulos[pathBase] || "ThreeLogics";
+    document.title = titulo;
+  }, [location]);
 
 
   useEffect(() => {
