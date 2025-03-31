@@ -4,10 +4,8 @@ import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// ✅ Obtener movimientos con nombre del usuario (solo si es admin)
 router.get("/", verificarToken, async (req, res) => {
   try {
-    // Obtener movimientos con productos relacionados
     const { data: movimientos, error } = await supabase
       .from("movimientos")
       .select(
@@ -16,7 +14,6 @@ router.get("/", verificarToken, async (req, res) => {
 
     if (error) return res.status(500).json({ error });
 
-    // ✅ USAR req.usuario.rol en vez de req.user.rol
     if (req.usuario.rol !== "admin") {
       const movimientosUsuario = movimientos.filter(
         (mov) => mov.user_id === req.usuario.id
@@ -24,7 +21,6 @@ router.get("/", verificarToken, async (req, res) => {
       return res.json(movimientosUsuario);
     }
 
-    // Obtener todos los usuarios (solo admin puede llegar aquí)
     const { data: usuarios, error: errorUsuarios } =
       await supabase.auth.admin.listUsers();
 

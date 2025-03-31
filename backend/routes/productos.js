@@ -26,7 +26,6 @@ router.get("/descargar-plantilla", (req, res) => {
     const json2csvParser = new Parser({ fields, delimiter: ";" });
     const csv = json2csvParser.parse([]);
 
-    // 👉 Agregar BOM al inicio del CSV para evitar errores de codificación
     const csvConBom = '\uFEFF' + csv;
 
     res.setHeader(
@@ -43,7 +42,6 @@ router.get("/descargar-plantilla", (req, res) => {
   }
 });
 
-// ✅ Endpoint para subir productos desde CSV
 router.post(
   "/cargar-csv",
   verificarToken,
@@ -64,7 +62,7 @@ router.post(
           productos.push(row);
         })
         .on("end", async () => {
-          fs.unlinkSync(req.file.path); // Eliminamos el archivo después de procesarlo
+          fs.unlinkSync(req.file.path); 
 
           const errores = [];
           const productosProcesados = [];
@@ -81,7 +79,6 @@ router.post(
               continue;
             }
 
-            // 🔍 Buscar o crear la categoría
             let { data: categoriaExistente } = await supabase
               .from("categorias")
               .select("id")
@@ -113,7 +110,6 @@ router.post(
               categoria_id = nuevaCategoria.id;
             }
 
-            // 🔄 Buscar si el producto ya existe
             const { data: productoExistente } = await supabase
               .from("productos")
               .select("id")
@@ -123,7 +119,6 @@ router.post(
             let productoId;
 
             if (productoExistente) {
-              // 🔄 Si el producto ya existe, lo actualizamos
               const { error: errorUpdate } = await supabase
                 .from("productos")
                 .update({ descripcion, precio, cantidad, categoria_id })
@@ -139,7 +134,6 @@ router.post(
 
               productoId = productoExistente.id;
             } else {
-              // ➕ Si no existe, lo insertamos como nuevo
               const { data: nuevoProducto, error: errorInsert } = await supabase
                 .from("productos")
                 .insert([
@@ -163,7 +157,6 @@ router.post(
               productoId = nuevoProducto.id;
             }
 
-            // 🔹 Verificar si el producto ya tiene una ubicación
             const { data: ubicacionExistente } = await supabase
               .from("ubicaciones")
               .select("id")
@@ -171,7 +164,6 @@ router.post(
               .maybeSingle();
 
             if (!ubicacionExistente) {
-              // 🔥 Generar ubicación basada en la configuración del usuario
               const nuevaUbicacion = await generarUbicacion(
                 productoId,
                 req.usuario.id
@@ -199,7 +191,6 @@ router.post(
     }
   }
 );
-// ✅ Crear un nuevo producto
 router.post("/", verificarToken, async (req, res) => {
   try {
     let {
@@ -217,7 +208,6 @@ router.post("/", verificarToken, async (req, res) => {
         .json({ error: "Todos los campos son obligatorios." });
     }
 
-    // 🔍 Buscar o crear la categoría
     if (!categoria_id && categoriaNombre) {
       const { data: categoriaExistente } = await supabase
         .from("categorias")
@@ -245,7 +235,6 @@ router.post("/", verificarToken, async (req, res) => {
         .json({ error: "No se pudo determinar una categoría válida." });
     }
 
-    // 🔄 Verificar si el producto con el mismo `nombre` y `descripcion` ya existe
     const { data: productoExistente } = await supabase
       .from("productos")
       .select("id, descripcion")
@@ -256,7 +245,6 @@ router.post("/", verificarToken, async (req, res) => {
 
     if (productoExistente) {
       if (productoExistente.descripcion === descripcion) {
-        // ✅ Si la descripción es la misma, actualizar el producto
         const { error: errorUpdate } = await supabase
           .from("productos")
           .update({
@@ -270,7 +258,6 @@ router.post("/", verificarToken, async (req, res) => {
 
         productoId = productoExistente.id;
       } else {
-        // ➕ Si la descripción es diferente, crear un nuevo producto
         const { data: nuevoProducto, error: errorInsert } = await supabase
           .from("productos")
           .insert([
@@ -291,7 +278,6 @@ router.post("/", verificarToken, async (req, res) => {
         productoId = nuevoProducto.id;
       }
     } else {
-      // ➕ Si no existe, crear un nuevo producto
       const { data: nuevoProducto, error: errorInsert } = await supabase
         .from("productos")
         .insert([
@@ -312,11 +298,9 @@ router.post("/", verificarToken, async (req, res) => {
       productoId = nuevoProducto.id;
     }
 
-    // 🔥 Generar ubicación basada en la configuración del usuario
     const ubicacion = await generarUbicacion(productoId, req.usuario.id);
     console.log("✅ Ubicación asignada:", ubicacion);
 
-    // 🔍 Recuperamos el producto completo después de crearlo/actualizarlo
     const { data: productoCompleto, error: errorProducto } = await supabase
       .from("productos")
       .select("*")
@@ -329,7 +313,6 @@ router.post("/", verificarToken, async (req, res) => {
         .json({ error: "No se pudo recuperar el producto creado." });
     }
 
-    // ✅ Devolvemos el producto completo con su ubicación
     res.status(201).json({ producto: productoCompleto, ubicacion });
   } catch (error) {
     console.error("❌ Error al crear producto:", error);
@@ -337,10 +320,8 @@ router.post("/", verificarToken, async (req, res) => {
   }
 });
 
-// ✅ Obtener productos (admin ve todos, cliente solo los suyos)
 router.get("/", verificarToken, async (req, res) => {
   try {
-    // 1. Obtener productos (según el rol)
     let query = supabase
       .from("productos")
       .select(
@@ -354,7 +335,6 @@ router.get("/", verificarToken, async (req, res) => {
     const { data: productos, error } = await query;
     if (error) throw error;
 
-    // 2. Si eres admin, buscar los nombres de los creadores
     if (req.usuario.rol === "admin") {
       const idsUnicos = [...new Set(productos.map((p) => p.user_id))];
 
@@ -363,13 +343,11 @@ router.get("/", verificarToken, async (req, res) => {
 
       if (errorUsers) throw errorUsers;
 
-      // Mapeamos los IDs a nombres desde user_metadata
       const mapaUsuarios = {};
       allUsers.users.forEach((u) => {
         mapaUsuarios[u.id] = u.user_metadata?.nombre || "Sin nombre";
       });
 
-      // Enriquecer los productos con nombre del creador
       const productosConNombre = productos.map((p) => ({
         ...p,
         creador_nombre: mapaUsuarios[p.user_id] || "Desconocido",
@@ -378,7 +356,6 @@ router.get("/", verificarToken, async (req, res) => {
       return res.json(productosConNombre);
     }
 
-    // 3. Si no eres admin, devuelves productos tal cual
     res.json(productos);
   } catch (error) {
     console.error("❌ Error al obtener productos:", error);
@@ -386,7 +363,6 @@ router.get("/", verificarToken, async (req, res) => {
   }
 });
 
-// ✅ Obtener un producto por ID
 router.get("/:id", verificarToken, async (req, res) => {
   try {
     const { data: producto } = await supabase
@@ -406,7 +382,6 @@ router.get("/:id", verificarToken, async (req, res) => {
   }
 });
 
-// ✅ Actualizar un producto (Solo el dueño o el admin pueden modificarlo)
 router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { data: producto } = await supabase
@@ -419,7 +394,6 @@ router.put("/:id", verificarToken, async (req, res) => {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
 
-    // Solo el dueño del producto o el admin pueden actualizarlo
     if (req.usuario.rol !== "admin" && producto.user_id !== req.usuario.id) {
       return res
         .status(403)
@@ -430,7 +404,7 @@ router.put("/:id", verificarToken, async (req, res) => {
 
     const { error } = await supabase
       .from("productos")
-      .update({ nombre, descripcion, precio, cantidad, categoria_id }) // ✅ Corregido `categoriId` → `categoria_id`
+      .update({ nombre, descripcion, precio, cantidad, categoria_id }) 
       .eq("id", req.params.id);
 
     if (error) throw error;
@@ -442,7 +416,6 @@ router.put("/:id", verificarToken, async (req, res) => {
   }
 });
 
-// ✅ Eliminar un producto
 router.delete("/:id", verificarToken, async (req, res) => {
   try {
     const { data: producto } = await supabase
@@ -455,7 +428,6 @@ router.delete("/:id", verificarToken, async (req, res) => {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
 
-    // Solo el dueño del producto o el admin pueden eliminarlo
     if (req.usuario.rol !== "admin" && producto.user_id !== req.usuario.id) {
       return res
         .status(403)

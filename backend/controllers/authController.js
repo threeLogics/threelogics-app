@@ -1,6 +1,5 @@
 import supabase from "../supabaseClient.js";
 
-// ✅ Registro de usuario con Supabase Auth
 export const register = async (req, res) => {
   try {
     console.log("📩 Datos recibidos en backend:", req.body);
@@ -8,7 +7,6 @@ export const register = async (req, res) => {
     let { nombre, email, password, rol } = req.body;
     if (!rol || (rol !== "admin" && rol !== "usuario")) rol = "usuario";
 
-    // 📌 1️⃣ Verificar si el usuario ya existe en Supabase
     const { data: existingUser, error: userError } =
       await supabase.auth.admin.listUsers();
 
@@ -17,13 +15,11 @@ export const register = async (req, res) => {
       return res.status(500).json({ error: "Error al verificar el usuario." });
     }
 
-    // 📌 2️⃣ Buscar si ya existe el email en la lista de usuarios
     const usuarioEncontrado = existingUser.users.find(
       (user) => user.email === email
     );
 
     if (usuarioEncontrado) {
-      // 📌 3️⃣ Si el usuario tiene `deleted_at`, impedir registro y pedir contacto con soporte
       if (usuarioEncontrado.user_metadata?.deleted_at) {
         return res.status(403).json({
           error:
@@ -31,13 +27,11 @@ export const register = async (req, res) => {
         });
       }
 
-      // 📌 4️⃣ Si el usuario ya existe, evitar duplicados
       return res.status(400).json({
         error: "Este correo ya está registrado. Intenta iniciar sesión.",
       });
     }
 
-    // 📌 5️⃣ Si el usuario no existe, proceder con el registro
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -61,7 +55,6 @@ export const register = async (req, res) => {
   }
 };
 
-// ✅ Inicio de sesión con Supabase Auth
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -80,7 +73,6 @@ export const login = async (req, res) => {
       return res.status(400).json({ error: "Error en la autenticación." });
     }
 
-    // 📌 Verificar si el usuario ha sido dado de baja
     if (data.user.user_metadata?.deleted_at) {
       return res.status(403).json({
         error:
@@ -98,7 +90,6 @@ export const login = async (req, res) => {
   }
 };
 
-// ✅ Cerrar sesión con Supabase Auth
 export const logout = async (req, res) => {
   try {
     const { error } = await supabase.auth.signOut();
@@ -110,7 +101,6 @@ export const logout = async (req, res) => {
   }
 };
 
-// ✅ Obtener usuario autenticado con Supabase Auth
 export const getUser = async (req, res) => {
   try {
     const {
@@ -124,12 +114,10 @@ export const getUser = async (req, res) => {
     res.status(500).json({ error: "Error al obtener usuario." });
   }
 };
-// ✅ Recuperación de contraseña con Supabase Auth
 export const recoverPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    // Enviar el enlace de recuperación con redirección al frontend
     const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `https://threelogicsapp.vercel.app/reset-password`, //http://localhost:5173
     });
@@ -146,7 +134,6 @@ export const recoverPassword = async (req, res) => {
   }
 };
 
-// ✅ Cambiar la contraseña después de recibir el token
 export const updatePassword = async (req, res) => {
   try {
     const { newPassword } = req.body;

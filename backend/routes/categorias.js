@@ -5,7 +5,6 @@ import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// Middleware para validar errores de express-validator
 const validarCampos = (req, res, next) => {
   const errores = validationResult(req);
   if (!errores.isEmpty()) {
@@ -14,7 +13,6 @@ const validarCampos = (req, res, next) => {
   next();
 };
 
-// ✅ Crear categoría con validación y evitar duplicados
 router.post(
   "/",
   [
@@ -27,14 +25,14 @@ router.post(
       console.log("✅ Datos recibidos en POST /categorias:", req.body);
 
       const { nombre } = req.body;
-      const userId = req.usuario.id; // 🔹 Obtener el ID del usuario autenticado
+      const userId = req.usuario.id; 
 
       console.log("🔍 Verificando si la categoría ya existe...");
       const { data: categoriaExistente, error: errorExistente } = await supabase
         .from("categorias")
         .select("id")
         .eq("nombre", nombre)
-        .eq("user_id", userId) // 🔹 Evita duplicados por usuario
+        .eq("user_id", userId) 
         .single();
 
       if (categoriaExistente) {
@@ -44,7 +42,7 @@ router.post(
       console.log("🆕 Insertando nueva categoría...");
       const { data: nuevaCategoria, error: errorInsert } = await supabase
         .from("categorias")
-        .insert([{ nombre, user_id: userId }]) // 🔹 Guardar el `user_id`
+        .insert([{ nombre, user_id: userId }]) 
         .select("id, nombre, user_id")
         .single();
 
@@ -66,16 +64,15 @@ router.post(
   }
 );
 
-// ✅ Obtener categorías según el rol del usuario, sin modificar la eliminación de duplicados
 router.get("/", verificarToken, async (req, res) => {
   try {
     const userId = req.usuario.id;
-    const userRole = req.usuario.rol; // 📌 Obtener el rol del usuario
+    const userRole = req.usuario.rol; 
 
     let query = supabase.from("categorias").select("id, nombre, user_id");
 
     if (userRole !== "admin") {
-      query = query.eq("user_id", userId); // 🔹 Si NO es admin, solo ve sus propias categorías
+      query = query.eq("user_id", userId); 
     }
 
     const { data, error } = await query;
@@ -90,13 +87,11 @@ router.get("/", verificarToken, async (req, res) => {
 });
 
 
-// ✅ Ruta para actualizar una categoría
 router.put("/:id", verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre } = req.body;
 
-    // 🔹 Verificar si la categoría existe en Supabase
     const { data: categoria, error: errorBuscar } = await supabase
       .from("categorias")
       .select("*")
@@ -112,7 +107,6 @@ router.put("/:id", verificarToken, async (req, res) => {
       return res.status(500).json({ error: "Error al buscar la categoría" });
     }
 
-    // 🔹 Actualizar la categoría en Supabase
     const { error: errorActualizar } = await supabase
       .from("categorias")
       .update({ nombre })
@@ -134,7 +128,6 @@ router.put("/:id", verificarToken, async (req, res) => {
   }
 });
 
-// ✅ Eliminar múltiples categorías
 router.delete("/", verificarToken, async (req, res) => {
   try {
     const { categoriaIds } = req.body; // 📥 Recibir los IDs en el body
@@ -145,7 +138,6 @@ router.delete("/", verificarToken, async (req, res) => {
         .json({ error: "No se enviaron categorías para eliminar." });
     }
 
-    // 🔍 Verificar si las categorías existen antes de eliminarlas
     const { data: categoriasExistentes, error: errorBuscar } = await supabase
       .from("categorias")
       .select("id")
@@ -159,7 +151,6 @@ router.delete("/", verificarToken, async (req, res) => {
         .json({ error: "Las categorías seleccionadas no existen." });
     }
 
-    // 🚀 Eliminar las categorías seleccionadas
     const { error } = await supabase
       .from("categorias")
       .delete()

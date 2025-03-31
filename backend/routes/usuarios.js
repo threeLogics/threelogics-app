@@ -6,7 +6,6 @@ import { verificarToken } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 📌 Configuración de `multer` para manejar la subida de imágenes
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const AVATARS = {
@@ -17,7 +16,6 @@ const AVATARS = {
   avatar5:
     "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/avatars/avatar5.png",
 };
-// 📌 Obtener perfil del usuario autenticado
 router.get("/perfil", verificarToken, async (req, res) => {
   try {
     const userId = req.usuario.id;
@@ -44,14 +42,11 @@ router.get("/perfil", verificarToken, async (req, res) => {
   }
 });
 
-// 📌 Actualizar perfil del usuario (incluyendo imagen de perfil en Supabase Storage)
-// 📌 Actualizar perfil del usuario (solo permite elegir entre avatares predefinidos)
 router.put("/perfil", verificarToken, async (req, res) => {
   try {
     const userId = req.usuario.id;
     const { nombre, email, nuevoPassword, imagenPerfil } = req.body;
 
-    // 📌 Validar que la imagen seleccionada sea una de las predefinidas
     const imagenPerfilUrl = Object.values(AVATARS).includes(imagenPerfil)
       ? imagenPerfil
       : AVATARS.default;
@@ -89,26 +84,22 @@ router.put("/perfil", verificarToken, async (req, res) => {
   }
 });
 
-// 📌 Obtener últimos 3 clientes nuevos y últimos 3 dados de baja
 router.get("/ultimos-clientes", async (req, res) => {
   try {
-    // ✅ Obtener todos los usuarios desde Supabase
     const { data: usuarios, error } = await supabase.auth.admin.listUsers();
 
     if (error) {
       throw error;
     }
 
-    // ✅ Filtrar SOLO clientes (usuarios con rol "usuario")
     const clientes = usuarios.users.filter(
       (user) => user.user_metadata?.rol === "usuario"
     );
 
-    // ✅ Separar clientes nuevos y clientes dados de baja
     const nuevosClientes = clientes
-      .filter((user) => !user.user_metadata?.deleted_at) // Solo los que NO tienen "deleted_at"
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) // Ordenar por fecha de creación
-      .slice(0, 3) // Tomar los 3 más recientes
+      .filter((user) => !user.user_metadata?.deleted_at) 
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 3) 
       .map((user) => ({
         id: user.id,
         nombre: user.user_metadata?.nombre || "Sin nombre",
@@ -117,13 +108,13 @@ router.get("/ultimos-clientes", async (req, res) => {
       }));
 
     const clientesEliminados = clientes
-      .filter((user) => user.user_metadata?.deleted_at) // Solo los que TIENEN "deleted_at"
+      .filter((user) => user.user_metadata?.deleted_at) 
       .sort(
         (a, b) =>
           new Date(b.user_metadata.deleted_at) -
           new Date(a.user_metadata.deleted_at)
-      ) // Ordenar por fecha de eliminación
-      .slice(0, 3) // Tomar los 3 más recientes
+      ) 
+      .slice(0, 3) 
       .map((user) => ({
         id: user.id,
         nombre: user.user_metadata?.nombre || "Sin nombre",
@@ -131,7 +122,7 @@ router.get("/ultimos-clientes", async (req, res) => {
         deleted_at: user.user_metadata.deleted_at,
       }));
 
-    // ✅ Enviar respuesta con clientes nuevos y eliminados
+    
     res.json({ nuevosClientes, clientesEliminados });
   } catch (error) {
     console.error("❌ Error al obtener clientes:", error);
@@ -139,12 +130,12 @@ router.get("/ultimos-clientes", async (req, res) => {
   }
 });
 
-// 📌 Dar de baja un usuario (Soft Delete)
+
 router.delete("/perfil", verificarToken, async (req, res) => {
   try {
     const userId = req.usuario.id;
 
-    // 🔥 Desactivar el usuario en Supabase Auth en lugar de eliminarlo
+   
     const { error } = await supabase.auth.admin.updateUserById(userId, {
       user_metadata: {
         deleted_at: new Date().toISOString(),

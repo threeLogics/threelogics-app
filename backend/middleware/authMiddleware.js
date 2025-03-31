@@ -8,7 +8,6 @@ export const verificarToken = async (req, res, next) => {
   }
 
   try {
-    // ✅ Verificar el token con Supabase
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
@@ -16,7 +15,6 @@ export const verificarToken = async (req, res, next) => {
       return res.status(401).json({ error: "⚠️ Token inválido o expirado" });
     }
 
-    // ✅ Asignar usuario autenticado a `req.usuario`
     req.usuario = {
       id: data.user.id,
       email: data.user.email,

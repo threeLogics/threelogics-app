@@ -4,7 +4,6 @@ import os from "os";
 
 const router = express.Router();
 
-// 🔹 Función para determinar estado según tiempo de respuesta
 const determinarEstado = (tiempoRespuesta, error, enMantenimiento) => {
   if (enMantenimiento) return "mantenimiento";
   if (error) return "error";
@@ -13,12 +12,10 @@ const determinarEstado = (tiempoRespuesta, error, enMantenimiento) => {
   return "operativo";
 };
 
-// 🔹 Verificar estado del sistema
 router.get("/", async (req, res) => {
   try {
     const servicios = [];
 
-    // 🔹 Verificar si el servidor está en mantenimiento
     const { data: mantenimientoData, error: mantenimientoError } =
       await supabase
         .from("estado_sistema")
@@ -29,7 +26,6 @@ router.get("/", async (req, res) => {
     const servidorEnMantenimiento =
       mantenimientoData?.estado === "mantenimiento";
 
-    // 🔹 Verificar si el servidor está corriendo
     let servidorEstado = "operativo";
     let servidorTiempo = "N/A";
 
@@ -53,13 +49,12 @@ router.get("/", async (req, res) => {
       tiempo_respuesta: servidorTiempo,
     });
 
-    // 🔹 Verificar la conexión con la Base de Datos
     let dbEstado = "operativo";
     let dbTiempo = "N/A";
 
     const inicioDB = Date.now();
     const { error: dbError } = await supabase
-      .from("productos") // ✅ una tabla válida
+      .from("productos") 
       .select("id")
       .limit(1);
 
@@ -77,7 +72,6 @@ router.get("/", async (req, res) => {
       tiempo_respuesta: dbTiempo,
     });
 
-    // 🔹 Verificar API Externa
     let apiExternaEstado = "operativo";
     let apiExternaTiempo = "N/A";
 
@@ -97,8 +91,7 @@ router.get("/", async (req, res) => {
       tiempo_respuesta: apiExternaTiempo,
     });
 
-    // 🔹 Verificar carga del servidor
-    const cargaCPU = os.loadavg()[0]; // Promedio de carga del CPU en los últimos 5 minutos
+    const cargaCPU = os.loadavg()[0]; 
     servicios.push({
       servicio: "Carga del Servidor",
       estado: cargaCPU > 2 ? "degradado" : "operativo",

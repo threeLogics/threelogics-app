@@ -3,7 +3,6 @@ import supabase from "../supabaseClient.js";
 import { verificarToken } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
-// 📌 Crear un pedido (entrada o salida)
 router.post("/", verificarToken, async (req, res) => {
   const { productos, tipo } = req.body;
   const userId = req.usuario.id;
@@ -19,7 +18,6 @@ router.post("/", verificarToken, async (req, res) => {
   try {
     let total = 0;
 
-    // 🛒 Insertar el nuevo pedido
     const { data: nuevoPedido, error: errorPedido } = await supabase
       .from("pedidos")
       .insert([
@@ -49,7 +47,6 @@ router.post("/", verificarToken, async (req, res) => {
         throw new Error(`Producto ${item.productoId} no encontrado`);
       }
 
-      // 🚫 Validar que hay stock suficiente para pedidos de salida
       if (tipo === "salida" && item.cantidad > producto.cantidad) {
         return res.status(400).json({
           error: `Stock insuficiente para el producto ${item.productoId}. Stock actual: ${producto.cantidad}, solicitado: ${item.cantidad}`,
@@ -72,7 +69,6 @@ router.post("/", verificarToken, async (req, res) => {
       await supabase.from("detallepedidos").insert(detalles);
     }
 
-    // ✅ Actualizar el total del pedido
     await supabase.from("pedidos").update({ total }).eq("id", nuevoPedido.id);
 
     res.status(201).json({
@@ -85,14 +81,11 @@ router.post("/", verificarToken, async (req, res) => {
   }
 });
 
-// 📌 Actualizar estado del pedido y stock
-// 📌 Actualizar estado del pedido y stock
 router.put("/:id/estado", verificarToken, async (req, res) => {
   const { estado } = req.body;
   const { id } = req.params;
 
   try {
-    // 📦 Obtener el pedido con sus detalles
     const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
       .select(
@@ -105,7 +98,6 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
       return res.status(404).json({ error: "Pedido no encontrado" });
     }
 
-    // ✅ Estados válidos
     const estadosPermitidos = [
       "pendiente",
       "procesado",
@@ -117,7 +109,6 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
       return res.status(400).json({ error: "Estado no permitido" });
     }
 
-    // 🔄 Estados que procesan el stock
     const estadosProcesanStock = ["procesado", "pagado", "recibido"];
 
     if (estadosProcesanStock.includes(estado)) {
@@ -125,7 +116,6 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
         const productoId = detalle.producto_id;
         const cantidadMovimiento = detalle.cantidad;
         const factor = pedido.tipo === "entrada" ? 2 : 0;
-        // 🔍 Buscar producto actual
         const { data: productoActual, error: errorProducto } = await supabase
           .from("productos")
           .select("cantidad")
@@ -140,7 +130,6 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
         const nuevoStock =
           productoActual.cantidad + cantidadMovimiento * factor;
 
-        // 📦 Actualizar stock
         const { error: errorUpdate } = await supabase
           .from("productos")
           .update({ cantidad: nuevoStock })
@@ -151,7 +140,6 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
           continue;
         }
 
-        // 📝 Registrar movimiento
         const { error: errorMovimiento } = await supabase
           .from("movimientos")
           .insert([
@@ -161,7 +149,7 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
               cantidad: cantidadMovimiento,
               fecha: new Date(),
               user_id: pedido.user_id,
-              pedido_id: pedido.id, // ✅ esto es lo que te faltaba
+              pedido_id: pedido.id, 
             },
           ]);
 
@@ -171,7 +159,6 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
       }
     }
 
-    // 🟢 Actualizar el estado del pedido
     await supabase.from("pedidos").update({ estado }).eq("id", id);
 
     res.json({ mensaje: `Pedido actualizado a ${estado}` });
@@ -181,7 +168,6 @@ router.put("/:id/estado", verificarToken, async (req, res) => {
   }
 });
 
-// 📌 Obtener todos los pedidos
 router.get("/", verificarToken, async (req, res) => {
   try {
     let query = supabase
@@ -206,7 +192,6 @@ router.get("/", verificarToken, async (req, res) => {
   }
 });
 
-// 📌 Eliminar un pedido (Solo si está pendiente)
 router.delete("/:id", verificarToken, async (req, res) => {
   try {
     const { data: pedido } = await supabase
@@ -230,20 +215,17 @@ router.delete("/:id", verificarToken, async (req, res) => {
   }
 });
 
-// 📌 Resumen de Totales: pedidos, $ vendidos, productos movidos
 router.get("/resumen", verificarToken, async (req, res) => {
   try {
     const { rol, id: userId } = req.usuario;
 
     const filtroBase = rol !== "admin" ? { user_id: userId } : {};
 
-    // 🔹 Total pedidos (todos)
     const { count: totalPedidos } = await supabase
       .from("pedidos")
       .select("*", { count: "exact", head: true })
       .match(filtroBase);
 
-    // 🔹 Total vendido ($) = solo pedidos de tipo "salida"
     const { data: pedidosSalida, error: errorSalida } = await supabase
       .from("pedidos")
       .select("total")
@@ -253,7 +235,6 @@ router.get("/resumen", verificarToken, async (req, res) => {
 
     const totalVendido = pedidosSalida.reduce((sum, p) => sum + p.total, 0);
 
-    // 🔹 Total productos movidos (precio total de productos de entrada)
     const { data: detallesEntrada, error: errorDetalles } = await supabase
       .from("pedidos")
       .select("id, detallepedidos(subtotal)")
