@@ -231,24 +231,24 @@ function Categorias() {
   variants={fadeIn}
   initial="hidden"
   animate="visible"
-  className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center mb-6"
+  className="flex flex-col gap-3 sm:gap-4 md:flex-row md:justify-between md:items-center mb-4 sm:mb-6"
 >
-  <h1 className="text-2xl sm:text-3xl font-bold text-teal-400 text-center md:text-left">
+  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-teal-400 text-center md:text-left leading-tight">
     {usuario?.rol === "admin"
       ? "🏷️ Todas las Categorías"
       : "🏷️ Mis Categorías"}
   </h1>
 
-  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center md:justify-end">
+  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-center justify-center md:justify-end">
     <button
       onClick={() => navigate("/crear-categoria")}
-      className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-md shadow-md transition"
+      className="text-sm sm:text-base bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2 rounded-md shadow-md transition"
     >
       ➕ Añadir Categoría
     </button>
     <button
       onClick={() => setModoEliminar(!modoEliminar)}
-      className={`px-5 py-2 rounded-md shadow-md transition ${
+      className={`text-sm sm:text-base px-4 sm:px-5 py-2 rounded-md shadow-md transition ${
         modoEliminar
           ? "bg-red-700 hover:bg-red-800"
           : "bg-red-500 hover:bg-red-600"
@@ -258,6 +258,7 @@ function Categorias() {
     </button>
   </div>
 </motion.div>
+
 
 
         {categorias.length > 0 ? (
