@@ -5,7 +5,7 @@ import {
   logout,
   getUser,
   recoverPassword,
-  updatePassword, // ✅ Agregamos esta función al router
+  updatePassword, 
 } from "../controllers/authController.js";
 
 const router = express.Router();
@@ -17,4 +17,4 @@ router.get("/user", getUser);
 router.post("/recover-password", recoverPassword);
 router.post("/update-password", updatePassword);
 
-export default router; // ✅ Exportamos por defecto
+export default router;

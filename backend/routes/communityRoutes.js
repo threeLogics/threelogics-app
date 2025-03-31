@@ -1,10 +1,9 @@
 import express from "express";
-import supabase from "../supabaseClient.js"; // Importa Supabase correctamente
-import { verificarToken } from "../middleware/authMiddleware.js"; // Middleware para autenticar
+import supabase from "../supabaseClient.js"; 
+import { verificarToken } from "../middleware/authMiddleware.js"; 
 
 const router = express.Router();
 
-// ✅ Obtener todas las preguntas con nombres de usuario desde auth.users
 router.get("/questions", async (req, res) => {
   try {
     const { data: questions, error } = await supabase
@@ -14,19 +13,16 @@ router.get("/questions", async (req, res) => {
 
     if (error) throw error;
 
-    // Obtener los usuarios desde Supabase Auth
     const { data: users, error: userError } =
       await supabase.auth.admin.listUsers();
 
     if (userError) throw userError;
 
-    // Mapear IDs de usuario a nombres
     const userMap = users.users.reduce((acc, user) => {
       acc[user.id] = user.user_metadata?.nombre || "Anónimo";
       return acc;
     }, {});
 
-    // Agregar el nombre de usuario a cada pregunta
     const questionsWithNames = questions.map((q) => ({
       ...q,
       nombre_usuario: userMap[q.user_id] || "Anónimo",
@@ -39,7 +35,6 @@ router.get("/questions", async (req, res) => {
   }
 });
 
-// ✅ Insertar una nueva pregunta (solo usuarios autenticados)
 router.post("/questions", verificarToken, async (req, res) => {
   try {
     const { text } = req.body;
@@ -66,7 +61,6 @@ router.post("/questions", verificarToken, async (req, res) => {
   }
 });
 
-// ✅ Obtener respuestas de una pregunta con nombres de usuario desde auth.users
 router.get("/answers/:questionId", async (req, res) => {
   try {
     const { questionId } = req.params;
@@ -79,7 +73,6 @@ router.get("/answers/:questionId", async (req, res) => {
 
     if (error) throw error;
 
-    // Obtener los nombres de usuario desde Supabase Auth
     const { data: users, error: userError } =
       await supabase.auth.admin.listUsers();
 
@@ -90,7 +83,6 @@ router.get("/answers/:questionId", async (req, res) => {
       return acc;
     }, {});
 
-    // Agregar el nombre de usuario a cada respuesta
     const answersWithNames = answers.map((a) => ({
       ...a,
       nombre_usuario: userMap[a.user_id] || "Anónimo",
@@ -103,7 +95,6 @@ router.get("/answers/:questionId", async (req, res) => {
   }
 });
 
-// ✅ Insertar una respuesta (solo usuarios autenticados)
 router.post("/answers", verificarToken, async (req, res) => {
   try {
     const { text, question_id } = req.body;

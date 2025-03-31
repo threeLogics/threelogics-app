@@ -2,7 +2,6 @@ import supabase from "../supabaseClient.js";
 
 export const generarUbicacion = async (productoId, userId) => {
   try {
-    // 🔍 Buscar si el producto ya tiene una ubicación
     const { data: ubicacionExistente, error: errorUbicacion } = await supabase
       .from("ubicaciones")
       .select("*")
@@ -14,13 +13,11 @@ export const generarUbicacion = async (productoId, userId) => {
       return null;
     }
 
-    // ✅ Si el producto ya tiene una ubicación, devolverla
     if (ubicacionExistente) {
       console.log("🔄 Producto ya tiene ubicación:", ubicacionExistente);
       return ubicacionExistente;
     }
 
-    // 🔍 Obtener configuración inicial del usuario
     const { data: configUsuario, error: errorConfig } = await supabase
       .from("usuario_ubicaciones")
       .select("*")
@@ -35,7 +32,6 @@ export const generarUbicacion = async (productoId, userId) => {
       return null;
     }
 
-    // 🆕 Generar ubicación basada en la configuración del usuario
     const ubicacionNueva = {
       almacen: configUsuario.almacen,
       estanteria: String(Math.floor(Math.random() * 20 + 1)).padStart(2, "0"),

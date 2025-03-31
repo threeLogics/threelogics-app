@@ -1,12 +1,11 @@
 import express from "express";
 import supabase from "../supabaseClient.js";
 import PDFDocument from "pdfkit";
-import { verificarToken } from "../middleware/authMiddleware.js"; // Middleware de autenticación
+import { verificarToken } from "../middleware/authMiddleware.js"; 
 import { Parser } from "json2csv";
 const router = express.Router();
 
 
-// 📌 Obtener estadísticas generales (Autenticado)
 router.get("/estadisticas", verificarToken, async (req, res) => {
   try {
     console.log("🛠️ Usuario recibido:", req.usuario);
@@ -17,7 +16,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       whereCondition = { usuario_id: usuario.id };
     }
 
-    // 📦 Cantidad total de productos en stock (según usuario)
     const productosQuery = supabase
       .from("productos")
       .select("*", { count: "exact" });
@@ -46,7 +44,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       0
     );
 
-    // 📊 Cantidad de movimientos en los últimos 30 días
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - 30);
 
@@ -84,7 +81,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
 
     const { count: movimientosSalida } = await movimientosSalidaQuery;
 
-    // 🔹 Obtener todos los movimientos para agrupar manualmente
     const movimientosDataQuery = supabase
       .from("movimientos")
       .select("producto_id");
@@ -98,7 +94,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
 
     if (errorMovimientos) throw errorMovimientos;
 
-    // 🔥 Agrupar productos más movidos manualmente en el backend
     const productosCount = {};
     movimientosData.forEach((mov) => {
       if (mov.producto_id) {
@@ -107,14 +102,12 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       }
     });
 
-    // 🏆 Obtener el producto más movido y los top 5 productos
     const productosOrdenados = Object.entries(productosCount)
       .sort((a, b) => b[1] - a[1])
       .map(([producto_id, total]) => ({ producto_id, total }));
 
     const productosMasMovidos =
       productosOrdenados.length > 0 ? productosOrdenados.slice(0, 5) : [];
-    // Obtener nombres de los productos más movidos
     const topIds = productosMasMovidos.map((p) => p.producto_id);
     const { data: productosData, error: errorProductos } = await supabase
       .from("productos")
@@ -134,7 +127,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
         total: prod.total,
       };
     });
-    // Obtener stock total por producto
     const productosStockQuery = supabase
       .from("productos")
       .select("nombre, cantidad");
@@ -153,7 +145,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       );
     }
 
-    // 🔹 Obtener distribución por categoría
     const productosPorCategoriaQuery = supabase
       .from("productos")
       .select("categoria_id, cantidad");
@@ -167,7 +158,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
 
     if (errorCategorias) throw errorCategorias;
 
-    // Contar stock por categoría
     const categoriaCount = {};
     productosPorCategoria.forEach((prod) => {
       if (prod.categoria_id) {
@@ -176,7 +166,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       }
     });
 
-    // Obtener nombres reales
     const { data: categoriasData } = await supabase
       .from("categorias")
       .select("id, nombre");
@@ -192,13 +181,12 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     const categoriaMasPopular =
       productosOrdenados.length > 0 ? productosOrdenados[0].producto_id : "N/A";
 
-    // 🔁 Entradas del mes anterior
     const fechaInicioMesAnterior = new Date();
     fechaInicioMesAnterior.setMonth(fechaInicioMesAnterior.getMonth() - 1);
     fechaInicioMesAnterior.setDate(1);
 
     const fechaFinMesAnterior = new Date();
-    fechaFinMesAnterior.setDate(0); // Último día del mes anterior
+    fechaFinMesAnterior.setDate(0); 
 
     const movimientosEntradaMesAnteriorQuery = supabase
       .from("movimientos")
@@ -214,7 +202,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     const { count: movimientosEntradaMesAnterior } =
       await movimientosEntradaMesAnteriorQuery;
 
-    // 📦 Obtener volumen de pedidos por día (últimos 30 días)
     const pedidosPorDiaQuery = supabase
       .from("pedidos")
       .select("fecha")
@@ -229,7 +216,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
 
     if (errorPedidosPorDia) throw errorPedidosPorDia;
 
-    // Agrupar por día (YYYY-MM-DD)
     const conteoPorDia = {};
     pedidosPorDia.forEach(({ fecha }) => {
       const dia = new Date(fecha).toISOString().split("T")[0];
@@ -239,7 +225,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
     const volumenPedidosPorDia = Object.entries(conteoPorDia).map(
       ([fecha, total]) => ({ fecha, total })
     );
-    // 1. Obtener todos los movimientos (solo user_id)
     const { data: movimientosUsuarios, error: errorMovUsuarios } =
       await supabase.from("movimientos").select("user_id");
 
@@ -248,7 +233,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       return res.status(500).json({ error: "Error al obtener movimientos" });
     }
 
-    // 2. Obtener todos los usuarios (como en el endpoint de movimientos)
     const { data: usuarios, error: errorUsuarios } =
       await supabase.auth.admin.listUsers();
 
@@ -262,7 +246,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       usuariosMap[u.id] = u.user_metadata?.nombre || "Desconocido";
     });
 
-    // 3. Calcular el cliente más activo
     const usuarioConteo = {};
     movimientosUsuarios.forEach(({ user_id }) => {
       usuarioConteo[user_id] = (usuarioConteo[user_id] || 0) + 1;
@@ -274,7 +257,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
 
     const clienteMasActivo = usuariosMap[clienteMasActivoId] || "Desconocido";
 
-    // 4. Incluir nombres de clientes en los productos más movidos
     const productosMasMovidosConCliente = await Promise.all(
       productosMasMovidosConNombre.map(async (prod) => {
         if (!prod?.producto_id) {
@@ -285,7 +267,7 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
           .from("movimientos")
           .select("user_id")
           .eq("producto_id", prod.producto_id)
-          .order("fecha", { ascending: false }) // último movimiento primero
+          .order("fecha", { ascending: false }) 
           .limit(1)
           .single();
 
@@ -299,7 +281,6 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       })
     );
 
-    // 5. Incluir nombres de clientes en la distribución del stock por categoría
     const distribucionCategoriasConCliente = await Promise.all(
       distribucionCategorias.map(async (cat) => {
         const categoriaId = categoriasData.find(
@@ -334,13 +315,13 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
       totalMovimientos,
       movimientosEntrada,
       movimientosSalida,
-      productosMasMovidos: productosMasMovidosConCliente, // modificado
+      productosMasMovidos: productosMasMovidosConCliente, 
       categoriaMasPopular,
       productosStock,
-      distribucionCategorias: distribucionCategoriasConCliente, // modificado
+      distribucionCategorias: distribucionCategoriasConCliente, 
       movimientosEntradaMesAnterior,
       volumenPedidosPorDia,
-      clienteMasActivo, // nuevo campo
+      clienteMasActivo, 
     });
   } catch (error) {
     console.error("❌ Error obteniendo estadísticas:", error);
@@ -348,26 +329,22 @@ router.get("/estadisticas", verificarToken, async (req, res) => {
   }
 });
 
-// 📈 Obtener datos de demanda para predicción
 router.get("/demanda-productos", verificarToken, async (req, res) => {
   try {
     const usuario = req.usuario;
 
-    // 1. Traemos los detalles de los pedidos (producto + cantidad + pedido_id)
     const { data: detalles, error } = await supabase
       .from("detallepedidos")
       .select("cantidad, producto_id, pedido_id");
 
     if (error) throw error;
 
-    // 2. Traemos los pedidos para filtrar por usuario y saber fechas
     const { data: pedidos, error: errorPedidos } = await supabase
       .from("pedidos")
       .select("id, fecha, user_id");
 
     if (errorPedidos) throw errorPedidos;
 
-    // 3. Filtramos los detalles que pertenecen al usuario actual
     const detallesUsuario =
       usuario.rol === "admin"
         ? detalles
@@ -376,12 +353,10 @@ router.get("/demanda-productos", verificarToken, async (req, res) => {
             return pedido && pedido.user_id === usuario.id;
           });
 
-    // 4. Obtenemos los IDs de los productos involucrados
     const productoIds = [
       ...new Set(detallesUsuario.map((d) => d.producto_id).filter(Boolean)),
     ];
 
-    // 5. Traemos los nombres de los productos
     const { data: productos, error: errorProductos } = await supabase
       .from("productos")
       .select("id, nombre")
@@ -389,7 +364,6 @@ router.get("/demanda-productos", verificarToken, async (req, res) => {
 
     if (errorProductos) throw errorProductos;
 
-    // 6. Formateamos: { nombre, cantidad }
     const pedidosPorProducto = detallesUsuario
       .map((d) => {
         const producto = productos.find((p) => p.id === d.producto_id);
@@ -398,9 +372,9 @@ router.get("/demanda-productos", verificarToken, async (req, res) => {
               nombre: producto.nombre,
               cantidad: d.cantidad,
             }
-          : null; // ignorar si no se encontró
+          : null; 
       })
-      .filter(Boolean); // elimina los null
+      .filter(Boolean); 
 
     return res.json({ pedidosPorProducto });
   } catch (error) {
@@ -448,24 +422,21 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
       }));
     }
 
-    // 📄 Crear PDF
     const doc = new PDFDocument({ margin: 40, size: "A4" });
     res.setHeader("Content-Disposition", 'attachment; filename="reporte_movimientos.pdf"');
     res.setHeader("Content-Type", "application/pdf");
     doc.pipe(res);
 
-    // 🧾 Título y usuario
     doc.font("Helvetica-Bold").fontSize(18).text("Reporte de Movimientos", { align: "center" }).moveDown();
     doc.font("Helvetica").fontSize(12)
       .text(`Usuario: ${nombreUsuario}`)
       .text(`Fecha: ${new Date().toLocaleDateString()}`)
       .moveDown();
 
-    // 🧱 Config tabla
     const startX = 40;
     const rowHeight = 20;
     const columnWidths = [60, 100, 70, 70, 140];
-    if (esAdmin) columnWidths.push(100); // Para "Realizado por"
+    if (esAdmin) columnWidths.push(100); 
     let y = doc.y;
 
     const renderEncabezado = () => {
@@ -525,7 +496,6 @@ router.get("/reporte-pdf", verificarToken, async (req, res) => {
         });
       }
 
-      // 🧩 Línea separadora
       doc
         .moveTo(startX, y + rowHeight - 5)
         .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), y + rowHeight - 5)
@@ -554,7 +524,6 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
     const esAdmin = usuario.rol === "admin";
     const whereCondition = esAdmin ? {} : { user_id: usuario.id };
 
-    // Obtener movimientos
     const { data: movimientos, error: errorMov } = await supabase
       .from("movimientos")
       .select("id, tipo, cantidad, fecha, user_id, producto:productos(nombre)")
@@ -568,7 +537,6 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
         .json({ error: "No hay movimientos para generar el CSV" });
     }
 
-    // Si es admin, obtener mapa de usuarios
     let usuariosMap = {};
     if (esAdmin) {
       const { data: usuarios, error: errorUsuarios } =
@@ -584,7 +552,6 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
       });
     }
 
-    // Transformar datos a plano (con columna "Realizado por" si es admin)
     const datosPlano = movimientos.map((mov) => {
       const fila = {
         ID: mov.id.slice(0, 8),
@@ -601,7 +568,6 @@ router.get("/reporte-csv", verificarToken, async (req, res) => {
       return fila;
     });
 
-    // Generar CSV
     const parser = new Parser({ delimiter: ";" });
     const csv = parser.parse(datosPlano);
 
@@ -652,18 +618,16 @@ router.get("/reporte-productos", verificarToken, async (req, res) => {
     res.setHeader("Content-Type", "application/pdf; charset=utf-8");
     doc.pipe(res);
 
-    // 🧾 Título y usuario
     doc.font("Helvetica-Bold").fontSize(18).text("Reporte de Productos", { align: "center" }).moveDown();
     doc.font("Helvetica").fontSize(12)
       .text(`Usuario: ${usuario.nombre || usuario.email}`)
       .text(`Fecha: ${new Date().toLocaleDateString()}`)
       .moveDown();
 
-    // 🧱 Config tabla
     const startX = 40;
     const rowHeight = 20;
     const columnWidths = [60, 130, 60, 80, 80];
-    if (esAdmin) columnWidths.push(120); // "Creado por"
+    if (esAdmin) columnWidths.push(120); 
     let y = doc.y;
 
     const renderEncabezado = () => {
@@ -717,7 +681,6 @@ router.get("/reporte-productos", verificarToken, async (req, res) => {
         });
       }
 
-      // Línea separadora
       doc
         .moveTo(startX, y + rowHeight - 5)
         .lineTo(startX + columnWidths.reduce((a, b) => a + b, 0), y + rowHeight - 5)
