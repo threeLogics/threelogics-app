@@ -1,7 +1,7 @@
 import supabase from "../supabaseClient.js";
 
 export const verificarToken = async (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1]; // ✅ Extraer el token correctamente
+  const token = req.headers.authorization?.split(" ")[1]; 
 
   if (!token) {
     return res.status(403).json({ error: "⚠️ Token no proporcionado" });
@@ -18,7 +18,7 @@ export const verificarToken = async (req, res, next) => {
     req.usuario = {
       id: data.user.id,
       email: data.user.email,
-      rol: data.user.user_metadata?.rol || "usuario", // 🔹 Si no tiene rol, asignar "usuario"
+      rol: data.user.user_metadata?.rol || "usuario", 
     };
 
     next();
