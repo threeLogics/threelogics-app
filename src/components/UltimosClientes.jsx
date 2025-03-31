@@ -85,7 +85,7 @@ export default function UltimosClientes() {
         {/* Nuevos Clientes */}
         <div>
           <h3 className="text-xl font-bold mb-5 text-teal-400 border-b border-teal-500 pb-2">
-            🟢 Nuevos Clientes
+            🟢 Nuevos Clientes :
           </h3>
           <AnimatePresence>
             {nuevosClientes.length > 0 ? (
@@ -124,7 +124,7 @@ export default function UltimosClientes() {
         {/* Clientes Dados de Baja */}
         <div>
           <h3 className="text-xl font-bold mb-5 text-red-400 border-b border-red-500 pb-2">
-            🔴 Clientes Dados de Baja
+            🔴 Clientes Dados de Baja :
           </h3>
           <AnimatePresence>
             {clientesEliminados.length > 0 ? (
