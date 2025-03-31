@@ -45,22 +45,24 @@ const EstadoSistema = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-6 py-16">
-      <h1 className="text-4xl font-bold text-teal-400 mb-4">Estado del Sistema</h1>
-      <p className="text-gray-400 text-lg mb-6">Monitoreo en tiempo real de nuestros servicios.</p>
-
-      {/* Última actualización */}
-      <div className="flex items-center gap-2 mb-6 text-gray-400">
-        <Clock className="w-5 h-5 text-gray-500" />
-        <span>Última actualización: {ultimaActualizacion.toLocaleTimeString()}</span>
-        <button onClick={() => setUltimaActualizacion(new Date())} className="text-teal-400 hover:text-teal-300 transition">
-          <RefreshCcw className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Tabla de Estado */}
-      <div className="max-w-3xl w-full bg-gray-900 p-6 rounded-lg shadow-md">
-        <table className="w-full text-left border-collapse">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
+    <h1 className="text-3xl sm:text-4xl font-bold text-teal-400 mb-4">Estado del Sistema</h1>
+    <p className="text-sm sm:text-lg text-gray-400 mb-6 text-center">
+      Monitoreo en tiempo real de nuestros servicios.
+    </p>
+  
+    <div className="flex items-center gap-2 mb-6 text-sm sm:text-base text-gray-400">
+      <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+      <span>Última actualización: {ultimaActualizacion.toLocaleTimeString()}</span>
+      <button onClick={() => setUltimaActualizacion(new Date())} className="text-teal-400 hover:text-teal-300 transition">
+        <RefreshCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+      </button>
+    </div>
+  
+    {/* Contenedor scroll horizontal para móvil */}
+    <div className="w-full overflow-x-auto">
+      <div className="min-w-[600px] max-w-3xl mx-auto bg-gray-900 p-4 sm:p-6 rounded-lg shadow-md">
+        <table className="w-full text-left border-collapse text-sm sm:text-base">
           <thead>
             <tr className="text-teal-400 border-b border-gray-700">
               <th className="py-3 px-4">Servicio</th>
@@ -72,8 +74,8 @@ const EstadoSistema = () => {
             {sistema.length > 0 ? (
               sistema.map((servicio, index) => (
                 <tr key={index} className="border-b border-gray-700 hover:bg-gray-800 transition">
-                  <td className="py-4 px-4 text-lg">{servicio.servicio}</td>
-                  <td className="py-4 px-4 flex justify-center items-center gap-2">
+                  <td className="py-3 px-4">{servicio.servicio}</td>
+                  <td className="py-3 px-4 flex justify-center items-center gap-2">
                     {getEstado(servicio.estado)}
                     <span
                       className={`font-semibold ${
@@ -93,7 +95,7 @@ const EstadoSistema = () => {
                       {servicio.estado.charAt(0).toUpperCase() + servicio.estado.slice(1)}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-center font-semibold">
+                  <td className="py-3 px-4 text-center font-semibold">
                     {servicio.tiempo_respuesta || "N/A"}
                   </td>
                 </tr>
@@ -109,6 +111,8 @@ const EstadoSistema = () => {
         </table>
       </div>
     </div>
+  </div>
+  
   );
 };
 
