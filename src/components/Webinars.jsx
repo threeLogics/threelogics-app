@@ -2,32 +2,32 @@ import React from 'react';
 
 const Webinars = () => {
   return (
-    <section className="flex flex-col items-center justify-center px-4 py-12 text-center bg-white">
+    <section className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4 py-12 sm:px-6 sm:py-16">
       
       {/* Título */}
-      <h1 className="text-4xl md:text-5xl font-bold mb-4">
+      <h1 className="text-3xl sm:text-5xl font-bold text-teal-400 mb-4 text-center">
         Descubre cómo ThreeLogics revoluciona la gestión de tu almacén
       </h1>
 
       {/* Subtítulo */}
-      <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl">
+      <p className="text-sm sm:text-lg text-gray-400 mb-10 text-center max-w-3xl">
         Una plataforma intuitiva para controlar productos, pedidos, categorías, ubicaciones y estadísticas en tiempo real.
       </p>
 
       {/* Vídeo */}
-      <div className="w-full max-w-4xl mb-8 relative pb-[56.25%] h-0 overflow-hidden rounded-2xl shadow-lg">
+      <div className="w-full max-w-5xl mb-10 rounded-2xl overflow-hidden shadow-lg relative pb-[56.25%]">
         <iframe 
-          className="absolute top-0 left-0 w-full h-full rounded-2xl"
-          src="https://www.youtube.com/embed/0c87dGV6rNA" 
-          title="Demo ThreeLogics" 
-          frameBorder="0" 
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          className="absolute top-0 left-0 w-full h-full"
+          src="https://www.youtube.com/embed/0c87dGV6rNA?rel=0&modestbranding=1&showinfo=0&controls=1"
+          title="Demo ThreeLogics"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         ></iframe>
       </div>
 
       {/* Cuerpo del texto */}
-      <div className="text-base md:text-lg text-gray-700 max-w-3xl mb-8">
+      <div className="text-base sm:text-lg text-gray-400 max-w-3xl mb-8 text-center">
         <p className="mb-4">
           ThreeLogics está diseñado para pequeñas y medianas empresas que buscan digitalizar y optimizar su almacén de forma sencilla y eficiente.
         </p>
@@ -49,7 +49,7 @@ const Webinars = () => {
       {/* Botón */}
       <a 
         href="/solicitar-demo" 
-        className="px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition"
+        className="px-8 py-3 bg-teal-500 text-white font-semibold rounded-2xl hover:bg-teal-400 transition"
       >
         Solicitar Demo Personalizada
       </a>
