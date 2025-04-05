@@ -160,7 +160,7 @@ export default function Footer() {
           <Link to="/comunidad" className="hover:text-teal-400">Comunidad</Link>
         </li>
               <li>
-                <a href="#" className="hover:text-teal-400">
+                <a href="/webinars" className="hover:text-teal-400">
                   Webinars
                 </a>
               </li>

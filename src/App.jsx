@@ -32,6 +32,7 @@ import EstadoSistema from "./components/EstadoSistema";
 import ResetPassword from "./components/ResetPassword";
 import supabase from "./supabaseClient";
 import ConfiguracionInicial from "./pages/ConfiguracionInicial";
+import Webinars from "./components/Webinars";
 
 
 
@@ -130,7 +131,9 @@ function App() {
         <Route path="/comunidad" element={<Community />} />
         <Route path="/terms" element={<TermsConditions />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
+        <Route path="/webinars" element={<Webinars />} />
         <Route path="/estado-sistema" element={<EstadoSistema />} />
+
         
 
         <Route
