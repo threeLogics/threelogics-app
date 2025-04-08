@@ -5,7 +5,7 @@ const Webinars = () => {
     <section className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4 py-12 sm:px-6 sm:py-16">
       
       {/* Título */}
-      <h1 className="text-3xl sm:text-5xl font-bold text-teal-400 mb-4 text-center">
+      <h1 className="text-3xl sm:text-5xl font-bold text-teal-400 mb-4 text-center pd-4">
         Descubre cómo ThreeLogics revoluciona la gestión de tu almacén
       </h1>
 
