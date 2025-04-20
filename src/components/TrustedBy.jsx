@@ -37,6 +37,7 @@ export default function TrustedBy() {
                 initial={{ opacity: 0.6 }}
                 animate={{ opacity: 0.8 }}
                 transition={{ duration: 0.5 }}
+                loading="lazy"
               />
               <motion.p
                 className="mt-2 text-sm sm:text-base transition-all duration-300 group-hover:text-white"

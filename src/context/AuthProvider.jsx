@@ -5,9 +5,8 @@ import { AuthContext } from "./AuthContext";
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null);
-  const [mensajeExpiracion, setMensajeExpiracion] = useState(""); 
+  const [mensajeExpiracion, setMensajeExpiracion] = useState("");
   const logoutTimeoutRef = useRef(null);
-
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -15,13 +14,12 @@ export function AuthProvider({ children }) {
 
     if (token && storedUser) {
       const parsedUser = JSON.parse(storedUser);
-      setUsuario(parsedUser); 
+      setUsuario(parsedUser);
 
       try {
         const decodedToken = jwtDecode(token);
         const currentTime = Date.now() / 1000;
 
-        
         if (decodedToken.exp < currentTime) {
           console.warn("⚠️ Token expirado, cerrando sesión...");
           cerrarSesionAutomatica();
@@ -46,10 +44,9 @@ export function AuthProvider({ children }) {
         logout();
       }
     } else {
-      
       logout();
     }
-  }, []); 
+  }, []);
 
   const cerrarSesionAutomatica = () => {
     console.warn("⚠️ Token expirado. Cerrando sesión...");
@@ -71,10 +68,9 @@ export function AuthProvider({ children }) {
     try {
       const decodedToken = jwtDecode(data.token);
 
-      
       const usuario = {
-        id: decodedToken.sub, 
-        nombre: decodedToken.user_metadata?.nombre || "Usuario", 
+        id: decodedToken.sub,
+        nombre: decodedToken.user_metadata?.nombre || "Usuario",
         email: decodedToken.email,
         rol: decodedToken.user_metadata?.rol || "usuario",
         imagenPerfil:
@@ -89,12 +85,12 @@ export function AuthProvider({ children }) {
         cerrarSesionAutomatica();
       }, (decodedToken.exp - Date.now() / 1000) * 1000);
 
-      setMensajeExpiracion(""); 
+      setMensajeExpiracion("");
       setUsuario(usuario);
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(usuario));
 
-      console.log("✅ Usuario autenticado:", usuario); 
+      console.log("✅ Usuario autenticado:", usuario);
     } catch (error) {
       console.error("❌ Error al decodificar el token:", error);
       return;
