@@ -1,5 +1,9 @@
 # ThreeLogics - Sistema de Gestión de Almacenes para PYMEs
 
+![MIT License](https://img.shields.io/badge/license-MIT-green)
+![Vercel Deployment](https://img.shields.io/badge/deploy-vercel-blue)
+![Render Backend](https://img.shields.io/badge/backend-render-orange)
+
 **ThreeLogics** es una plataforma web moderna y escalable diseñada para optimizar la gestión logística de pequeñas y medianas empresas. Su objetivo es digitalizar procesos de almacén, mejorar el control de stock, generar informes analíticos y facilitar la toma de decisiones mediante un sistema intuitivo, ágil y seguro.
 
 ## Tabla de Contenidos
@@ -10,6 +14,7 @@
 - [Arquitectura del Proyecto](#arquitectura-del-proyecto)
 - [Instalación y Configuración](#instalación-y-configuración)
 - [Guía de Uso](#guía-de-uso)
+- [Estructura del Repositorio](#estructura-del-repositorio)
 - [Estrategia de Desarrollo](#estrategia-de-desarrollo)
 - [Controles de Calidad](#controles-de-calidad)
 - [Documentación](#documentación)
@@ -111,6 +116,15 @@ El sistema permite:
 - Descargar reportes en PDF.
 - Filtrar, ordenar y paginar información.
 - Registrar y controlar stock según tipos de movimiento.
+
+## Estructura del Repositorio
+
+```
+/frontend        → Aplicación React + Vite
+/backend         → Servidor Node.js + Express
+/documentacion   → Manuales técnicos y de usuario
+/public          → Recursos estáticos
+```
 
 ## Estrategia de Desarrollo
 
