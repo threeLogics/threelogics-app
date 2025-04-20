@@ -21,7 +21,7 @@
 - [Controles de Calidad](#controles-de-calidad)
 - [Documentación](#documentación)
 - [Equipo de Desarrollo](#equipo-de-desarrollo)
-- [Auditoría Web](#auditoría-Web)
+- [Auditoría Web](#auditoría-web-unlighthouse)
 - [Licencia](#licencia)
 
 ## Demo
