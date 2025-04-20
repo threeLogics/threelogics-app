@@ -6,6 +6,8 @@
 
 **ThreeLogics** es una plataforma web moderna y escalable diseñada para optimizar la gestión logística de pequeñas y medianas empresas. Su objetivo es digitalizar procesos de almacén, mejorar el control de stock, generar informes analíticos y facilitar la toma de decisiones mediante un sistema intuitivo, ágil y seguro.
 
+![Vista del Dashboard de ThreeLogics](https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//dashboard.png)
+
 ## Tabla de Contenidos
 
 - [Demo](#demo)
@@ -66,6 +68,8 @@ Aplicación dividida en tres capas:
 - **Frontend:** Interfaz gráfica para gestión de almacenes.
 - **Backend:** API REST para lógica de negocio.
 - **Base de Datos:** Gestión y almacenamiento de datos con Supabase.
+
+![Arquitectura de ThreeLogics](https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//arquitectura.png)
 
 **Extras**:
 
