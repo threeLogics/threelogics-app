@@ -18,9 +18,7 @@
 
 ## Demo
 
-Escanea el siguiente código QR para acceder a una demo funcional de ThreeLogics:
-
-> **[QR con el vídeo explicativo del uso del sistema]**
+[Acceder a la demo de ThreeLogics](https://threelogicsapp.vercel.app/webinars)
 
 ## Características Principales
 
@@ -52,7 +50,7 @@ Escanea el siguiente código QR para acceder a una demo funcional de ThreeLogics
 ### Infraestructura
 
 - **Frontend desplegado en Vercel**
-- **Backend en Google Cloud**
+- **Backend en Render**
 - **Monitorización con Grafana y Google Analytics**
 - **CI/CD con GitHub Actions**
 
@@ -131,8 +129,8 @@ El sistema permite:
 
 ## Documentación
 
-- Manual del Desarrollador
-- Manual del Usuario
+- [Manual del Desarrollador](./documentacion/ManualDesarrollador-ThreeLogics.pdf)
+- [Manual de Usuario](./documentacion/ManualUsuario-ThreeLogics.pdf)
 - Guía de Administración y Backup
 - FAQs
 
