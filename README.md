@@ -21,6 +21,7 @@
 - [Controles de Calidad](#controles-de-calidad)
 - [Documentación](#documentación)
 - [Equipo de Desarrollo](#equipo-de-desarrollo)
+- [Auditoría Web](#auditoría-Web)
 - [Licencia](#licencia)
 
 ## Demo
@@ -157,6 +158,21 @@ El sistema permite:
 - **Iker Domínguez** - Fullstack & QA
 - **Adrián Vaquero** - Backend & Seguridad
 - **Daniel Ramiro** - Frontend & UI/UX
+
+## Auditoría Web (Unlighthouse)
+
+La aplicación fue auditada con [Unlighthouse](https://unlighthouse.dev/) usando datos de producción en Vercel.
+
+**Resultados Generales:**
+
+| Métrica             | Puntuación Promedio |
+| ------------------- | ------------------- |
+| 🚀 Rendimiento      | 60                  |
+| ♿ Accesibilidad    | 90                  |
+| ✅ Buenas Prácticas | 99                  |
+| 🌐 SEO              | 92                  |
+
+> 🔍 Auditado el 20 de abril de 2025 desde https://threelogicsapp.vercel.app
 
 ## Licencia
 
