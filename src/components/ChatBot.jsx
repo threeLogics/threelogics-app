@@ -100,20 +100,20 @@ const ChatBot = () => {
         <div className="absolute bottom-16 right-0 w-80 bg-gray-900 border border-teal-500 rounded-xl shadow-2xl p-4 flex flex-col text-white">
           <h3 className="text-lg font-bold text-white-700">Chat de Soporte</h3>
 
-          {((messages.length === 0 && sugerencias.length > 0) ||
-            (messages.length > 0 && messages[messages.length - 1]?.role === "bot")) && (
-            <div className="mt-2 mb-2 flex flex-wrap gap-2">
-              {sugerencias.map((text, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleQuickReply(text)}
-                  className="bg-gray-800 text-white-200 px-2 py-1 text-xs rounded hover:bg-teal-600 hover:text-white transition"
-                >
-                  {text}
-                </button>
-              ))}
-            </div>
-          )}
+          {isOpen && sugerencias.length > 0 && !isTyping && (
+  <div className="mt-2 mb-2 flex flex-wrap gap-2">
+    {sugerencias.map((text, index) => (
+      <button
+        key={index}
+        onClick={() => handleQuickReply(text)}
+        className="bg-gray-800 text-white-200 px-2 py-1 text-xs rounded hover:bg-teal-600 hover:text-white transition"
+      >
+        {text}
+      </button>
+    ))}
+  </div>
+)}
+
 
           <div className="h-60 overflow-y-auto mt-1 space-y-1">
             {messages.map((msg, i) => (
