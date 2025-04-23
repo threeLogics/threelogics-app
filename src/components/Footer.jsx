@@ -93,32 +93,49 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-center md:text-left">
           {/* Contacto */}
           <div className="md:text-left">
-            <h4 className="text-2xl font-semibold mb-6 text-teal-400">
-              Contacto
-            </h4>
-            <p className="text-gray-300 text-lg flex items-center gap-2">
-              <Mail className="w-5 h-5 text-teal-400" />{" "}
-              threelogicsapp@gmail.com
-            </p>
-            <p className="text-gray-300 text-lg mt-2 flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-teal-400" /> Fuenlabrada, España
-            </p>
-            <div className="flex justify-center md:justify-start space-x-5 mt-5 text-xl">
+  <h4 className="text-2xl font-semibold mb-6 text-teal-400">Contacto</h4>
 
-              <a
-                href="https://github.com/threeLogics"
-                className="text-gray-400 hover:text-teal-400"
-              >
-                <Github className="w-6 h-6 inline" /> GitHub
-              </a>
-              <a
-                href="https://www.instagram.com/threelogicsenterprise/"
-                className="text-gray-400 hover:text-teal-400"
-              >
-                <Instagram className="w-6 h-6 inline" /> Instagram
-              </a>
-            </div>
-          </div>
+  <div className="space-y-4 text-lg text-gray-300">
+    {/* Email */}
+    <a
+      href="mailto:threelogicsapp@gmail.com"
+      className="flex items-center gap-2 hover:text-teal-300 transition"
+    >
+      <Mail className="w-5 h-5 text-teal-400" />
+      threelogicsapp@gmail.com
+    </a>
+
+    {/* Dirección */}
+    <p className="flex items-center gap-2">
+      <MapPin className="w-5 h-5 text-teal-400" />
+      Fuenlabrada, España
+    </p>
+  </div>
+
+  {/* Redes sociales */}
+  <div className="flex items-center space-x-6 mt-6 text-gray-400 text-xl">
+    <a
+      href="https://github.com/threeLogics"
+      className="flex items-center gap-2 hover:text-teal-400 transition"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Github className="w-6 h-6" />
+      GitHub
+    </a>
+
+    <a
+      href="https://www.instagram.com/threelogicsenterprise/"
+      className="flex items-center gap-2 hover:text-teal-400 transition"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      <Instagram className="w-6 h-6" />
+      Instagram
+    </a>
+  </div>
+</div>
+
 
           {/* Soluciones */}
           <div className="md:text-center">

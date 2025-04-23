@@ -54,19 +54,16 @@ export default function TestimonialSlider() {
     setCurrent((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
   }, []);
 
-  
   useEffect(() => {
     if (isPaused) return;
     intervalRef.current = setInterval(nextTestimonial, 5000);
-
     return () => clearInterval(intervalRef.current);
   }, [isPaused, nextTestimonial]);
 
-  
   const handlePause = () => {
     setIsPaused(true);
     clearInterval(intervalRef.current);
-    setTimeout(() => setIsPaused(false), 8000); 
+    setTimeout(() => setIsPaused(false), 8000);
   };
 
   const slideVariants = {
@@ -93,21 +90,12 @@ export default function TestimonialSlider() {
       </h2>
       <p className="text-gray-400 text-lg max-w-xl mb-10 leading-relaxed">
         Estamos construyendo una{" "}
-        <span className="text-white font-medium">
-          comunidad empresarial extraordinaria
-        </span>
-        , basada en
-        <span className="text-teal-400 font-medium">
-          {" "}
-          valores compartidos
-        </span>{" "}
-        y{" "}
-        <span className="text-white font-medium">estándares profesionales</span>
-        .
+        <span className="text-white font-medium">comunidad empresarial extraordinaria</span>, basada en{" "}
+        <span className="text-teal-400 font-medium">valores compartidos</span> y{" "}
+        <span className="text-white font-medium">estándares profesionales</span>.
       </p>
 
-      <div className="relative w-full max-w-3xl bg-gray-800 px-8 py-10 rounded-2xl shadow-2xl overflow-hidden">
-        {/* Botón Izquierdo */}
+      <div className="relative w-full max-w-3xl bg-gray-800/60 backdrop-blur-md px-8 py-10 rounded-2xl shadow-2xl overflow-hidden">
         <button
           className="cursor-pointer absolute left-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
           onClick={() => {
@@ -118,7 +106,6 @@ export default function TestimonialSlider() {
           <ChevronLeft className="text-white w-6 h-6" />
         </button>
 
-        {/* Testimonio */}
         <div className="relative h-60 flex justify-center items-center">
           <AnimatePresence custom={direction} mode="wait">
             <motion.div
@@ -130,29 +117,48 @@ export default function TestimonialSlider() {
               animate="visible"
               exit="exit"
             >
-              <div className="flex items-center gap-4 mb-5">
+              <div className="flex items-center gap-4 mb-4">
                 <img
                   src={testimonials[current].avatar}
                   alt={testimonials[current].author}
-                  className="w-20 h-20 rounded-full border border-gray-600 shadow-lg"
+                  className="w-20 h-20 rounded-full border border-gray-600 shadow-lg transition-transform hover:scale-105"
                 />
                 <div className="text-left">
-                  <p className="font-semibold">
-                    {testimonials[current].author}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={testimonials[current].companyLogo}
+                      alt={testimonials[current].companyName}
+                      className="w-6 h-6 object-contain"
+                    />
+                    <p className="font-semibold">
+                      {testimonials[current].author}
+                    </p>
+                  </div>
                   <p className="text-sm text-gray-400">
                     {testimonials[current].position}
                   </p>
+                  <div className="flex gap-1 mt-1">
+                    {Array(5)
+                      .fill()
+                      .map((_, i) => (
+                        <span key={i} className="text-yellow-400 text-sm">★</span>
+                      ))}
+                  </div>
                 </div>
               </div>
-              <p className="text-base md:text-lg italic text-gray-300 mb-6 max-w-xl leading-relaxed">
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-base md:text-lg italic text-gray-300 mb-6 max-w-xl leading-relaxed"
+              >
                 {testimonials[current].quote}
-              </p>
+              </motion.p>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Botón Derecho */}
         <button
           className="cursor-pointer absolute right-4 top-1/2 transform -translate-y-1/2 bg-gray-700 p-3 rounded-full hover:bg-gray-600 transition duration-300"
           onClick={() => {

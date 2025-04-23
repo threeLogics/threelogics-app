@@ -97,8 +97,14 @@ export default function Navbar() {
       <div className="hidden md:flex items-center space-x-6 text-gray-300">
         {!usuario ? (
           <>
+          <button
+              onClick={() => handleScrollToSection("work-process")}
+              className="hover:text-teal-400 transition cursor-pointer"
+            >
+              Cómo trabajamos
+            </button>
             <button
-              onClick={() => handleScrollToSection("testimonial-slider")}
+              onClick={() => handleScrollToSection("about-us")}
               className="hover:text-teal-400 transition cursor-pointer"
             >
               Nosotros
@@ -109,12 +115,7 @@ export default function Navbar() {
             >
               Servicios
             </button>
-            <button
-              onClick={() => handleScrollToSection("work-process")}
-              className="hover:text-teal-400 transition cursor-pointer"
-            >
-              Proceso
-            </button>
+            
             <span className="text-gray-500">|</span>
             <a
               href="mailto:threelogicsapp@gmail.com"
@@ -279,7 +280,13 @@ export default function Navbar() {
           {!usuario ? (
             <>
               <button
-                onClick={() => handleScrollToSection("testimonial-slider")}
+                onClick={() => handleScrollToSection("work-process")}
+                className="hover:text-teal-400 transition"
+              >
+                Cómo trabajamos
+              </button>
+              <button
+                onClick={() => handleScrollToSection("about-us")}
                 className="hover:text-teal-400 transition"
               >
                 Nosotros
@@ -290,12 +297,7 @@ export default function Navbar() {
               >
                 Servicios
               </button>
-              <button
-                onClick={() => handleScrollToSection("work-process")}
-                className="hover:text-teal-400 transition"
-              >
-                Proceso
-              </button>
+            
               <a
                 href="mailto:info@threelogics.com"
                 className="text-teal-400 hover:text-teal-300 transition"

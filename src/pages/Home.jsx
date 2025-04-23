@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-
+import AboutUs from "../components/AboutUs";
 import Hero from "../components/Hero";
 import Navbar from "../components/Navbar";
 import TrustedBy from "../components/TrustedBy";
@@ -68,6 +68,9 @@ const Home = () => {
       <TrustedBy />
       <div id="work-process">
         <WorkProcess />
+      </div>
+      <div id="about-us">
+        <AboutUs />
       </div>
       <div id="services">
         <Services />
