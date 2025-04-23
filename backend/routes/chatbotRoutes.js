@@ -9,9 +9,9 @@ const normalizeText = (text) => {
   return text
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") 
-    .replace(/[¿?.,!]/g, "") 
-    .replace(/\s+/g, " ") 
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[¿?.,!]/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 };
 
@@ -23,6 +23,7 @@ router.post("/chat", async (req, res) => {
 
     let cleanMessage = normalizeText(message);
 
+    // Coincidencia exacta
     let { data: exactMatch, error: exactError } = await supabase
       .from("conocimientos")
       .select("respuesta")
@@ -33,6 +34,7 @@ router.post("/chat", async (req, res) => {
     if (exactMatch.length > 0)
       return res.json({ reply: exactMatch[0].respuesta });
 
+    // Coincidencia parcial
     let { data: partialMatch, error: partialError } = await supabase
       .from("conocimientos")
       .select("respuesta")
@@ -44,7 +46,8 @@ router.post("/chat", async (req, res) => {
     if (partialMatch.length > 0)
       return res.json({ reply: partialMatch[0].respuesta });
 
-    let shortMessage = cleanMessage.split(" ").slice(0, 3).join(" "); 
+    // Coincidencia por palabras clave
+    let shortMessage = cleanMessage.split(" ").slice(0, 3).join(" ");
     let { data: keywordMatch, error: keywordError } = await supabase
       .from("conocimientos")
       .select("respuesta")

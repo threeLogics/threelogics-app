@@ -1,67 +1,70 @@
 import { useState, useEffect, useRef } from "react";
 import { Send, MessageCircle, X } from "lucide-react";
+import supabase from "../supabaseClient";
 
-// Función para sanitizar mensajes 
 const sanitizeMessage = (text) => {
-  return text.trim().replace(/\s+/g, " ").slice(0, 200); 
+  return text.trim().replace(/\s+/g, " ").slice(0, 200);
 };
 
 const ChatBot = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const [sugerencias, setSugerencias] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasLoadedInitialSuggestions, setHasLoadedInitialSuggestions] = useState(false);
   const messagesEndRef = useRef(null);
-
- 
-  const quickReplies = [
-    "Hola",
-    "¿Cómo inicio sesión?",
-    "¿Cómo me pongo en contacto?",
-    "¿Qué es ThreeLogics?",
-    "¿Es seguro almacenar mis datos en ThreeLogics?",
-    "¿Puedo exportar mis datos?",
-    "¿Qué diferencia hay entre un pedido de entrada y uno de salida?",
-    "¿Cómo puedo ver los movimientos de inventario?"
-
-  ];
-
   const API_URL = import.meta.env.VITE_API_URL;
+
+  const fetchSugerencias = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("conocimientos")
+        .select("pregunta")
+        .order("pregunta", { ascending: false });
+
+      if (!error && data.length > 0) {
+        const random = data.sort(() => 0.5 - Math.random()).slice(0, 3);
+        setSugerencias(random.map((item) => item.pregunta));
+        setHasLoadedInitialSuggestions(true);
+      }
+    } catch (err) {
+      console.error("❌ Error al cargar sugerencias:", err);
+    }
+  };
 
   const sendMessage = async (msg = input) => {
     const sanitizedMessage = sanitizeMessage(msg);
     if (!sanitizedMessage) return;
-  
+
     const userMessage = { role: "user", content: sanitizedMessage };
     setMessages((prev) => [...prev, userMessage]);
-  
+    setInput("");
+    setIsTyping(true); // Comienza "escribiendo..."
+
     try {
       const res = await fetch(`${API_URL}/api/chatbot/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: sanitizedMessage }),
       });
-  
+
       const data = await res.json();
       setMessages((prev) => [
         ...prev,
-        { role: "bot", content: sanitizeMessage(data.reply) }
+        { role: "bot", content: sanitizeMessage(data.reply) },
       ]);
+      fetchSugerencias();
     } catch (error) {
       console.error("❌ Error en el chatbot:", error);
       setMessages((prev) => [
         ...prev,
-        { role: "bot", content: "Ocurrió un error, inténtalo más tarde." }
+        { role: "bot", content: "Ocurrió un error, inténtalo más tarde." },
       ]);
+    } finally {
+      setIsTyping(false); // Finaliza "escribiendo..."
     }
-  
-    setInput(""); 
   };
-  
-
-  
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
@@ -74,6 +77,16 @@ const ChatBot = () => {
     sendMessage(text);
   };
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0 && !hasLoadedInitialSuggestions) {
+      fetchSugerencias();
+    }
+  }, [isOpen]);
+
   return (
     <div className="fixed bottom-5 right-5 z-50">
       <button
@@ -84,33 +97,32 @@ const ChatBot = () => {
       </button>
 
       {isOpen && (
-      <div className="absolute bottom-16 right-0 w-80 bg-gray-900 border border-teal-500 rounded-xl shadow-2xl p-4 flex flex-col text-white">
-
+        <div className="absolute bottom-16 right-0 w-80 bg-gray-900 border border-teal-500 rounded-xl shadow-2xl p-4 flex flex-col text-white">
           <h3 className="text-lg font-bold text-white-700">Chat de Soporte</h3>
 
-          {/* Sugerencias solo al abrir (si no hay mensajes previos) */}
-          {messages.length === 0 && (
+          {((messages.length === 0 && sugerencias.length > 0) ||
+            (messages.length > 0 && messages[messages.length - 1]?.role === "bot")) && (
             <div className="mt-2 mb-2 flex flex-wrap gap-2">
-              {quickReplies.map((reply, index) => (
+              {sugerencias.map((text, index) => (
                 <button
                   key={index}
-                  onClick={() => handleQuickReply(reply)}
+                  onClick={() => handleQuickReply(text)}
                   className="bg-gray-800 text-white-200 px-2 py-1 text-xs rounded hover:bg-teal-600 hover:text-white transition"
-
                 >
-                  {reply}
+                  {text}
                 </button>
               ))}
             </div>
           )}
 
-          {/* Historial de mensajes */}
           <div className="h-60 overflow-y-auto mt-1 space-y-1">
             {messages.map((msg, i) => (
               <div
                 key={i}
                 className={`p-2 rounded-lg text-sm ${
-                  msg.role === "user" ? "bg-teal-600/30 text-white self-end text-right" : "bg-gray-800 text-white self-start text-left"
+                  msg.role === "user"
+                    ? "bg-teal-600/30 text-white self-end text-right"
+                    : "bg-gray-800 text-white self-start text-left"
                 }`}
               >
                 <p className="text-white-700">
@@ -118,10 +130,14 @@ const ChatBot = () => {
                 </p>
               </div>
             ))}
+            {isTyping && (
+              <div className="text-sm italic text-gray-400 text-left">
+                🤖 Escribiendo...
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Enviar mensaje */}
           <div className="flex mt-2">
             <input
               value={input}
@@ -132,8 +148,7 @@ const ChatBot = () => {
             />
             <button
               onClick={() => sendMessage()}
-              className="bg-teal-600 hover:bg-teal-500 text-white px-3 rounded-r-lg transition"
-
+              className="bg-teal-600 hover:bg-teal-500 text-white px-3 rounded-r-lg transition cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
