@@ -60,18 +60,22 @@ function Movimientos() {
   
 
   const movimientosFiltrados = useMemo(() => {
-    const fechaLimite = new Date();
-    fechaLimite.setDate(fechaLimite.getDate() - parseInt(filtroFecha, 10));
-
+    let fechaLimite = null;
+    if (filtroFecha !== "") {
+      fechaLimite = new Date();
+      fechaLimite.setDate(fechaLimite.getDate() - parseInt(filtroFecha, 10));
+    }
+  
     return movimientos.filter((mov) => {
       const fechaMovimiento = new Date(mov.fecha);
       return (
         (!filtroCategoria || mov.productos?.categoria_id === filtroCategoria) &&
-        (!filtroTipo || mov.tipo === filtroTipo) && 
-        fechaMovimiento >= fechaLimite
+        (!filtroTipo || mov.tipo === filtroTipo) &&
+        (!fechaLimite || fechaMovimiento >= fechaLimite)
       );
     });
   }, [movimientos, filtroCategoria, filtroFecha, filtroTipo]);
+  
 
   const indiceInicial = (pagina - 1) * movimientosPorPagina;
   const movimientosPaginados = movimientosFiltrados.slice(
