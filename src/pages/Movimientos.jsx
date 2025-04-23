@@ -188,7 +188,7 @@ if (loading)
             <option value="7">📅 Últimos 7 días</option>
             <option value="30">📅 Últimos 30 días</option>
             <option value="90">📅 Últimos 3 meses</option>
-            <option value="">📅 Todos</option>
+            <option value="" selected>📅 Todos</option>
           </select>
 
           {/* 🔹 Nuevo filtro por tipo de movimiento */}
