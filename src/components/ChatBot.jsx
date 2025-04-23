@@ -84,8 +84,9 @@ const ChatBot = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-16 right-0 w-80 bg-white border rounded-lg shadow-2xl p-3 flex flex-col">
-          <h3 className="text-lg font-bold text-gray-700">Chat de Soporte</h3>
+      <div className="absolute bottom-16 right-0 w-80 bg-gray-900 border border-teal-500 rounded-xl shadow-2xl p-4 flex flex-col text-white">
+
+          <h3 className="text-lg font-bold text-white-700">Chat de Soporte</h3>
 
           {/* Sugerencias solo al abrir (si no hay mensajes previos) */}
           {messages.length === 0 && (
@@ -94,7 +95,8 @@ const ChatBot = () => {
                 <button
                   key={index}
                   onClick={() => handleQuickReply(reply)}
-                  className="bg-gray-200 text-gray-700 px-2 py-1 text-xs rounded hover:bg-gray-300 transition cursor-pointer"
+                  className="bg-gray-800 text-white-200 px-2 py-1 text-xs rounded hover:bg-teal-600 hover:text-white transition"
+
                 >
                   {reply}
                 </button>
@@ -108,10 +110,10 @@ const ChatBot = () => {
               <div
                 key={i}
                 className={`p-2 rounded-lg text-sm ${
-                  msg.role === "user" ? "bg-blue-100 self-end text-right" : "bg-gray-100 self-start text-left"
+                  msg.role === "user" ? "bg-teal-600/30 text-white self-end text-right" : "bg-gray-800 text-white self-start text-left"
                 }`}
               >
-                <p className="text-gray-700">
+                <p className="text-white-700">
                   {msg.role === "user" ? "🧑‍💻" : "🤖"} {msg.content}
                 </p>
               </div>
@@ -125,12 +127,13 @@ const ChatBot = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyPress}
-              className="border p-2 w-full rounded-l-lg text-gray-700 text-sm"
+              className="bg-gray-800 border border-teal-500 text-white p-2 w-full rounded-l-lg text-sm focus:outline-none focus:ring-1 focus:ring-teal-400"
               placeholder="Escribe tu mensaje..."
             />
             <button
               onClick={() => sendMessage()}
-              className="bg-teal-500 text-white px-3 rounded-r-lg flex items-center cursor-pointer"
+              className="bg-teal-600 hover:bg-teal-500 text-white px-3 rounded-r-lg transition"
+
             >
               <Send className="w-4 h-4" />
             </button>

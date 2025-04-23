@@ -97,30 +97,45 @@ export default function Hero() {
 
         {/* Botón animado */}
         <motion.div
-          variants={{
-            hidden: { opacity: 0, y: 20 },
-            visible: { opacity: 1, y: 0 },
-          }}
-          transition={{ duration: 1, delay: 0.6 }}
-          className="mt-6 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start"
-        >
-          <motion.button
-            whileHover={{
-              scale: 1.1,
-              boxShadow: "0px 0px 20px rgba(45, 212, 191, 0.8)",
-            }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              const footer = document.getElementById("footer");
-              if (footer) {
-                footer.scrollIntoView({ behavior: "smooth" });
-              }
-            }}
-            className="px-4 py-2 sm:px-6 sm:py-3 border border-teal-500 text-white rounded-lg font-medium transition-all hover:bg-teal-500 cursor-pointer text-sm sm:text-base"
-          >
-            Más Información
-          </motion.button>
-        </motion.div>
+  variants={{
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  }}
+  transition={{ duration: 1, delay: 0.6 }}
+  className="mt-6 flex flex-col sm:flex-row gap-4 sm:gap-6 items-center sm:items-start"
+>
+  <motion.button
+    whileHover={{
+      scale: 1.1,
+      boxShadow: "0px 0px 20px rgba(45, 212, 191, 0.8)",
+    }}
+    whileTap={{ scale: 0.95 }}
+    onClick={() => {
+      const footer = document.getElementById("footer");
+      if (footer) {
+        footer.scrollIntoView({ behavior: "smooth" });
+      }
+    }}
+    className="px-4 py-2 sm:px-6 sm:py-3 border border-teal-500 text-white rounded-lg font-medium transition-all hover:bg-teal-500 cursor-pointer text-sm sm:text-base"
+  >
+    Más Información
+  </motion.button>
+
+  {/* 🔽 Botón para ver el webinar */}
+  <motion.a
+  href="/webinars"
+  whileHover={{
+    scale: 1.1,
+    boxShadow: "0px 0px 20px rgba(255, 255, 255, 0.3)",
+  }}
+  whileTap={{ scale: 0.95 }}
+  className="px-4 py-2 sm:px-6 sm:py-3 bg-teal-500 text-black rounded-lg font-medium transition-all hover:bg-teal-400 cursor-pointer text-sm sm:text-base"
+>
+  Ver Demo en Vídeo
+</motion.a>
+
+</motion.div>
+
       </motion.div>
 
       {/* Contenedor de la imagen */}
