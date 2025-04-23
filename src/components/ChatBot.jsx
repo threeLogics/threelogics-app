@@ -23,6 +23,8 @@ const ChatBot = () => {
         .select("pregunta")
         .order("pregunta", { ascending: false });
 
+      console.log("🎯 Sugerencias cargadas:", data);
+
       if (!error && data.length > 0) {
         const random = data.sort(() => 0.5 - Math.random()).slice(0, 3);
         setSugerencias(random.map((item) => item.pregunta));
@@ -40,7 +42,7 @@ const ChatBot = () => {
     const userMessage = { role: "user", content: sanitizedMessage };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    setIsTyping(true); // Comienza "escribiendo..."
+    setIsTyping(true);
 
     try {
       const res = await fetch(`${API_URL}/api/chatbot/chat`, {
@@ -62,7 +64,7 @@ const ChatBot = () => {
         { role: "bot", content: "Ocurrió un error, inténtalo más tarde." },
       ]);
     } finally {
-      setIsTyping(false); // Finaliza "escribiendo..."
+      setIsTyping(false);
     }
   };
 
@@ -82,7 +84,7 @@ const ChatBot = () => {
   }, [messages]);
 
   useEffect(() => {
-    if (isOpen && messages.length === 0 && !hasLoadedInitialSuggestions) {
+    if (isOpen) {
       fetchSugerencias();
     }
   }, [isOpen]);
@@ -98,22 +100,25 @@ const ChatBot = () => {
 
       {isOpen && (
         <div className="absolute bottom-16 right-0 w-80 bg-gray-900 border border-teal-500 rounded-xl shadow-2xl p-4 flex flex-col text-white">
-          <h3 className="text-lg font-bold text-white-700">Chat de Soporte</h3>
+          <h3 className="text-lg font-bold text-white">Chat de Soporte</h3>
 
-          {isOpen && sugerencias.length > 0 && !isTyping && (
-  <div className="mt-2 mb-2 flex flex-wrap gap-2">
-    {sugerencias.map((text, index) => (
-      <button
-        key={index}
-        onClick={() => handleQuickReply(text)}
-        className="bg-gray-800 text-white-200 px-2 py-1 text-xs rounded hover:bg-teal-600 hover:text-white transition"
-      >
-        {text}
-      </button>
-    ))}
-  </div>
-)}
-
+          {sugerencias.length > 0 ? (
+            <div className="mt-2 mb-2 flex flex-wrap gap-2">
+              {sugerencias.map((text, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleQuickReply(text)}
+                  className="bg-gray-800 text-white-200 px-2 py-1 text-xs rounded hover:bg-teal-600 hover:text-white transition"
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm italic text-gray-400 mt-2 mb-2">
+              No hay sugerencias disponibles.
+            </div>
+          )}
 
           <div className="h-60 overflow-y-auto mt-1 space-y-1">
             {messages.map((msg, i) => (
