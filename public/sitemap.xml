@@ -1,16 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset
-      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-<!-- created with Free Online Sitemap Generator www.xml-sitemaps.com -->
+  xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
+  <!-- Home -->
+  <url>
+    <loc>https://threelogicsapp.vercel.app/</loc>
+    <lastmod>2025-04-25</lastmod>
+  </url>
 
-<url>
-  <loc>https://threelogicsapp.vercel.app/</loc>
-  <lastmod>2025-04-25T07:55:18+00:00</lastmod>
-</url>
-
-
+  <!-- Rutas públicas -->
+  <url><loc>https://threelogicsapp.vercel.app/faq</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/reset-password</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/comunidad</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/terms</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/privacy</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/webinars</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/estado-sistema</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/login</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/register</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/verificar-cuenta</loc></url>
+  <url><loc>https://threelogicsapp.vercel.app/configuracion-inicial</loc></url>
 </urlset>
