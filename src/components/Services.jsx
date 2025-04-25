@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 
 export default function Services() {
   return (
-    <section className="relative py-20 bg-black text-white text-center">
+    <section className="relative pb-12 bg-black text-white text-center">
+
       {/* Encabezado */}
       <div className="max-w-3xl mx-auto text-center">
   <motion.div

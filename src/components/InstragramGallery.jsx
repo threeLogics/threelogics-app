@@ -19,7 +19,8 @@ const images = [
 
 const InstagramGallery = () => {
   return (
-    <section className="my-24 px-4 text-center">
+    <section className="mt-10 mb-24 px-4 text-center">
+
       <a href="https://www.instagram.com/threelogicsenterprise/" target="_blank" rel="noopener noreferrer">
       <h2 className="text-4xl font-bold text-white mb-10">
         Síguenos en <span className="text-teal-400">Instagram</span>

@@ -86,9 +86,6 @@ export default function UltimosClientes() {
      rounded-2xl shadow-xl border border-white/10 
      bg-white/5 backdrop-blur-md">
 
-<h2 className="text-2xl sm:text-3xl font-bold text-white mb-8 text-center">
-    Actividad Reciente de Clientes
-  </h2>
 
  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {/* Nuevos Clientes */}
