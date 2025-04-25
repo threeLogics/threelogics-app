@@ -10,9 +10,12 @@ import Footer from "../components/Footer";
 import Services from "../components/Services";
 import WebDevelopment from "../components/WebDevelopment";
 import UltimosClientes from "../components/UltimosClientes";
-import GoBackUp from "../components/GoBackUp"; 
+import GoBackUp from "../components/GoBackUp";
 import InstagramGallery from "../components/InstragramGallery";
 import { motion } from "framer-motion";
+
+
+import MetaData from "../components/MetaData";
 
 const Home = () => {
   const [showCookie, setShowCookie] = useState(false);
@@ -60,6 +63,14 @@ const Home = () => {
           </button>
         </motion.div>
       )}
+
+      {/* Agrega MetaData aquí para Home */}
+      <MetaData
+        title="Inicio | ThreeLogics"
+        description="Bienvenido a ThreeLogics, el software de gestión de almacenes para pymes. Optimiza inventarios, automatiza procesos y mejora la eficiencia logística."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="gestión de almacenes, software para pymes, logística, optimización de inventarios, transformación digital"
+      />
 
       <Navbar />
       <div id="hero">
