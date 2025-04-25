@@ -1,23 +1,25 @@
 import { useState, useEffect } from "react";
 import { api } from "../services/api";
 import { CheckCircle, AlertTriangle, XCircle, Clock, RefreshCcw, Loader, HelpCircle } from "lucide-react";
+import MetaData from '../components/MetaData'; 
+
 
 const EstadoSistema = () => {
   const [sistema, setSistema] = useState([]);
   const [ultimaActualizacion, setUltimaActualizacion] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(true); // <- NUEVO estado
+  const [isLoading, setIsLoading] = useState(true); 
 
   useEffect(() => {
     const fetchEstado = async () => {
       try {
-        setIsLoading(true); // <- Activamos loading al empezar
+        setIsLoading(true); 
         const { data } = await api.get("/estado");
         setSistema(data);
       } catch (error) {
         console.error("Error al obtener estado del sistema:", error);
         setSistema([{ servicio: "Error en el sistema", estado: "error", tiempo_respuesta: "N/A" }]);
       } finally {
-        setIsLoading(false); // <- Loading OFF siempre al final
+        setIsLoading(false);
         setUltimaActualizacion(new Date());
       }
     };
@@ -50,6 +52,13 @@ const EstadoSistema = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4 py-10 sm:px-6 sm:py-16">
+           <MetaData
+        title="Estado del Sistema | ThreeLogics"
+        description="Monitorea en tiempo real el estado de los servicios y la infraestructura de ThreeLogics."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="estado del sistema, monitoreo, infraestructura, estado de los servicios, ThreeLogics"
+      />
+
       <h1 className="text-3xl sm:text-4xl font-bold text-teal-400 mb-4">Estado del Sistema</h1>
       <p className="text-sm sm:text-lg text-gray-400 mb-6 text-center">
         Monitoreo en tiempo real de nuestros servicios.
