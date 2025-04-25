@@ -6,6 +6,7 @@
   import { Eye, EyeOff, ArrowLeft } from "lucide-react"; 
   import zxcvbn from "zxcvbn"; 
   import supabase from "../supabaseClient";
+  import { Helmet } from 'react-helmet';
 
 
   export default function Perfil() {
@@ -203,6 +204,12 @@
     
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white pt-12">
+              <Helmet>
+        <title>Perfil de Usuario | ThreeLogics</title>
+        <meta name="description" content="Gestiona tu perfil en ThreeLogics. Actualiza tu información personal, cambia tu contraseña y selecciona un avatar." />
+        <meta name="keywords" content="editar perfil, cambiar contraseña, gestionar cuenta, software para pymes, avatar, perfil de usuario" />
+        <meta name="robots" content="noindex, nofollow" /> {/* Asegura que no se indexe en motores de búsqueda */}
+      </Helmet>
   <div className="bg-gray-900 p-8 px-6 rounded-lg shadow-lg max-w-lg w-full text-center relative">
         {/* Botón para volver atrás */}
         <button

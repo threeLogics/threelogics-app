@@ -1,9 +1,16 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import MetaData from '../components/MetaData';
 
 const Page404 = () => {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-r from-black to-teal-700 text-white text-center overflow-hidden">
+      <MetaData
+        title="Página no encontrada | ThreeLogics"
+        description="Lo sentimos, la página que buscas no existe o ha sido movida. Vuelve al inicio para continuar navegando en ThreeLogics."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="404, página no encontrada, error, ThreeLogics, software para pymes"
+      />
       {/* Animación de caída del 404 */}
       <motion.h1
         className="text-9xl font-extrabold tracking-widest"

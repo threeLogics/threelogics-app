@@ -4,6 +4,7 @@
   import { toast } from "react-toastify";
   import { motion } from "framer-motion";
   import { Eye, EyeOff } from "lucide-react";
+  import MetaData from '../components/MetaData';
 
   export default function Register() {
     const [nombre, setNombre] = useState("");
@@ -72,6 +73,12 @@
 
     return (
       <div className="h-screen w-screen flex justify-center items-center bg-black">
+            <MetaData
+        title="Registro de Cuenta | ThreeLogics"
+        description="Regístrate en ThreeLogics para acceder a la mejor plataforma de gestión de almacenes. Optimiza tus inventarios y mejora la eficiencia logística de tu empresa."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="registro, cuenta, software de gestión de almacenes, pymes, logística, optimización de inventarios"
+      />
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}

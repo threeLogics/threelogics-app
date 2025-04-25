@@ -8,6 +8,7 @@ import { motion } from "framer-motion";
 import DOMPurify from "dompurify";
 import SplitText from "../components/SplitText";
 import { Eye, EyeOff } from "lucide-react"; 
+import MetaData from '../components/MetaData';
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -94,6 +95,12 @@ export default function Login() {
 
   return (
     <div className="h-screen w-screen flex justify-center items-center bg-black">
+           <MetaData
+        title="Iniciar Sesión | ThreeLogics"
+        description="Inicia sesión en ThreeLogics para acceder a todas las funcionalidades de la plataforma de gestión de almacenes. Optimiza tu logística y gestión de inventarios."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="iniciar sesión, login, software para pymes, gestión de almacenes, logística, optimización de inventarios"
+      />
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}

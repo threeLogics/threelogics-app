@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { api } from "../services/api";
 import "react-toastify/dist/ReactToastify.css";
 import { motion } from "framer-motion";
+import MetaData from '../components/MetaData';
 
 function CrearPedido() {
   const [productos, setProductos] = useState([]);
@@ -138,6 +139,13 @@ function CrearPedido() {
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center items-center pt-10">
+          <MetaData
+        title="Crear Pedido | ThreeLogics"
+        description="Crea un nuevo pedido con los productos disponibles en ThreeLogics. Organiza tus movimientos de entrada y salida de inventario fácilmente."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="crear pedido, gestión de pedidos, entrada, salida, inventarios, logística, software para pymes"
+      />
+      
       <motion.div className="p-8 max-w-4xl w-full bg-gray-900 text-white rounded-lg shadow-2xl">
         <h1 className="text-3xl font-bold text-teal-400 mb-6 text-center">
           📝 Crear Pedido

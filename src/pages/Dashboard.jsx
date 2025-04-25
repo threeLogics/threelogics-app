@@ -10,6 +10,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import supabase from "../supabaseClient";
 import { Popover, PopoverContent, PopoverTrigger } from "../components/ui/popover";
+import MetaData from '../components/MetaData';
 
 import { AreaChart,Area,CartesianGrid , BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell , RadarChart,
   PolarGrid,
@@ -317,6 +318,12 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen p-6 pt-20 bg-black text-white space-y-6">
+        <MetaData
+        title="Dashboard | ThreeLogics"
+        description="Accede al dashboard de ThreeLogics y visualiza las estadísticas de tu almacén. Obtén un análisis detallado de los movimientos, productos y predicciones de demanda."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="dashboard, estadísticas, predicción de demanda, productos más movidos, movimientos de almacén, logística, optimización de inventarios"
+      />
   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <h1 className="text-3xl font-bold text-teal-400">📊 Dashboard</h1>
     <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">

@@ -4,14 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import TarjetaResumen from "../components/TarjetaResumen";
+import MetaData from '../components/MetaData';
+
+
 export default function Pedidos() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [pagina, setPagina] = useState(1);
 const [pedidosPorPagina, setPedidosPorPagina] = useState(8); 
-
-
 
 
   // 📌 Filtros
@@ -177,6 +178,12 @@ const totalPaginas = Math.ceil(pedidosFiltrados.length / pedidosPorPagina);
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-10">
+      <MetaData
+        title="Mis Pedidos | ThreeLogics"
+        description="Gestiona y visualiza el estado de tus pedidos dentro de ThreeLogics. Filtra y organiza tus pedidos por estado, tipo y precio."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="pedidos, gestión de pedidos, seguimiento de pedidos, logística, software para pymes"
+      />
       <div className="p-8 max-w-5xl w-full">
         <h1 className="text-3xl font-bold text-teal-400 mb-6 text-left">
           📑 Mis Pedidos

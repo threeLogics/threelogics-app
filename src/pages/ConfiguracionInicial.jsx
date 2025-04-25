@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../supabaseClient";
 import { motion } from "framer-motion";
+import MetaData from '../components/MetaData';
 
 const ConfiguracionInicial = () => {
   const [almacen, setAlmacen] = useState("01");
@@ -72,6 +73,12 @@ const ConfiguracionInicial = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-black to-teal-700 text-white p-6">
+          <MetaData
+        title="Configuración Inicial | ThreeLogics"
+        description="Configura tu ubicación de almacenamiento en ThreeLogics para empezar a gestionar tus productos. Completa los datos de tu almacén, estantería y más."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="configuración inicial, ubicación de almacenamiento, almacén, estantería, software para pymes"
+      />
       {/* Título animado */}
       <motion.h1
         className="text-3xl font-extrabold tracking-widest mb-6"

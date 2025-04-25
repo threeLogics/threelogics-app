@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import supabase from "../supabaseClient";
 import DOMPurify from "dompurify";
 import { motion } from "framer-motion"; 
+import MetaData from '../components/MetaData';
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -66,6 +67,12 @@ export default function ResetPassword() {
 
   return (
     <div className="h-screen flex items-center justify-center bg-black text-white">
+       <MetaData
+        title="Restablecer Contraseña | ThreeLogics"
+        description="Restablece tu contraseña en ThreeLogics y recupera el acceso a tu cuenta. Asegúrate de que tu nueva contraseña cumpla con los requisitos de seguridad."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="restablecer contraseña, recuperar cuenta, seguridad, software para pymes, gestión de almacenes"
+      />
         <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}

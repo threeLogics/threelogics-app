@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
+import MetaData from '../components/MetaData';
 
 export default function Productos() {
   const { usuario } = useContext(AuthContext);
@@ -303,6 +304,12 @@ export default function Productos() {
   
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-12">
+          <MetaData
+        title="Productos | ThreeLogics"
+        description="Administra y optimiza la gestión de productos dentro de tu almacén con ThreeLogics. Filtra, busca y organiza tus productos de manera eficiente."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="productos, gestión de almacenes, stock, logística, optimización de inventarios"
+      />
       <div className="p-6 max-w-7xl w-full">
         {/* 📌 Header */}
         <motion.div

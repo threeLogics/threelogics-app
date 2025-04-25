@@ -2,6 +2,7 @@
     import supabase from "../supabaseClient";
     import { motion } from "framer-motion";
     import { useSearchParams } from "react-router-dom";
+    import MetaData from '../components/MetaData';
 
     const Ubicaciones = () => {
       const [ubicaciones, setUbicaciones] = useState([]);
@@ -158,6 +159,12 @@ const totalPaginas = Math.ceil(ubicacionesFiltradas.length / ubicacionesPorPagin
     
       return (
         <div className="flex flex-col items-start pt-20 min-h-screen bg-black text-white p-6">
+          <MetaData
+        title="Ubicaciones | ThreeLogics"
+        description="Gestiona y visualiza las ubicaciones dentro de tu almacén con ThreeLogics. Encuentra los productos y su ubicación exacta de manera eficiente y optimizada."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="ubicaciones, gestión de almacenes, productos en almacén, stock, logística, optimización de inventarios"
+      />
           <div className="w-full max-w-6xl mx-auto">
             <motion.h1 variants={fadeIn} initial="hidden" animate="visible" className="text-left mb-8 text-3xl font-bold text-teal-400">
               📍 Ubicaciones y Proceso Logístico

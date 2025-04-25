@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import MetaData from '../components/MetaData';
 
 const TermsConditions = () => {
   useEffect(() => {
@@ -8,6 +9,12 @@ const TermsConditions = () => {
 
   return (
     <div className="bg-black text-white min-h-screen p-10 pt-20">
+         <MetaData
+        title="Términos y Condiciones | ThreeLogics"
+        description="Lee los términos y condiciones de uso de ThreeLogics. Conoce las responsabilidades del usuario, la propiedad intelectual y nuestras políticas de servicio."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="términos y condiciones, política de privacidad, uso de servicio, propiedad intelectual, responsabilidad del usuario"
+      />
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-teal-400 mb-6 text-center">
           Términos y Condiciones

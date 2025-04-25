@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import supabase from "../supabaseClient";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import MetaData from '../components/MetaData';
 
 export default function VerificarCuenta() {
   const navigate = useNavigate();
@@ -45,6 +46,12 @@ export default function VerificarCuenta() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
+       <MetaData
+        title="Verificación de Cuenta | ThreeLogics"
+        description="Verifica tu cuenta de ThreeLogics para acceder a todas las funcionalidades de la plataforma. Solo unos pocos pasos para completar el proceso."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="verificación de cuenta, login, gestión de almacenes, seguridad, software para pymes"
+      />
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

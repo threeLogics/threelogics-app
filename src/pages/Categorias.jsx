@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import MetaData from '../components/MetaData';
 
 function Categorias() {
   const { usuario } = useContext(AuthContext);
@@ -71,6 +72,7 @@ function Categorias() {
   if (loading)
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white space-y-6">
+
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -226,6 +228,12 @@ function Categorias() {
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-18">
+          <MetaData
+        title="Categorías | ThreeLogics"
+        description="Gestiona y organiza las categorías de productos en ThreeLogics. Visualiza, edita y elimina categorías fácilmente para una mejor gestión de inventarios."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="categorías, gestión de categorías, productos, inventarios, organización, software para pymes"
+      />
       <div className="p-6 max-w-6xl w-full">
       <motion.div
   variants={fadeIn}

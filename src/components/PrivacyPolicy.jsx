@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
+import MetaData from '../components/MetaData';
 
 const PrivacyPolicy = () => {
   useEffect(() => {
@@ -9,6 +10,12 @@ const PrivacyPolicy = () => {
 
   return (
     <div className="bg-black text-white min-h-screen p-10 pt-20">
+       <MetaData
+        title="Política de Privacidad | ThreeLogics"
+        description="Lee nuestra política de privacidad para conocer cómo ThreeLogics recopila, usa y protege tus datos personales. Asegúrate de entender tus derechos como usuario."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="política de privacidad, gestión de datos, protección de datos, software para pymes"
+      />
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold text-teal-400 mb-6 text-center">
           Política de Privacidad

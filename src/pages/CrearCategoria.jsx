@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-toastify"; 
 import { motion } from "framer-motion";
-
+import MetaData from '../components/MetaData';
 function CrearCategoria() {
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
@@ -72,6 +72,12 @@ function CrearCategoria() {
 
   return (
     <div className="w-full min-h-screen bg-black flex flex-col justify-center items-center">
+           <MetaData
+        title="Crear Categoría | ThreeLogics"
+        description="Crea nuevas categorías para organizar tus productos de manera más eficiente dentro de ThreeLogics. Facilita la gestión de tu inventario."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="crear categoría, gestión de categorías, productos, inventarios, organización, software para pymes"
+      />
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}

@@ -1,8 +1,15 @@
 import React from 'react';
+import MetaData from '../components/MetaData';
 
 const Webinars = () => {
   return (
     <section className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4 py-12 sm:px-6 sm:py-16">
+        <MetaData
+        title="Webinars | ThreeLogics"
+        description="Descubre cómo ThreeLogics revoluciona la gestión de tu almacén. Mira nuestro webinar para conocer cómo optimizar la logística y el control de inventarios de tu negocio."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="webinar, demo ThreeLogics, gestión de almacenes, optimización de inventarios, software para pymes"
+      />
 
       {/* Título */}
       <h1 className="text-3xl sm:text-5xl font-bold text-teal-400 mb-4 text-center pt-5">

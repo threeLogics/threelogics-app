@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
 import { trackEvent } from "../utils/analytics";
+import MetaData from '../components/MetaData';
 
 
 function CrearProducto() {
@@ -156,6 +157,12 @@ function CrearProducto() {
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center items-center pt-10">
+           <MetaData
+        title="Crear Producto | ThreeLogics"
+        description="Añade un nuevo producto a tu inventario con ThreeLogics. Completa los detalles del producto y optimiza la gestión de tu almacén."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="crear producto, gestión de productos, inventario, almacén, software para pymes"
+      />
 <div className="p-6 max-w-5xl w-full bg-gray-900 text-white rounded-lg shadow-2xl flex flex-col lg:flex-row gap-8">
 {/* Formulario para añadir productos */}
         <motion.div

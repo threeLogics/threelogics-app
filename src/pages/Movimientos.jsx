@@ -3,6 +3,7 @@ import { AuthContext } from "../context/AuthContext";
 import supabase from "../supabaseClient.js";
 import { motion } from "framer-motion";
 import { api } from "../services/api";
+import MetaData from '../components/MetaData';
 
 function Movimientos() {
   const [movimientos, setMovimientos] = useState([]);
@@ -153,6 +154,12 @@ if (loading)
 
   return (
     <div className="w-full min-h-screen bg-black flex justify-center pt-12">
+        <MetaData
+        title="Historial de Movimientos | ThreeLogics"
+        description="Visualiza y gestiona todos los movimientos de productos en tu almacén con ThreeLogics. Filtra, organiza y consulta tus movimientos de entrada y salida."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="movimientos, gestión de almacenes, productos, entradas, salidas, logística, optimización de inventarios"
+      />
       <div className="p-6 max-w-7xl w-full">
         {/* Título */}
         <motion.div
