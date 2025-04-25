@@ -141,7 +141,7 @@ export default function Footer() {
   rel="noopener noreferrer"
 >
   <BookOpen className="w-6 h-6" />
-  Documentación
+  Docs
 </a>
 
   </div>

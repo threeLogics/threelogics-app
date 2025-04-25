@@ -1,9 +1,9 @@
-import { useState, useEffect, useContext } from "react";
+
+import { useState, useEffect, useContext, useRef } from "react";
 import supabase from "../supabaseClient"; 
-
 import { AuthContext } from "../context/AuthContext"; 
-
 import { MessageCircle, User, Send, Clock } from "lucide-react";
+import { toast } from "react-toastify";
 
 const formatDate = (dateString) => {
   return new Intl.DateTimeFormat("es-ES", {
@@ -18,71 +18,24 @@ const Community = () => {
   const [answers, setAnswers] = useState({});
   const [newAnswers, setNewAnswers] = useState({});
   const { usuario } = useContext(AuthContext); 
-
+  const questionRef = useRef(null);
 
   useEffect(() => {
-      
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+    window.scrollTo({ top: 0, behavior: "smooth" });
     fetchQuestions();
   }, []);
 
   const fetchQuestions = async () => {
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/questions`)
-
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/questions`);
       const data = await res.json();
-  
-      console.log("📌 Preguntas obtenidas:", data);
-  
-      if (!Array.isArray(data)) {
-        throw new Error("La API no devolvió un array válido");
-      }
-  
+      if (!Array.isArray(data)) throw new Error("La API no devolvió un array válido");
       setQuestions(data);
     } catch (error) {
       console.error("❌ Error al recuperar preguntas:", error);
       setQuestions([]); 
     }
   };
-  
-  
-  const handleSendQuestion = async () => {
-    if (!newQuestion.trim()) return;
-  
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("❌ No hay token, usuario no autenticado.");
-      return;
-    }
-  
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/questions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ text: newQuestion }),
-      });
-      
-      const data = await res.json();
-  
-      if (!res.ok) {
-        throw new Error(data.error || "Error desconocido al insertar pregunta");
-      }
-  
-      setNewQuestion("");
-      fetchQuestions(); 
-    } catch (error) {
-      console.error("❌ Error al insertar pregunta:", error.message);
-    }
-  };
-  
-  
-  
 
   const fetchAnswers = async (questionId) => {
     try {
@@ -93,18 +46,48 @@ const Community = () => {
       console.error("❌ Error al recuperar respuestas:", error);
     }
   };
-  
-  
 
-  const handleSendAnswer = async (questionId) => {
-    if (!newAnswers[questionId]?.trim()) return;
-  
+  const handleSendQuestion = async () => {
+    if (!newQuestion.trim()) return;
     const token = localStorage.getItem("token");
     if (!token) {
       console.error("❌ No hay token, usuario no autenticado.");
       return;
     }
-  
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/questions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: newQuestion }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Error desconocido al insertar pregunta");
+
+      setNewQuestion("");
+      toast.success("✅ Pregunta enviada");
+      fetchQuestions();
+
+      setTimeout(() => {
+        questionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    } catch (error) {
+      console.error("❌ Error al insertar pregunta:", error.message);
+    }
+  };
+
+  const handleSendAnswer = async (questionId) => {
+    if (!newAnswers[questionId]?.trim()) return;
+    const token = localStorage.getItem("token");
+    if (!token) {
+      console.error("❌ No hay token, usuario no autenticado.");
+      return;
+    }
+
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/community/answers`, {
         method: "POST",
@@ -117,33 +100,29 @@ const Community = () => {
           question_id: questionId,
         }),
       });
-  
+
       const data = await res.json();
-  
-      if (!res.ok) {
-        throw new Error(data.error || "Error desconocido al insertar respuesta");
-      }
-  
+      if (!res.ok) throw new Error(data.error || "Error desconocido al insertar respuesta");
+
       setNewAnswers({ ...newAnswers, [questionId]: "" });
-      fetchAnswers(questionId); 
+      toast.success("✅ Respuesta publicada");
+      if (!answers[questionId]) await fetchAnswers(questionId);
     } catch (error) {
       console.error("❌ Error al insertar respuesta:", error.message);
     }
   };
-  
-  
 
   return (
     <div className="bg-black min-h-screen flex flex-col items-center p-6">
       <div className="max-w-3xl w-full mx-auto p-5 bg-white rounded-lg shadow-lg mt-14">
         <h1 className="text-3xl font-bold text-center text-teal-400 mb-6 mt-6">Comunidad</h1>
-  
+
         {!usuario && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-4 text-sm text-center">
             ❌ Debes iniciar sesión para enviar preguntas o respuestas.
           </div>
         )}
-  
+
         <div className="mb-6 flex items-center border-b pb-4">
           <input
             type="text"
@@ -152,6 +131,7 @@ const Community = () => {
             placeholder="Escribe una pregunta..."
             value={newQuestion}
             onChange={(e) => setNewQuestion(e.target.value)}
+            aria-label="Campo para nueva pregunta"
           />
           <button
             disabled={!usuario}
@@ -161,10 +141,14 @@ const Community = () => {
             <Send className="w-5 h-5" />
           </button>
         </div>
-  
+
         <div className="space-y-6">
-          {questions.map((question) => (
-            <div key={question.id} className="p-4 bg-gray-100 rounded-lg">
+          {questions.map((question, idx) => (
+            <div
+              key={question.id}
+              ref={idx === 0 ? questionRef : null}
+              className="p-4 bg-gray-100 rounded-lg shadow-sm"
+            >
               <div className="flex items-start">
                 <User className="w-6 h-6 text-teal-400 mr-3" />
                 <div>
@@ -175,18 +159,18 @@ const Community = () => {
                   </p>
                 </div>
               </div>
-  
+
               <button
                 onClick={() => fetchAnswers(question.id)}
                 className="text-teal-500 mt-2 text-sm underline"
               >
-                Ver respuestas
+                Ver respuestas ({answers[question.id]?.length || 0})
               </button>
-  
+
               {answers[question.id] && (
-                <div className="mt-4 space-y-2">
-                  {answers[question.id].map((answer) => (
-                    <div key={answer.id} className="p-3 bg-gray-200 rounded-lg text-sm">
+                <div className="mt-4 space-y-2 transition-all duration-300">
+                  {answers[question.id].map((answer, i) => (
+                    <div key={answer.id} className={`p-3 ${i % 2 === 0 ? "bg-white" : "bg-gray-200"} rounded-lg text-sm`}>
                       <p className="font-semibold">{answer.nombre_usuario || "Anónimo"}</p>
                       <p className="text-gray-700">{answer.text}</p>
                       <p className="text-gray-500 flex items-center text-xs mt-1">
@@ -196,7 +180,7 @@ const Community = () => {
                   ))}
                 </div>
               )}
-  
+
               <div className="mt-4 flex items-center border-t pt-2">
                 <input
                   type="text"
@@ -207,6 +191,7 @@ const Community = () => {
                   onChange={(e) =>
                     setNewAnswers({ ...newAnswers, [question.id]: e.target.value })
                   }
+                  aria-label="Campo de respuesta"
                 />
                 <button
                   disabled={!usuario}
