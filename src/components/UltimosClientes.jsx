@@ -77,6 +77,11 @@ export default function UltimosClientes() {
   }
   
   return (
+    <div className="w-full max-w-6xl mx-auto px-6">
+ <h2 className="text-4xl font-bold mb-6 text-white text-center">
+  Actividad Reciente de <span className="text-teal-400">Clientes</span>
+</h2>
+
 <div className="w-full max-w-6xl mx-auto px-6 py-10 
      rounded-2xl shadow-xl border border-white/10 
      bg-white/5 backdrop-blur-md">
@@ -165,6 +170,7 @@ export default function UltimosClientes() {
         </div>
       </div>
     </div>
+  </div>
   );
   
   
