@@ -173,6 +173,8 @@ La aplicación fue auditada con [Unlighthouse](https://unlighthouse.dev/) y [Goo
 | 🌐 SEO              | 100                  |
 
 > 🔍 Auditado el 25 de abril de 2025 desde https://threelogicsapp.vercel.app
+> 
+![Rendimiento y SEO]([https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//dashboard.png](https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//seoo.png))
 
 ## Licencia
 
