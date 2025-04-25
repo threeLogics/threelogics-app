@@ -3,7 +3,7 @@ import supabase from "../supabaseClient";
 
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
-import { Mail, MapPin, Linkedin, Github, Instagram } from "lucide-react";
+import { Mail, MapPin, Linkedin, Github, Instagram, BookOpen  } from "lucide-react";
 
 
 
@@ -133,6 +133,17 @@ export default function Footer() {
       <Instagram className="w-6 h-6" />
       Instagram
     </a>
+
+    <a
+  href="https://github.com/threeLogics/threelogics-app/tree/main/documentacion"
+  className="flex items-center gap-2 hover:text-teal-400 transition"
+  target="_blank"
+  rel="noopener noreferrer"
+>
+  <BookOpen className="w-6 h-6" />
+  Documentación
+</a>
+
   </div>
 </div>
 
