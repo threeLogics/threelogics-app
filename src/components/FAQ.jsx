@@ -7,6 +7,7 @@ import {
   Briefcase,
   PackageSearch,
 } from "lucide-react";
+import MetaData from '../components/MetaData';  
 
 const faqData = [
   {
@@ -186,6 +187,12 @@ const FAQ = () => {
 
   return (
     <div className="bg-black min-h-screen text-white p-10">
+          <MetaData
+        title="Preguntas Frecuentes (FAQ) | ThreeLogics"
+        description="Consulta las preguntas frecuentes sobre ThreeLogics, el software de gestión de almacenes para pymes."
+        imageUrl="https://threelogicsapp.vercel.app/og-image.png"
+        keywords="gestión de almacenes, software para pymes, logística, optimización de inventarios, transformación digital"
+      />
       <div className="max-w-4xl mx-auto bg-gray-950 p-6 rounded-lg shadow-lg mt-12">
         <h1 className="text-4xl font-bold text-center text-white mb-8">
           Preguntas <span className="text-teal-400">Frecuentes (FAQ)</span>
