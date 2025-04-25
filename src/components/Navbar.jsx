@@ -85,7 +85,7 @@ export default function Navbar() {
           className="flex items-center space-x-3 bg-transparent border-none cursor-pointer"
         >
           <img
-            src="/LogoBlancoSobreNegro.png"
+            src="/logoo.png"
             alt="ThreeLogics Logo"
             className="h-10 w-auto"
           />
