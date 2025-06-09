@@ -56,8 +56,8 @@ export default function AboutUs() {
           </p>
 
           <div className="flex space-x-6 mt-6">
-            <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//Iker.png" alt="Iker Domínguez" className="w-14 h-14 rounded-full hover:scale-110" />
-            <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//adrii.png" alt="Adrián Vaquero" className="w-14 h-14 rounded-full hover:scale-110" />
+            <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//ikerr.png" alt="Iker Domínguez" className="w-14 h-14 rounded-full hover:scale-110" />
+            <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//adriii.png" alt="Adrián Vaquero" className="w-14 h-14 rounded-full hover:scale-110" />
             <img src="https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//dani%20(1).png" alt="Daniel Ramiro" className="w-14 h-14 rounded-full hover:scale-110" />
           </div>
         </motion.div>

@@ -12,7 +12,7 @@ const testimonials = [
     author: "Adrián Vaquero",
     position: "CoFundador · ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//adrii.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//adriii.png",
   },
   {
     companyLogo:
@@ -23,7 +23,7 @@ const testimonials = [
     author: "Iker Domínguez",
     position: "CoFundador · ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//Iker.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//ikerr.png",
   },
   {
     companyLogo:
