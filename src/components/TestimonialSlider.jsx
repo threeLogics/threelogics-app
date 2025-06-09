@@ -12,7 +12,7 @@ const testimonials = [
     author: "Adrián Vaquero",
     position: "CoFundador · ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/adri.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//adri.png",
   },
   {
     companyLogo:
@@ -23,7 +23,7 @@ const testimonials = [
     author: "Iker Domínguez",
     position: "CoFundador · ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/ftoiker.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//iker.jpg",
   },
   {
     companyLogo:
@@ -34,7 +34,7 @@ const testimonials = [
     author: "Daniel Ramiro",
     position: "CoFundador · ThreeLogics",
     avatar:
-      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider/dani.png",
+      "https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/testimonialSlider//dani%20(1).png",
   },
 ];
 
