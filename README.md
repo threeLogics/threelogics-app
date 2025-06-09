@@ -158,22 +158,25 @@ El sistema permite:
 - **Iker Domínguez** - Fullstack & QA
 - **Adrián Vaquero** - Backend & Seguridad
 - **Daniel Ramiro** - Frontend & UI/UX
+  
+## Auditoría Web (Unlighthouse/Google Search Console)
 
-## Auditoría Web (Unlighthouse)
-
-La aplicación fue auditada con [Unlighthouse](https://unlighthouse.dev/) usando datos de producción en Vercel.
+La aplicación fue auditada con [Unlighthouse](https://unlighthouse.dev/) y [Google Search Console](https://pagespeed.web.dev/analysis/https-threelogicsapp-vercel-app/mt0prodwiw?utm_source=search_console&form_factor=desktop&hl=es) usando datos de producción en Vercel.
 
 **Resultados Generales:**
 
 | Métrica             | Puntuación Promedio |
 | ------------------- | ------------------- |
-| 🚀 Rendimiento      | 60                  |
+| 🚀 Rendimiento      | 84                  |
 | ♿ Accesibilidad    | 90                  |
-| ✅ Buenas Prácticas | 99                  |
-| 🌐 SEO              | 92                  |
+| ✅ Buenas Prácticas | 96                  |
+| 🌐 SEO              | 100                  |
 
-> 🔍 Auditado el 20 de abril de 2025 desde https://threelogicsapp.vercel.app
+> 🔍 Auditado el 25 de abril de 2025 desde https://threelogicsapp.vercel.app
+
+![Rendimiento y SEO](https://cazaomhrosdojmlbweld.supabase.co/storage/v1/object/public/servicios//seoo.png)
 
 ## Licencia
 
 Este proyecto está licenciado bajo la **MIT License**.
+
